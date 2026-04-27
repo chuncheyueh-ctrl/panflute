@@ -28,7 +28,7 @@ const defaultData={
   students:[], memberships:[], attendance:[], attendanceDates:[], points:[], events:[], lessonLogs:[], coursePlans:[], classNotes:[], noteQuizHistory:[],
   selectedId:null, selectedLevel:1,
   filter:{schoolId:"s1",gradeId:"g3"},
-  calendar:{schoolId:"s1",scope:"school",month:""},
+  calendar:{schoolId:"s1",scope:"school",month:"",selectedDate:""},
   logFilter:{schoolId:"s1",gradeId:"g3",scope:"class"},
   courseFilter:{schoolId:"s1",gradeId:"g3"}
 };
@@ -53,10 +53,11 @@ function normalize(d){
   d.filter=d.filter||{schoolId:d.schools[0].id,gradeId:d.grades[0].id};
   if(!d.filter.schoolId)d.filter.schoolId=d.schools[0].id;
   if(!d.filter.gradeId)d.filter.gradeId=d.grades[0].id;
-  d.calendar=d.calendar||{schoolId:d.filter.schoolId,scope:"school",month:monthStr()};
+  d.calendar=d.calendar||{schoolId:d.filter.schoolId,scope:"school",month:monthStr(),selectedDate:todayStr()};
   if(!d.calendar.month)d.calendar.month=monthStr();
   if(!d.calendar.schoolId)d.calendar.schoolId=d.filter.schoolId;
   if(!d.calendar.scope)d.calendar.scope="school";
+  if(!d.calendar.selectedDate)d.calendar.selectedDate=todayStr();
   d.logFilter=d.logFilter||{schoolId:d.filter.schoolId,gradeId:d.filter.gradeId,scope:"class"};
   d.courseFilter=d.courseFilter||{schoolId:d.filter.schoolId,gradeId:d.filter.gradeId};
   d.students.forEach(s=>{s.id=s.id||uid();s.name=s.name||"未命名";s.level=clampRaw(s.level,d.levels);s.points=parseInt(s.points)||0;s.schoolId=s.schoolId||d.filter.schoolId;s.gradeId=s.gradeId||d.filter.gradeId;s.notes=s.notes||"";s.photo=s.photo||""});
@@ -440,24 +441,116 @@ function renderDisplay(){
 
 /* Calendar */
 function eventClass(t){return t==="exam"?"event-exam":t==="concert"?"event-concert":t==="school"?"event-school":"event-other"}
-function setCalendarSchool(v){data.calendar.schoolId=v;saveAndRender()}function setCalendarScope(v){data.calendar.scope=v;saveAndRender()}function setCalendarMonth(v){data.calendar.month=v;saveAndRender()}function changeMonth(delta){const [y,m]=data.calendar.month.split("-").map(Number);data.calendar.month=monthStr(new Date(y,m-1+delta,1));saveAndRender()}function goToday(){data.calendar.month=monthStr();saveAndRender()}
+function eventTypeName(t){return t==="exam"?"考試":t==="concert"?"演出/活動":t==="school"?"學校行事":"其他"}
+function setCalendarSchool(v){data.calendar.schoolId=v;saveAndRender()}
+function setCalendarScope(v){data.calendar.scope=v;saveAndRender()}
+function setCalendarMonth(v){data.calendar.month=v;saveAndRender()}
+function setCalendarSelectedDate(date){
+  data.calendar.selectedDate=date;
+  if(date)data.calendar.month=date.slice(0,7);
+  saveAndRender();
+}
+function changeMonth(delta){
+  const [y,m]=data.calendar.month.split("-").map(Number);
+  data.calendar.month=monthStr(new Date(y,m-1+delta,1));
+  saveAndRender()
+}
+function goToday(){data.calendar.month=monthStr();data.calendar.selectedDate=todayStr();saveAndRender()}
+function visibleEventsForDate(date){
+  return data.events.filter(e=>e.date===date&&(data.calendar.scope==="all"||e.schoolId===data.calendar.schoolId));
+}
 function renderCalendar(){
   const cs=document.getElementById("calendarSchool");if(!cs)return;
   cs.innerHTML=optionHTML(data.schools,data.calendar.schoolId);
-  document.getElementById("eventSchool").innerHTML=optionHTML(data.schools,data.calendar.schoolId);
+  const es=document.getElementById("eventSchool");if(es)es.innerHTML=optionHTML(data.schools,data.calendar.schoolId);
   setVal("calendarMonth",data.calendar.month);setVal("calendarScope",data.calendar.scope);
   const [y,m]=data.calendar.month.split("-").map(Number),first=new Date(y,m-1,1),start=first.getDay(),days=new Date(y,m,0).getDate();
   setText("calendarTitle",`${y}年${m}月 行事曆`);
   let out=["日","一","二","三","四","五","六"].map(n=>`<div class="day-name">${n}</div>`).join("");
   for(let i=0;i<start;i++)out+="<div></div>";
-  for(let d=1;d<=days;d++){const date=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`,evs=data.events.filter(e=>e.date===date&&(data.calendar.scope==="all"||e.schoolId===data.calendar.schoolId));out+=`<div class="day-cell" onclick="quickEventDate('${date}')"><div class="day-name">${d}</div>${evs.map(e=>`<div class="event-chip ${eventClass(e.type)}" onclick="event.stopPropagation();editEvent('${e.id}')">${escapeAttr(e.title)}</div>`).join("")}</div>`}
+  for(let d=1;d<=days;d++){
+    const date=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const evs=visibleEventsForDate(date);
+    const selected=date===data.calendar.selectedDate;
+    out+=`<div class="day-cell ${evs.length?'has-events':''} ${selected?'selected-day':''}" onclick="setCalendarSelectedDate('${date}')">
+      <div class="day-name">${d}</div>
+      ${evs.slice(0,4).map(e=>`<div class="event-chip ${eventClass(e.type)}" onclick="event.stopPropagation();editEvent('${e.id}')">${escapeAttr(e.title)}</div>`).join("")}
+      ${evs.length>4?`<div class="small">+${evs.length-4} 筆</div>`:""}
+    </div>`
+  }
   document.getElementById("calendarGrid").innerHTML=out;
+  renderSelectedDateEvents();
 }
-function quickEventDate(date){setVal("eventDate",date)}
-function clearEventForm(){["eventId","eventTitle","eventNotes"].forEach(id=>setVal(id,""));setVal("eventDate",todayStr());setVal("eventSchool",data.calendar.schoolId);setVal("eventType","exam")}
-function saveEvent(){const id=document.getElementById("eventId").value||uid(),item={id,date:document.getElementById("eventDate").value||todayStr(),schoolId:document.getElementById("eventSchool").value,type:document.getElementById("eventType").value,title:document.getElementById("eventTitle").value.trim()||"未命名事件",notes:document.getElementById("eventNotes").value};const idx=data.events.findIndex(e=>e.id===id);if(idx>=0)data.events[idx]=item;else data.events.push(item);data.calendar.schoolId=item.schoolId;data.calendar.month=item.date.slice(0,7);saveAndRender("事件已儲存");setVal("eventId",id)}
-function editEvent(id){const e=data.events.find(x=>x.id===id);if(!e)return;setVal("eventId",e.id);setVal("eventDate",e.date);setVal("eventSchool",e.schoolId);setVal("eventType",e.type);setVal("eventTitle",e.title);setVal("eventNotes",e.notes||"")}
-function deleteEvent(){const id=document.getElementById("eventId")?.value;if(!id)return;data.events=data.events.filter(e=>e.id!==id);clearEventForm();saveAndRender("事件已刪除")}
+function quickEventDate(date){setCalendarSelectedDate(date);setVal("eventDate",date)}
+function newEventForSelectedDate(){
+  clearEventForm();
+  setVal("eventDate",data.calendar.selectedDate||todayStr());
+  setVal("eventSchool",data.calendar.schoolId);
+}
+function clearEventForm(){
+  ["eventId","eventTitle","eventNotes"].forEach(id=>setVal(id,""));
+  setVal("eventDate",data.calendar.selectedDate||todayStr());
+  setVal("eventSchool",data.calendar.schoolId);
+  setVal("eventType","exam");
+}
+function eventFormPayload(forceNew=true){
+  const id=forceNew ? uid() : (document.getElementById("eventId").value||uid());
+  return {
+    id,
+    date:document.getElementById("eventDate").value||todayStr(),
+    schoolId:document.getElementById("eventSchool").value,
+    type:document.getElementById("eventType").value,
+    title:document.getElementById("eventTitle").value.trim()||"未命名事件",
+    notes:document.getElementById("eventNotes").value
+  };
+}
+function saveEvent(){
+  const item=eventFormPayload(true);
+  data.events.push(item);
+  data.calendar.schoolId=item.schoolId;
+  data.calendar.selectedDate=item.date;
+  data.calendar.month=item.date.slice(0,7);
+  clearEventForm();
+  saveAndRender("已新增事件");
+}
+function updateEventFromForm(){
+  const id=document.getElementById("eventId").value;
+  if(!id){toast("請先點選要修改的事件");return}
+  const item=eventFormPayload(false);
+  const idx=data.events.findIndex(e=>e.id===id);
+  if(idx>=0)data.events[idx]=item;else data.events.push(item);
+  data.calendar.schoolId=item.schoolId;
+  data.calendar.selectedDate=item.date;
+  data.calendar.month=item.date.slice(0,7);
+  saveAndRender("事件已更新");
+}
+function editEvent(id){
+  const e=data.events.find(x=>x.id===id);if(!e)return;
+  data.calendar.selectedDate=e.date;
+  setVal("eventId",e.id);setVal("eventDate",e.date);setVal("eventSchool",e.schoolId);setVal("eventType",e.type);setVal("eventTitle",e.title);setVal("eventNotes",e.notes||"");
+  renderSelectedDateEvents();
+}
+function deleteEvent(){
+  const id=document.getElementById("eventId")?.value;
+  if(!id){toast("請先點選要刪除的事件");return}
+  if(!confirm("確定刪除這個事件？"))return;
+  data.events=data.events.filter(e=>e.id!==id);
+  clearEventForm();
+  saveAndRender("事件已刪除");
+}
+function renderSelectedDateEvents(){
+  const title=document.getElementById("selectedDateTitle");
+  const box=document.getElementById("selectedDateEvents");
+  if(!title||!box)return;
+  const date=data.calendar.selectedDate||todayStr();
+  title.textContent=`${date} 當日事件`;
+  const evs=visibleEventsForDate(date).sort((a,b)=>eventTypeName(a.type).localeCompare(eventTypeName(b.type),"zh-Hant")||a.title.localeCompare(b.title,"zh-Hant"));
+  box.innerHTML=evs.map(e=>`<div class="event-list-item" onclick="editEvent('${e.id}')">
+    <div class="top"><div class="name"><span class="event-dot ${e.type}"></span>${escapeAttr(e.title)}</div><div class="att-badge">${eventTypeName(e.type)}</div></div>
+    <div class="meta">${schoolName(e.schoolId)}｜${e.date}</div>
+    ${e.notes?`<div class="small" style="white-space:pre-wrap;margin-top:6px">${escapeAttr(e.notes)}</div>`:""}
+  </div>`).join("")||`<p class="small">這一天目前沒有事件。按「新增當日事件」即可新增。</p>`;
+}
 
 /* Lesson logs */
 function setLogFilter(k,v){data.logFilter[k]=v;saveAndRender()}function setLogScope(v){data.logFilter.scope=v;saveAndRender()}

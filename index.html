@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V9 音符測驗版</title>
+<title>Battle 排笛教學管理系統 V10 行事曆版</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -78,6 +78,16 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 .staff-wrap{background:#fff;border:1px solid var(--line);border-radius:22px;padding:12px;overflow:auto;margin:12px 0}.staff-svg{width:100%;max-width:680px;min-width:330px;display:block;margin:auto}
 .quiz-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-top:12px}.quiz-options button{border-radius:18px;padding:16px;font-size:18px}.quiz-feedback{font-size:22px;font-weight:1000;text-align:center;min-height:36px;margin-top:10px}.quiz-scorebar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(max-width:800px){.quiz-scorebar{grid-template-columns:repeat(2,1fr)}.quiz-options button{font-size:16px;padding:14px}}
 
+
+.event-list-panel{display:grid;gap:8px;margin-top:10px}
+.event-list-item{border:1px solid var(--line);border-radius:16px;padding:10px;background:#fffaf5;cursor:pointer}
+.event-list-item .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.event-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:#c47a3c}
+.event-dot.exam{background:#d26b6b}.event-dot.concert{background:#5c8dc7}.event-dot.school{background:#6aa66a}.event-dot.other{background:#f1b15f}
+.day-cell.selected-day{outline:3px solid rgba(196,122,60,.28);background:#fff7ef}
+.day-cell.has-events{box-shadow:inset 0 0 0 1px rgba(196,122,60,.22)}
+.event-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -100,7 +110,7 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V9｜音符閃卡測驗＋App化＋多班級</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V10｜行事曆多事件＋音符測驗＋多班級</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -182,8 +192,62 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 </section>
 
 <section id="calendarView" class="hidden">
-  <div class="card"><div class="section-title"><h2>行事曆</h2><div class="toolbar"><button onclick="changeMonth(-1)">上一月</button><button onclick="goToday()">本月</button><button onclick="changeMonth(1)">下一月</button></div></div><div class="three"><div><label>學校</label><select id="calendarSchool" onchange="setCalendarSchool(this.value)"></select></div><div><label>月份</label><input id="calendarMonth" type="month" onchange="setCalendarMonth(this.value)"></div><div><label>顯示</label><select id="calendarScope" onchange="setCalendarScope(this.value)"><option value="school">目前學校</option><option value="all">全部學校</option></select></div></div></div>
-  <div class="grid"><div class="card"><h2>新增 / 修改事件</h2><input id="eventId" type="hidden"><label>日期</label><input id="eventDate" type="date"><label>學校</label><select id="eventSchool"></select><label>類型</label><select id="eventType"><option value="exam">考試</option><option value="concert">演出 / 活動</option><option value="school">學校行事</option><option value="other">其他</option></select><label>標題</label><input id="eventTitle" placeholder="期中考 / 期末考 / 畢業典禮"><label>備註</label><textarea id="eventNotes" rows="4"></textarea><div class="controls"><button class="primary" onclick="saveEvent()">儲存</button><button onclick="clearEventForm()">清空</button><button class="warn" onclick="deleteEvent()">刪除</button></div></div><div class="card"><h2 id="calendarTitle">月份行事曆</h2><div class="calendar-grid" id="calendarGrid"></div></div></div>
+  <div class="card">
+    <div class="section-title">
+      <div>
+        <h2>行事曆</h2>
+        <p class="small">同一天可以新增多個事件；點日期可查看當天全部事件，點事件可修改或刪除。</p>
+      </div>
+      <div class="toolbar">
+        <button onclick="changeMonth(-1)">上一月</button>
+        <button onclick="goToday()">本月</button>
+        <button onclick="changeMonth(1)">下一月</button>
+        <button class="primary" onclick="newEventForSelectedDate()">新增當日事件</button>
+      </div>
+    </div>
+    <div class="three">
+      <div><label>學校</label><select id="calendarSchool" onchange="setCalendarSchool(this.value)"></select></div>
+      <div><label>月份</label><input id="calendarMonth" type="month" onchange="setCalendarMonth(this.value)"></div>
+      <div><label>顯示</label><select id="calendarScope" onchange="setCalendarScope(this.value)"><option value="school">目前學校</option><option value="all">全部學校</option></select></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>新增 / 修改事件</h2>
+        <input id="eventId" type="hidden">
+        <label>日期</label><input id="eventDate" type="date">
+        <label>學校</label><select id="eventSchool"></select>
+        <label>類型</label>
+        <select id="eventType">
+          <option value="exam">考試</option>
+          <option value="concert">演出 / 活動</option>
+          <option value="school">學校行事</option>
+          <option value="other">其他</option>
+        </select>
+        <label>標題</label><input id="eventTitle" placeholder="期中考 / 期末考 / 畢業典禮 / 補課">
+        <label>備註</label><textarea id="eventNotes" rows="4"></textarea>
+        <div class="controls">
+          <button class="primary" onclick="saveEvent()">儲存為新事件</button>
+          <button class="blue" onclick="updateEventFromForm()">更新選取事件</button>
+          <button onclick="clearEventForm()">清空</button>
+          <button class="warn" onclick="deleteEvent()">刪除選取事件</button>
+        </div>
+        <p class="small">「儲存為新事件」永遠新增一筆；「更新選取事件」才會修改既有事件。</p>
+      </div>
+
+      <div class="card">
+        <h2 id="selectedDateTitle">當日事件</h2>
+        <div id="selectedDateEvents" class="event-list-panel"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="calendarTitle">月份行事曆</h2>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </div>
 </section>
 
 <section id="lessonLogView" class="hidden">
