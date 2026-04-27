@@ -60,7 +60,7 @@ function normalize(d){
   if(!d.calendar.selectedDate)d.calendar.selectedDate=todayStr();
   d.logFilter=d.logFilter||{schoolId:d.filter.schoolId,gradeId:d.filter.gradeId,scope:"class"};
   d.courseFilter=d.courseFilter||{schoolId:d.filter.schoolId,gradeId:d.filter.gradeId};
-  d.students.forEach(s=>{s.id=s.id||uid();s.name=s.name||"未命名";s.level=clampRaw(s.level,d.levels);s.points=parseInt(s.points)||0;s.schoolId=s.schoolId||d.filter.schoolId;s.gradeId=s.gradeId||d.filter.gradeId;s.notes=s.notes||"";s.photo=s.photo||""});
+  d.students.forEach(s=>{s.id=s.id||uid();s.name=s.name||"未命名";s.level=clampRaw(s.level,d.levels);s.points=parseInt(s.points)||0;s.schoolId=s.schoolId||d.filter.schoolId;s.gradeId=s.gradeId||d.filter.gradeId;s.notes=s.notes||"";s.photo=s.photo||"";normalizeAbility(s)});
   d.memberships=d.memberships||[];
   d.students.forEach(s=>{
     const exists=d.memberships.some(m=>m.studentId===s.id&&m.schoolId===s.schoolId&&m.gradeId===s.gradeId);
@@ -660,6 +660,105 @@ function renderQuizStats(){setText("quizNow",`${Math.min(quizState.index,quizSta
 function renderStaffNote(note){const svg=document.getElementById("noteStaffSvg");if(!svg)return;if(!note){svg.innerHTML='<text x="340" y="130" text-anchor="middle" font-size="24" fill="#7d6b60">請開始測驗</text>';return}const x=355,baseY=130,gap=12,y=baseY-note.step*(gap/2);let lines="";for(let i=0;i<5;i++){let ly=baseY-i*gap;lines+=`<line x1="120" y1="${ly}" x2="560" y2="${ly}" stroke="#2d241f" stroke-width="2"/>`;}let ledgerYs=[];if(note.step<=-2){for(let st=-2;st>=note.step;st-=2)ledgerYs.push(baseY-st*(gap/2));}if(note.step>=6){for(let st=6;st<=note.step;st+=2)ledgerYs.push(baseY-st*(gap/2));}const ledgers=ledgerYs.map(ly=>`<line x1="${x-32}" y1="${ly}" x2="${x+32}" y2="${ly}" stroke="#2d241f" stroke-width="2"/>`).join("");svg.innerHTML=`<rect x="0" y="0" width="680" height="260" rx="18" fill="#fffaf5"/><text x="135" y="132" font-size="82" font-family="serif" fill="#2d241f">𝄞</text>${lines}${ledgers}<ellipse cx="${x}" cy="${y}" rx="18" ry="13" transform="rotate(-18 ${x} ${y})" fill="#2d241f"/><text x="340" y="225" text-anchor="middle" font-size="18" fill="#7d6b60">高音譜號｜請選出音名＋注音</text>`;}
 function renderNoteQuiz(){const sel=document.getElementById("quizStudentSelect");if(!sel)return;sel.innerHTML=filteredStudents().map(s=>`<option value="${s.id}" ${s.id===data.selectedId?'selected':''}>${escapeAttr(s.name)}｜Lv.${s.level}</option>`).join("");if(!document.getElementById("noteRangeChecks")?.innerHTML)renderNoteRangeChecks();if(!quizState.current)renderStaffNote(null);renderQuizStats();renderQuizHistory();}
 function renderQuizHistory(){const box=document.getElementById("quizHistoryList");if(!box)return;const rows=(data.noteQuizHistory||[]).filter(h=>h.schoolId===data.filter.schoolId&&h.gradeId===data.filter.gradeId).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);box.innerHTML=rows.map(h=>{const s=data.students.find(x=>x.id===h.studentId);const rate=h.total?Math.round(h.correct/h.total*100):0;return `<div class="log-card"><div class="name">${escapeAttr(s?.name||"學生")}｜${h.correct}/${h.total}｜${rate}%｜+${h.points}</div><div class="meta">${h.date}｜範圍：${escapeAttr(h.range||"")}</div></div>`;}).join("")||'<p class="small">尚無測驗紀錄。</p>';}
+
+
+const ABILITY_KEYS = [
+  {key:"pitch", label:"音準"},
+  {key:"rhythm", label:"節奏"},
+  {key:"sight", label:"視譜"},
+  {key:"breath", label:"氣息"},
+  {key:"tone", label:"音色"},
+  {key:"expression", label:"表現力"}
+];
+function defaultAbility(){
+  return {pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3};
+}
+function normalizeAbility(s){
+  s.ability=s.ability||defaultAbility();
+  ABILITY_KEYS.forEach(a=>{
+    let v=parseInt(s.ability[a.key]);
+    if(!v||v<1||v>5)v=3;
+    s.ability[a.key]=v;
+  });
+}
+function updateAbility(key,val){
+  const s=selected();if(!s)return;
+  normalizeAbility(s);
+  s.ability[key]=Math.max(1,Math.min(5,parseInt(val)||3));
+  persist();renderAbilityEditor(s);renderAbilityCharts();
+}
+function abilityPoints(s){
+  normalizeAbility(s);
+  return ABILITY_KEYS.map((a,i)=>{
+    const angle=-Math.PI/2 + i*(Math.PI*2/ABILITY_KEYS.length);
+    const r=(s.ability[a.key]/5)*118;
+    return {x:210+Math.cos(angle)*r,y:170+Math.sin(angle)*r,label:a.label,value:s.ability[a.key],angle};
+  });
+}
+function hexAxisPoints(radius=118){
+  return ABILITY_KEYS.map((a,i)=>{
+    const angle=-Math.PI/2 + i*(Math.PI*2/ABILITY_KEYS.length);
+    return {x:210+Math.cos(angle)*radius,y:170+Math.sin(angle)*radius,label:a.label,angle};
+  });
+}
+function renderHex(svgId,s){
+  const svg=document.getElementById(svgId);
+  if(!svg)return;
+  if(!s){svg.innerHTML=`<text x="210" y="180" text-anchor="middle" font-size="20" fill="#7d6b60">請先選擇學生</text>`;return}
+  normalizeAbility(s);
+  const rings=[1,2,3,4,5].map(k=>{
+    const pts=hexAxisPoints(118*k/5).map(p=>`${p.x},${p.y}`).join(" ");
+    return `<polygon points="${pts}" fill="none" stroke="#ead9c8" stroke-width="1"/>`;
+  }).join("");
+  const axes=hexAxisPoints().map(p=>`<line x1="210" y1="170" x2="${p.x}" y2="${p.y}" stroke="#ead9c8" stroke-width="1.5"/>`).join("");
+  const dataPts=abilityPoints(s).map(p=>`${p.x},${p.y}`).join(" ");
+  const labels=hexAxisPoints(148).map((p,i)=>{
+    const a=ABILITY_KEYS[i], v=s.ability[a.key];
+    return `<text x="${p.x}" y="${p.y+5}" text-anchor="middle" font-size="16" font-weight="900" fill="#5b463a">${a.label}</text>
+            <text x="${p.x}" y="${p.y+24}" text-anchor="middle" font-size="14" fill="#c47a3c">${v}/5</text>`;
+  }).join("");
+  const dots=abilityPoints(s).map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#c47a3c"/>`).join("");
+  svg.innerHTML=`
+    <rect x="0" y="0" width="420" height="360" rx="22" fill="#fffaf5"/>
+    ${rings}${axes}
+    <polygon points="${dataPts}" fill="rgba(196,122,60,.28)" stroke="#c47a3c" stroke-width="3"/>
+    ${dots}
+    <circle cx="210" cy="170" r="3" fill="#7d6b60"/>
+    ${labels}
+  `;
+}
+function renderAbilityEditor(s){
+  const box=document.getElementById("abilityEditor");
+  if(!box||!s)return;
+  normalizeAbility(s);
+  box.innerHTML=ABILITY_KEYS.map(a=>`
+    <div class="ability-control">
+      <label><span>${a.label}</span><span class="ability-num">${s.ability[a.key]}</span></label>
+      <input type="range" min="1" max="5" step="1" value="${s.ability[a.key]}" oninput="updateAbility('${a.key}',this.value)">
+    </div>
+  `).join("");
+  renderAbilitySummary("abilitySummary",s);
+}
+function renderAbilitySummary(id,s){
+  const box=document.getElementById(id);if(!box||!s)return;
+  normalizeAbility(s);
+  const vals=ABILITY_KEYS.map(a=>({label:a.label,value:s.ability[a.key]}));
+  const strong=vals.slice().sort((a,b)=>b.value-a.value)[0];
+  const weak=vals.slice().sort((a,b)=>a.value-b.value)[0];
+  const avg=(vals.reduce((sum,x)=>sum+x.value,0)/vals.length).toFixed(1);
+  box.innerHTML=`
+    <div class="ability-pill">平均 ${avg}/5</div>
+    <div class="ability-pill">優勢：${strong.label}</div>
+    <div class="ability-pill">加強：${weak.label}</div>
+  `;
+}
+function renderAbilityCharts(){
+  const s=selected();
+  if(s)normalizeAbility(s);
+  renderHex("abilityHexSvg",s);
+  renderHex("studentAbilityHexSvg",s);
+  renderAbilitySummary("studentAbilitySummary",s);
+}
 
 function renderAll(){
   setVal("apiUrl",localStorage.getItem(API_KEY)||"");
