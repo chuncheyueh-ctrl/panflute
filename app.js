@@ -537,7 +537,7 @@ function hideLevelUp(){const o=document.getElementById("levelupOverlay");if(o)o.
 function launchConfetti(){const colors=["#f1b15f","#c47a3c","#6aa66a","#5c8dc7","#d26b6b","#fff0c7"];for(let i=0;i<48;i++){const p=document.createElement("div");p.className="confetti";p.style.left=Math.random()*100+"vw";p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDelay=(Math.random()*0.35)+"s";p.style.animationDuration=(1.3+Math.random()*1.1)+"s";document.body.appendChild(p);setTimeout(()=>p.remove(),2600)}}
 
 /* Google sync */
-function saveApiUrl(){const url=document.getElementById("apiUrl")?.value.trim();localStorage.setItem(API_KEY,url);toast("已儲存 Google 同步網址")}
+function saveApiUrl(){const url=document.getElementById("apiUrl")?.value.trim();localStorage.setItem(API_KEY,url);toast("已記住雲端網址，以後不用重貼")}
 function clearApiUrl(){localStorage.removeItem(API_KEY);setVal("apiUrl","");toast("已清除網址")}
 async function saveToCloud(){
   const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}
@@ -554,5 +554,22 @@ function renderAll(){
   setVal("apiUrl",localStorage.getItem(API_KEY)||"");
   renderSelects();renderTeacher();renderClassroom();renderAttendanceOverview();renderDisplay();renderCalendar();renderLessonLogs();renderCoursePlans();renderLevelsManage();renderManage();renderStudentPoolForClass();
 }
+
+function hideSplashSoon(){
+  const s=document.getElementById("appSplash");
+  if(!s)return;
+  setTimeout(()=>s.classList.add("hide"),650);
+}
+function toggleDisplayBoost(){
+  document.body.classList.toggle("displayModeBoost");
+  toast(document.body.classList.contains("displayModeBoost")?"展示模式已放大":"展示模式已恢復");
+}
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+
 persist();
 renderAll();
+hideSplashSoon();

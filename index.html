@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V5 穩定核心版</title>
+<title>Battle 排笛教學管理系統 V8 App版</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -56,12 +56,45 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 .member-item input{width:auto}
 .student-pool-item{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid var(--line);border-radius:14px;background:#fffaf5;margin-bottom:8px}
 
+
+.app-splash{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;background:linear-gradient(160deg,#2d241f,#c47a3c 60%,#fff0c7);color:white;text-align:center;transition:opacity .45s ease,visibility .45s ease}
+.app-splash.hide{opacity:0;visibility:hidden}
+.splash-card{padding:28px;border-radius:36px;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.splash-logo{width:110px;height:110px;border-radius:32px;background:#fff;display:grid;place-items:center;margin:0 auto 16px;font-size:64px}
+.splash-title{font-size:34px;font-weight:1000;margin:0}
+.splash-sub{font-size:15px;margin-top:8px;opacity:.9}
+.displayModeBoost .display-rank{font-size:30px;padding:20px}
+.displayModeBoost .rank-no{font-size:38px;min-width:64px;height:64px}
+.displayModeBoost .big-draw{font-size:58px}
+.displayModeBoost .tile{min-height:86px}
+.display-rank:first-child{animation:rankGlow 1.2s ease-in-out infinite alternate}
+@keyframes rankGlow{from{transform:scale(1);box-shadow:0 8px 20px rgba(196,122,60,.12)}to{transform:scale(1.015);box-shadow:0 12px 30px rgba(196,122,60,.26)}}
+.install-tip{font-size:12px;color:var(--muted);font-weight:900;margin-top:6px}
+@media (display-mode: standalone){header{padding-top:calc(12px + env(safe-area-inset-top))}body{background:#fff8ef}}
+
 </style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c47a3c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Battle排笛">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+
 </head>
 <body>
+
+<div id="appSplash" class="app-splash">
+  <div class="splash-card">
+    <div class="splash-logo">🐶</div>
+    <h1 class="splash-title">Battle 排笛系統</h1>
+    <div class="splash-sub">等級・點名・排行榜・展示模式</div>
+  </div>
+</div>
+
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V7｜多班級成員制＋點名總覽＋穩定核心</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V8｜App化＋遊戲展示＋多班級</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -86,7 +119,7 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 </header>
 <main>
 <section id="syncView" class="hidden">
-  <div class="card"><h2>Google 試算表同步設定</h2><p class="small">貼上 Google Apps Script Web App URL 後，可手動讀取／儲存到 Google 試算表。未設定時，本系統仍可離線使用。</p><label>Google Apps Script Web App URL</label><input id="apiUrl" placeholder="貼上 /exec 結尾的網址"><div class="controls"><button class="primary" onclick="saveApiUrl()">儲存網址</button><button onclick="loadFromCloud()">讀取雲端</button><button class="good" onclick="saveToCloud()">儲存雲端</button><button onclick="clearApiUrl()">清除網址</button></div></div>
+  <div class="card"><h2>Google 試算表同步設定</h2><div class='install-tip'>手機/iPad 建議用 Safari 開啟後「分享 → 加入主畫面」，會像 App 一樣使用。</div><p class="small">貼上 Google Apps Script Web App URL 後，可手動讀取／儲存到 Google 試算表。未設定時，本系統仍可離線使用。</p><label>Google Apps Script Web App URL</label><input id="apiUrl" placeholder="貼上 /exec 結尾的網址"><div class="controls"><button class="primary" onclick="saveApiUrl()">儲存網址</button><button onclick="loadFromCloud()">讀取雲端</button><button class="good" onclick="saveToCloud()">儲存雲端</button><button onclick="clearApiUrl()">清除網址</button></div></div>
 </section>
 
 <section id="teacherView">
@@ -123,7 +156,7 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 </section>
 
 <section id="displayView" class="hidden">
-  <div class="card"><div class="section-title"><h2>展示模式</h2><div class="toolbar"><button onclick="drawRandomStudent()">抽籤</button><button class="primary" onclick="setView('classroom')">回老師控制台</button></div></div><p class="small">適合投影，只顯示排行榜、抽籤與等級地圖。</p></div><div class="big-draw" id="displayDraw">🎲 準備抽籤</div><div class="grid"><div class="card"><h2 id="displayClassTitle">班級展示</h2><p id="displayClassSub" class="small"></p><div id="displayRank"></div></div><div class="card"><h2>班級等級地圖</h2><div class="map-wrap"><div id="displayBoard" class="board"></div></div></div></div>
+  <div class="card"><div class="section-title"><h2>展示模式</h2><div class="toolbar"><button onclick="drawRandomStudent()">抽籤</button><button onclick="toggleDisplayBoost()">投影放大</button><button class="primary" onclick="setView('classroom')">回老師控制台</button></div></div><p class="small">適合投影，只顯示排行榜、抽籤與等級地圖。</p></div><div class="big-draw" id="displayDraw">🎲 準備抽籤</div><div class="grid"><div class="card"><h2 id="displayClassTitle">班級展示</h2><p id="displayClassSub" class="small"></p><div id="displayRank"></div></div><div class="card"><h2>班級等級地圖</h2><div class="map-wrap"><div id="displayBoard" class="board"></div></div></div></div>
 </section>
 
 <section id="studentView" class="hidden">
