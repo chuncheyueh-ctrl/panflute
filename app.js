@@ -25,7 +25,7 @@ const defaultData={
   schools:[{id:"s1",name:"學校一"},{id:"s2",name:"學校二"},{id:"s3",name:"學校三"},{id:"s4",name:"學校四"}],
   grades:[{id:"g3",name:"三年級"},{id:"g4",name:"四年級"}],
   levels:JSON.parse(JSON.stringify(defaultLevels)),
-  students:[], memberships:[], attendance:[], attendanceDates:[], points:[], events:[], lessonLogs:[], coursePlans:[], classNotes:[],
+  students:[], memberships:[], attendance:[], attendanceDates:[], points:[], events:[], lessonLogs:[], coursePlans:[], classNotes:[], noteQuizHistory:[],
   selectedId:null, selectedLevel:1,
   filter:{schoolId:"s1",gradeId:"g3"},
   calendar:{schoolId:"s1",scope:"school",month:""},
@@ -49,7 +49,7 @@ function normalize(d){
   d.schools=Array.isArray(d.schools)&&d.schools.length?d.schools:JSON.parse(JSON.stringify(defaultData.schools));
   d.grades=Array.isArray(d.grades)&&d.grades.length?d.grades:JSON.parse(JSON.stringify(defaultData.grades));
   d.levels=Array.isArray(d.levels)&&d.levels.length>1?d.levels:JSON.parse(JSON.stringify(defaultLevels));
-  ["students","memberships","attendance","attendanceDates","points","events","lessonLogs","coursePlans","classNotes"].forEach(k=>d[k]=Array.isArray(d[k])?d[k]:[]);
+  ["students","memberships","attendance","attendanceDates","points","events","lessonLogs","coursePlans","classNotes","noteQuizHistory"].forEach(k=>d[k]=Array.isArray(d[k])?d[k]:[]);
   d.filter=d.filter||{schoolId:d.schools[0].id,gradeId:d.grades[0].id};
   if(!d.filter.schoolId)d.filter.schoolId=d.schools[0].id;
   if(!d.filter.gradeId)d.filter.gradeId=d.grades[0].id;
@@ -88,7 +88,7 @@ function optionHTML(list,selectedId){return list.map(x=>`<option value="${x.id}"
 function avatarHTML(s,cls="avatar"){return `<div class="${cls}">${s?.photo?`<img src="${s.photo}">`:initials(s?.name)}</div>`}
 
 function setView(v){
-  ["sync","teacher","classroom","display","student","calendar","lessonLog","coursePlan","levels","manage"].forEach(name=>{
+  ["sync","teacher","classroom","display","student","noteQuiz","calendar","lessonLog","coursePlan","levels","manage"].forEach(name=>{
     const el=document.getElementById(name+"View"); if(el)el.classList.toggle("hidden",name!==v);
   });
   const menu=document.getElementById("mainMenu"); if(menu)menu.value=v;
@@ -550,9 +550,27 @@ async function loadFromCloud(){
 function exportData(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="battle-panflute-v5-backup.json";a.click()}
 function importData(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{data=normalize(JSON.parse(r.result));saveAndRender("匯入完成")};r.readAsText(file);e.target.value=""}
 
+const NOTE_BANK = [
+  {id:"G3",label:"低音G ㄙㄛ",step:-5},{id:"A3",label:"低音A ㄌㄚ",step:-4},{id:"B3",label:"低音B ㄒㄧ",step:-3},{id:"C4",label:"中央C ㄉㄛ",step:-2},{id:"D4",label:"D ㄖㄨㄟ",step:-1},{id:"E4",label:"E ㄇㄧ",step:0},{id:"F4",label:"F ㄈㄚ",step:1},{id:"G4",label:"G ㄙㄛ",step:2},{id:"A4",label:"A ㄌㄚ",step:3},{id:"B4",label:"B ㄒㄧ",step:4},{id:"C5",label:"高音C ㄉㄛ",step:5},{id:"D5",label:"高音D ㄖㄨㄟ",step:6},{id:"E5",label:"高音E ㄇㄧ",step:7},{id:"F5",label:"高音F ㄈㄚ",step:8},{id:"G5",label:"高音G ㄙㄛ",step:9}
+];
+let quizState={active:false,total:0,index:0,correct:0,streak:0,points:0,current:null,answered:false,studentId:null,selectedIds:[]};
+function renderNoteRangeChecks(){const box=document.getElementById("noteRangeChecks");if(!box)return;box.innerHTML=NOTE_BANK.map(n=>`<label class="note-check"><input type="checkbox" class="noteRangeInput" value="${n.id}" checked> ${n.label}</label>`).join("");}
+function selectNoteRange(type){const sets={low:["G3","A3","B3","C4"],basic:["C4","D4","E4","F4","G4"],full:NOTE_BANK.map(n=>n.id)};document.querySelectorAll(".noteRangeInput").forEach(i=>i.checked=sets[type].includes(i.value));}
+function clearNoteRange(){document.querySelectorAll(".noteRangeInput").forEach(i=>i.checked=false)}
+function selectedNotePool(){const ids=[...document.querySelectorAll(".noteRangeInput:checked")].map(i=>i.value);return NOTE_BANK.filter(n=>ids.includes(n.id));}
+function startNoteQuiz(){const pool=selectedNotePool();if(!pool.length){toast("請至少勾選一個音");return}const totalSel=document.getElementById("quizTotal")?.value||"10";const total=totalSel==="custom"?(parseInt(document.getElementById("quizCustomTotal")?.value)||10):parseInt(totalSel);const s=selected();quizState={active:true,total,index:0,correct:0,streak:0,points:0,current:null,answered:false,studentId:s?.id||null,selectedIds:pool.map(n=>n.id)};nextNoteQuestion();toast("測驗開始");}
+function nextNoteQuestion(){if(!quizState.active){startNoteQuiz();return}if(quizState.index>=quizState.total){finishNoteQuiz();return}const pool=NOTE_BANK.filter(n=>quizState.selectedIds.includes(n.id));quizState.current=pool[Math.floor(Math.random()*pool.length)];quizState.answered=false;quizState.index++;setText("quizFeedback","請選出正確音名");renderStaffNote(quizState.current);renderQuizOptions();renderQuizStats();}
+function answerNote(id){if(!quizState.active||quizState.answered||!quizState.current)return;quizState.answered=true;if(id===quizState.current.id){quizState.correct++;quizState.streak++;let gain=1;if(quizState.streak===3)gain+=2;if(quizState.streak===5)gain+=5;quizState.points+=gain;setText("quizFeedback",`✅ 正確！${gain>1?"連擊加成 ":""}+${gain}`);}else{quizState.streak=0;setText("quizFeedback",`❌ 錯了，正確答案：${quizState.current.label}`);}renderQuizStats();setTimeout(()=>{if(quizState.active)nextNoteQuestion();},750);}
+function finishNoteQuiz(){if(!quizState.active){toast("目前沒有進行中的測驗");return}quizState.active=false;const s=data.students.find(x=>x.id===quizState.studentId)||selected();if(s){s.points=(parseInt(s.points)||0)+quizState.points;data.points.push({id:uid(),date:todayStr(),studentId:s.id,delta:quizState.points,reason:"音符閃卡測驗",schoolId:data.filter.schoolId,gradeId:data.filter.gradeId});data.noteQuizHistory=data.noteQuizHistory||[];data.noteQuizHistory.push({id:uid(),date:todayStr(),studentId:s.id,schoolId:data.filter.schoolId,gradeId:data.filter.gradeId,total:quizState.total,correct:quizState.correct,points:quizState.points,range:quizState.selectedIds.join(",")});}saveAndRender(`測驗完成：答對 ${quizState.correct}/${quizState.total}，加 ${quizState.points} 點`);setText("quizFeedback",`🎉 測驗完成！答對 ${quizState.correct}/${quizState.total}，獲得 +${quizState.points}`);}
+function renderQuizOptions(){const box=document.getElementById("quizOptions");if(!box)return;const pool=NOTE_BANK.filter(n=>quizState.selectedIds.includes(n.id));let opts=[quizState.current,...pool.filter(n=>n.id!==quizState.current.id).sort(()=>Math.random()-0.5).slice(0,5)].sort(()=>Math.random()-0.5);box.innerHTML=opts.map(n=>`<button onclick="answerNote('${n.id}')">${n.label}</button>`).join("");}
+function renderQuizStats(){setText("quizNow",`${Math.min(quizState.index,quizState.total)}/${quizState.total}`);setText("quizCorrect",quizState.correct);setText("quizStreak",quizState.streak);setText("quizPoints",quizState.points);}
+function renderStaffNote(note){const svg=document.getElementById("noteStaffSvg");if(!svg)return;if(!note){svg.innerHTML='<text x="340" y="130" text-anchor="middle" font-size="24" fill="#7d6b60">請開始測驗</text>';return}const x=355,baseY=130,gap=12,y=baseY-note.step*(gap/2);let lines="";for(let i=0;i<5;i++){let ly=baseY-i*gap;lines+=`<line x1="120" y1="${ly}" x2="560" y2="${ly}" stroke="#2d241f" stroke-width="2"/>`;}let ledgerYs=[];if(note.step<=-2){for(let st=-2;st>=note.step;st-=2)ledgerYs.push(baseY-st*(gap/2));}if(note.step>=6){for(let st=6;st<=note.step;st+=2)ledgerYs.push(baseY-st*(gap/2));}const ledgers=ledgerYs.map(ly=>`<line x1="${x-32}" y1="${ly}" x2="${x+32}" y2="${ly}" stroke="#2d241f" stroke-width="2"/>`).join("");svg.innerHTML=`<rect x="0" y="0" width="680" height="260" rx="18" fill="#fffaf5"/><text x="135" y="132" font-size="82" font-family="serif" fill="#2d241f">𝄞</text>${lines}${ledgers}<ellipse cx="${x}" cy="${y}" rx="18" ry="13" transform="rotate(-18 ${x} ${y})" fill="#2d241f"/><text x="340" y="225" text-anchor="middle" font-size="18" fill="#7d6b60">高音譜號｜請選出音名＋注音</text>`;}
+function renderNoteQuiz(){const sel=document.getElementById("quizStudentSelect");if(!sel)return;sel.innerHTML=filteredStudents().map(s=>`<option value="${s.id}" ${s.id===data.selectedId?'selected':''}>${escapeAttr(s.name)}｜Lv.${s.level}</option>`).join("");if(!document.getElementById("noteRangeChecks")?.innerHTML)renderNoteRangeChecks();if(!quizState.current)renderStaffNote(null);renderQuizStats();renderQuizHistory();}
+function renderQuizHistory(){const box=document.getElementById("quizHistoryList");if(!box)return;const rows=(data.noteQuizHistory||[]).filter(h=>h.schoolId===data.filter.schoolId&&h.gradeId===data.filter.gradeId).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);box.innerHTML=rows.map(h=>{const s=data.students.find(x=>x.id===h.studentId);const rate=h.total?Math.round(h.correct/h.total*100):0;return `<div class="log-card"><div class="name">${escapeAttr(s?.name||"學生")}｜${h.correct}/${h.total}｜${rate}%｜+${h.points}</div><div class="meta">${h.date}｜範圍：${escapeAttr(h.range||"")}</div></div>`;}).join("")||'<p class="small">尚無測驗紀錄。</p>';}
+
 function renderAll(){
   setVal("apiUrl",localStorage.getItem(API_KEY)||"");
-  renderSelects();renderTeacher();renderClassroom();renderAttendanceOverview();renderDisplay();renderCalendar();renderLessonLogs();renderCoursePlans();renderLevelsManage();renderManage();renderStudentPoolForClass();
+  renderSelects();renderTeacher();renderClassroom();renderAttendanceOverview();renderNoteQuiz();renderDisplay();renderCalendar();renderLessonLogs();renderCoursePlans();renderLevelsManage();renderManage();renderStudentPoolForClass();
 }
 
 function hideSplashSoon(){

@@ -3,10 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V8 App版</title>
-  <link rel="apple-touch-icon" href="icon-192-v2.png">
-<link rel="icon" href="icon-192-v2.png">
-  
+<title>Battle 排笛教學管理系統 V9 音符測驗版</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -75,6 +72,12 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 .install-tip{font-size:12px;color:var(--muted);font-weight:900;margin-top:6px}
 @media (display-mode: standalone){header{padding-top:calc(12px + env(safe-area-inset-top))}body{background:#fff8ef}}
 
+.note-quiz-card{background:linear-gradient(180deg,#fff,#fffaf5);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow)}
+.note-range-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px;margin-top:8px}
+.note-check{display:flex;align-items:center;gap:8px;background:#fff7ef;border:1px solid var(--line);border-radius:14px;padding:10px;font-weight:1000}.note-check input{width:auto}
+.staff-wrap{background:#fff;border:1px solid var(--line);border-radius:22px;padding:12px;overflow:auto;margin:12px 0}.staff-svg{width:100%;max-width:680px;min-width:330px;display:block;margin:auto}
+.quiz-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-top:12px}.quiz-options button{border-radius:18px;padding:16px;font-size:18px}.quiz-feedback{font-size:22px;font-weight:1000;text-align:center;min-height:36px;margin-top:10px}.quiz-scorebar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(max-width:800px){.quiz-scorebar{grid-template-columns:repeat(2,1fr)}.quiz-options button{font-size:16px;padding:14px}}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -97,13 +100,14 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V8｜App化＋遊戲展示＋多班級</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V9｜音符閃卡測驗＋App化＋多班級</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
         <option value="classroom">班級控制台</option>
         <option value="display">展示模式</option>
         <option value="student">學生個人頁</option>
+        <option value="noteQuiz">音符測驗</option>
         <option value="calendar">行事曆</option>
         <option value="lessonLog">上課紀錄</option>
         <option value="coursePlan">學年課程總覽</option>
@@ -164,6 +168,17 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 
 <section id="studentView" class="hidden">
   <div class="card"><div class="three"><div><label>學校</label><select id="studentSchool" onchange="setFilter('schoolId',this.value)"></select></div><div><label>年級 / 班級</label><select id="studentGrade" onchange="setFilter('gradeId',this.value)"></select></div><div><label>學生</label><select id="studentSelect" onchange="selectStudent(this.value)"></select></div></div></div><div class="card" style="text-align:center"><div id="studentAvatar" class="avatar big"></div><h1 id="studentName"></h1><div class="stage" id="studentStage"></div><div class="big-level" id="studentLevel"></div><div class="progress"><div class="bar" id="studentBar"></div></div><div class="reward" id="studentReward"></div><h2>下一步任務</h2><div id="studentObjectives" class="objectives" style="text-align:left"></div><p class="small" id="studentNotes"></p></div>
+</section>
+
+<section id="noteQuizView" class="hidden">
+  <div class="card">
+    <div class="section-title"><div><h2>音符閃卡測驗</h2><p class="small">高音譜號五線譜｜可勾選音域與題數｜音名＋注音：C ㄉㄛ、D ㄖㄨㄟ、E ㄇㄧ、F ㄈㄚ、G ㄙㄛ、A ㄌㄚ、B ㄒㄧ</p></div><div class="toolbar"><button onclick="selectNoteRange('low')">低音G–中央C</button><button onclick="selectNoteRange('basic')">C–G</button><button onclick="selectNoteRange('full')">全選G–G</button><button onclick="clearNoteRange()">清空</button></div></div>
+    <div class="three"><div><label>目前作答學生</label><select id="quizStudentSelect" onchange="selectStudent(this.value)"></select></div><div><label>題數</label><select id="quizTotal"><option value="5">5題</option><option value="10" selected>10題</option><option value="20">20題</option><option value="custom">自訂</option></select></div><div><label>自訂題數</label><input id="quizCustomTotal" type="number" min="1" value="10"></div></div>
+    <label>勾選考試音域（最低：高音譜號下加區 G；最高：上加一間 G）</label><div id="noteRangeChecks" class="note-range-grid"></div>
+    <div class="controls" style="margin-top:12px"><button class="primary" onclick="startNoteQuiz()">開始測驗</button><button onclick="nextNoteQuestion()">跳下一題</button><button onclick="finishNoteQuiz()">結束並記錄</button></div>
+  </div>
+  <div class="note-quiz-card"><div class="quiz-scorebar"><div class="stat"><div class="num" id="quizNow">0/0</div><div class="cap">目前題數</div></div><div class="stat"><div class="num" id="quizCorrect">0</div><div class="cap">答對</div></div><div class="stat"><div class="num" id="quizStreak">0</div><div class="cap">連擊</div></div><div class="stat"><div class="num" id="quizPoints">0</div><div class="cap">本次加分</div></div></div><div class="staff-wrap"><svg id="noteStaffSvg" class="staff-svg" viewBox="0 0 680 260" aria-label="五線譜音符"></svg></div><div class="quiz-feedback" id="quizFeedback">請先選擇音域並開始測驗</div><div id="quizOptions" class="quiz-options"></div></div>
+  <div class="card"><h2>測驗紀錄</h2><div id="quizHistoryList" class="log-list"></div></div>
 </section>
 
 <section id="calendarView" class="hidden">
