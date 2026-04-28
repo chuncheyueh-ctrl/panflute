@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V11 能力指標版</title>
+<title>Battle 排笛教學管理系統 V13 安全雲端版</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -99,6 +99,17 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 .ability-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
 .ability-pill{border:1px solid var(--line);border-radius:999px;background:#fff;padding:8px 10px;font-weight:1000;text-align:center}
 
+
+.reward-shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.reward-card{border:1px solid var(--line);border-radius:22px;background:#fffaf5;box-shadow:var(--shadow);overflow:hidden}
+.reward-img{height:150px;background:#efe1d3;display:grid;place-items:center;font-size:52px;color:#7d6b60;overflow:hidden}
+.reward-img img{width:100%;height:100%;object-fit:cover}
+.reward-body{padding:12px}.reward-price{font-size:24px;font-weight:1000;color:var(--brand)}.reward-stock{font-size:13px;color:var(--muted);font-weight:900}
+.reward-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.redemption-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:16px;background:#fffaf5;margin-bottom:8px}
+.reward-thumb{width:48px;height:48px;border-radius:14px;background:#efe1d3;display:grid;place-items:center;overflow:hidden;flex:0 0 auto}
+.reward-thumb img{width:100%;height:100%;object-fit:cover}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -121,7 +132,7 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V11｜六角形能力指標＋行事曆＋音符測驗</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V13｜安全雲端＋獎品兌換＋能力指標</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -129,6 +140,7 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
         <option value="display">展示模式</option>
         <option value="student">學生個人頁</option>
         <option value="noteQuiz">音符測驗</option>
+        <option value="rewardShop">獎品兌換</option>
         <option value="calendar">行事曆</option>
         <option value="lessonLog">上課紀錄</option>
         <option value="coursePlan">學年課程總覽</option>
@@ -138,7 +150,7 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
       </select>
       <button onclick="fullRender()">重新整理</button>
       <button onclick="loadFromCloud()">讀取雲端</button>
-      <button class="primary" onclick="saveToCloud()">儲存雲端</button>
+      <button class="primary" onclick="safeSaveToCloud()">安全儲存</button>
       <button onclick="exportData()">匯出備份</button>
       <label class="btn" for="importFile">匯入</label>
       <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importData(event)">
@@ -147,7 +159,7 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
 </header>
 <main>
 <section id="syncView" class="hidden">
-  <div class="card"><h2>Google 試算表同步設定</h2><div class='install-tip'>手機/iPad 建議用 Safari 開啟後「分享 → 加入主畫面」，會像 App 一樣使用。</div><p class="small">貼上 Google Apps Script Web App URL 後，可手動讀取／儲存到 Google 試算表。未設定時，本系統仍可離線使用。</p><label>Google Apps Script Web App URL</label><input id="apiUrl" placeholder="貼上 /exec 結尾的網址"><div class="controls"><button class="primary" onclick="saveApiUrl()">儲存網址</button><button onclick="loadFromCloud()">讀取雲端</button><button class="good" onclick="saveToCloud()">儲存雲端</button><button onclick="clearApiUrl()">清除網址</button></div></div>
+  <div class="card"><h2>Google 試算表同步設定</h2><p class='small'>V13 安全版：預設請用「安全儲存（合併）」。系統會先讀取雲端、合併資料並建立備份，避免空資料覆蓋雲端。</p><div class='install-tip'>手機/iPad 建議用 Safari 開啟後「分享 → 加入主畫面」，會像 App 一樣使用。</div><p class="small">貼上 Google Apps Script Web App URL 後，可手動讀取／儲存到 Google 試算表。未設定時，本系統仍可離線使用。</p><label>Google Apps Script Web App URL</label><input id="apiUrl" placeholder="貼上 /exec 結尾的網址"><div class="controls"><button class="primary" onclick="saveApiUrl()">儲存網址</button><button onclick="loadFromCloud()">讀取雲端</button><button class="good" onclick="safeSaveToCloud()">安全儲存（合併）</button><button class="warn" onclick="forceSaveToCloud()">強制覆蓋</button><button onclick="clearApiUrl()">清除網址</button></div></div>
 </section>
 
 <section id="teacherView">
@@ -208,6 +220,14 @@ label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12p
   </div>
   <div class="note-quiz-card"><div class="quiz-scorebar"><div class="stat"><div class="num" id="quizNow">0/0</div><div class="cap">目前題數</div></div><div class="stat"><div class="num" id="quizCorrect">0</div><div class="cap">答對</div></div><div class="stat"><div class="num" id="quizStreak">0</div><div class="cap">連擊</div></div><div class="stat"><div class="num" id="quizPoints">0</div><div class="cap">本次加分</div></div></div><div class="staff-wrap"><svg id="noteStaffSvg" class="staff-svg" viewBox="0 0 680 260" aria-label="五線譜音符"></svg></div><div class="quiz-feedback" id="quizFeedback">請先選擇音域並開始測驗</div><div id="quizOptions" class="quiz-options"></div></div>
   <div class="card"><h2>測驗紀錄</h2><div id="quizHistoryList" class="log-list"></div></div>
+</section>
+
+
+<section id="rewardShopView" class="hidden">
+  <div class="card"><div class="section-title"><div><h2>獎品兌換</h2><p class="small">選學生 → 點獎品 → 自動扣點、扣庫存並留下兌換紀錄。</p></div><div class="toolbar"><button class="primary" onclick="clearRewardForm()">新增獎品</button><button onclick="renderRewardShop()">重新整理</button></div></div>
+    <div class="three"><div><label>目前班級</label><div class="reward" id="rewardClassInfo" style="margin-top:0"></div></div><div><label>兌換學生</label><select id="rewardStudentSelect" onchange="selectStudent(this.value);renderRewardShop()"></select></div><div><label>學生點數</label><div class="stat" style="padding:12px"><div class="num" id="rewardStudentPoints">0</div><div class="cap">可用點數</div></div></div></div>
+  </div>
+  <div class="grid"><div><div class="card"><h2>新增 / 修改獎品</h2><input id="rewardId" type="hidden"><label>獎品名稱</label><input id="rewardName" placeholder="例如：糖果、小貼紙、神秘禮物"><div class="two"><div><label>兌換點數</label><input id="rewardCost" type="number" min="0" value="5"></div><div><label>數量 / 庫存</label><input id="rewardStock" type="number" min="-1" value="10"></div></div><p class="small">庫存填 -1 代表無限量。</p><label>獎品照片</label><input id="rewardPhotoInput" type="file" accept="image/*" onchange="loadRewardPhoto(event)"><div class="reward-img" id="rewardPhotoPreview">🎁</div><label>備註</label><textarea id="rewardNotes" rows="3" placeholder="例如：限量、每人一次、兌換規則"></textarea><div class="controls"><button class="primary" onclick="saveReward()">儲存獎品</button><button onclick="clearRewardForm()">清空</button><button class="warn" onclick="deleteReward()">刪除獎品</button></div></div><div class="card"><h2>兌換紀錄</h2><div id="redemptionList"></div></div></div><div class="card"><h2>獎品商店</h2><div id="rewardShopList" class="reward-shop-grid"></div></div></div>
 </section>
 
 <section id="calendarView" class="hidden">

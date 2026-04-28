@@ -25,7 +25,7 @@ const defaultData={
   schools:[{id:"s1",name:"學校一"},{id:"s2",name:"學校二"},{id:"s3",name:"學校三"},{id:"s4",name:"學校四"}],
   grades:[{id:"g3",name:"三年級"},{id:"g4",name:"四年級"}],
   levels:JSON.parse(JSON.stringify(defaultLevels)),
-  students:[], memberships:[], attendance:[], attendanceDates:[], points:[], events:[], lessonLogs:[], coursePlans:[], classNotes:[], noteQuizHistory:[],
+  students:[], memberships:[], attendance:[], attendanceDates:[], points:[], events:[], lessonLogs:[], coursePlans:[], classNotes:[], noteQuizHistory:[], rewards:[], redemptions:[],
   selectedId:null, selectedLevel:1,
   filter:{schoolId:"s1",gradeId:"g3"},
   calendar:{schoolId:"s1",scope:"school",month:"",selectedDate:""},
@@ -49,7 +49,7 @@ function normalize(d){
   d.schools=Array.isArray(d.schools)&&d.schools.length?d.schools:JSON.parse(JSON.stringify(defaultData.schools));
   d.grades=Array.isArray(d.grades)&&d.grades.length?d.grades:JSON.parse(JSON.stringify(defaultData.grades));
   d.levels=Array.isArray(d.levels)&&d.levels.length>1?d.levels:JSON.parse(JSON.stringify(defaultLevels));
-  ["students","memberships","attendance","attendanceDates","points","events","lessonLogs","coursePlans","classNotes","noteQuizHistory"].forEach(k=>d[k]=Array.isArray(d[k])?d[k]:[]);
+  ["students","memberships","attendance","attendanceDates","points","events","lessonLogs","coursePlans","classNotes","noteQuizHistory","rewards","redemptions"].forEach(k=>d[k]=Array.isArray(d[k])?d[k]:[]);
   d.filter=d.filter||{schoolId:d.schools[0].id,gradeId:d.grades[0].id};
   if(!d.filter.schoolId)d.filter.schoolId=d.schools[0].id;
   if(!d.filter.gradeId)d.filter.gradeId=d.grades[0].id;
@@ -89,7 +89,7 @@ function optionHTML(list,selectedId){return list.map(x=>`<option value="${x.id}"
 function avatarHTML(s,cls="avatar"){return `<div class="${cls}">${s?.photo?`<img src="${s.photo}">`:initials(s?.name)}</div>`}
 
 function setView(v){
-  ["sync","teacher","classroom","display","student","noteQuiz","calendar","lessonLog","coursePlan","levels","manage"].forEach(name=>{
+  ["sync","teacher","classroom","display","student","noteQuiz","rewardShop","calendar","lessonLog","coursePlan","levels","manage"].forEach(name=>{
     const el=document.getElementById(name+"View"); if(el)el.classList.toggle("hidden",name!==v);
   });
   const menu=document.getElementById("mainMenu"); if(menu)menu.value=v;
@@ -632,14 +632,19 @@ function launchConfetti(){const colors=["#f1b15f","#c47a3c","#6aa66a","#5c8dc7",
 /* Google sync */
 function saveApiUrl(){const url=document.getElementById("apiUrl")?.value.trim();localStorage.setItem(API_KEY,url);toast("已記住雲端網址，以後不用重貼")}
 function clearApiUrl(){localStorage.removeItem(API_KEY);setVal("apiUrl","");toast("已清除網址")}
-async function saveToCloud(){
-  const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}
-  try{persist();const res=await fetch(url,{method:"POST",body:JSON.stringify({action:"saveAll",payload:data})});const j=await res.json();if(!j.ok)throw new Error(j.error||"同步失敗");toast("已儲存到 Google 試算表")}catch(e){console.error(e);toast("同步失敗，請檢查 Apps Script 權限")}
-}
-async function loadFromCloud(){
-  const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}
-  try{const res=await fetch(url+"?action=loadAll");const j=await res.json();if(!j.ok)throw new Error(j.error||"讀取失敗");data=normalize(j.payload);persist();renderAll();toast("已從 Google 試算表讀取")}catch(e){console.error(e);toast("讀取失敗，請檢查 Apps Script 權限")}
-}
+
+
+
+function dataCountSummary(d){d=d||{};const keys=["students","memberships","attendance","attendanceDates","points","events","lessonLogs","coursePlans","classNotes","noteQuizHistory","rewards","redemptions"];const counts={};keys.forEach(k=>counts[k]=Array.isArray(d[k])?d[k].length:0);counts.total=keys.reduce((sum,k)=>sum+counts[k],0);return counts}
+function mergeById(cloudArr=[],localArr=[]){const map=new Map();(cloudArr||[]).forEach(x=>{if(x&&x.id)map.set(x.id,x)});(localArr||[]).forEach(x=>{if(!x||!x.id)return;const old=map.get(x.id);map.set(x.id,old?{...old,...x}:x)});return Array.from(map.values())}
+function mergeCloudData(cloud,local){cloud=normalize(cloud||{});local=normalize(local||{});const merged={...cloud,...local};["schools","grades","levels","students","memberships","attendance","attendanceDates","points","events","lessonLogs","coursePlans","classNotes","noteQuizHistory","rewards","redemptions"].forEach(k=>{merged[k]=mergeById(cloud[k]||[],local[k]||[])});merged.filter=local.filter||cloud.filter;merged.calendar=local.calendar||cloud.calendar;merged.logFilter=local.logFilter||cloud.logFilter;merged.courseFilter=local.courseFilter||cloud.courseFilter;merged.selectedId=local.selectedId||cloud.selectedId;merged.selectedLevel=local.selectedLevel||cloud.selectedLevel||1;merged.updatedAt=Date.now();return normalize(merged)}
+async function fetchCloudData(){const url=localStorage.getItem(API_KEY);if(!url)throw new Error("NO_URL");const res=await fetch(url+"?action=loadAll&ts="+Date.now());const j=await res.json();if(!j.ok)throw new Error(j.error||"讀取失敗");return normalize(j.payload||{})}
+async function postCloudData(payload,mode="safe"){const url=localStorage.getItem(API_KEY);if(!url)throw new Error("NO_URL");const res=await fetch(url,{method:"POST",body:JSON.stringify({action:"saveAll",payload,mode})});const j=await res.json();if(!j.ok)throw new Error(j.error||"儲存失敗");return j}
+async function saveToCloud(){return safeSaveToCloud()}
+async function safeSaveToCloud(){const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}try{persist();const local=normalize(data);let cloud=normalize({});try{cloud=await fetchCloudData()}catch(e){cloud=normalize({})}const lc=dataCountSummary(local),cc=dataCountSummary(cloud);if(lc.total===0&&cc.total>0){alert("偵測到本機是空資料，但雲端有資料。已取消儲存，避免把雲端清空。請先按「讀取雲端」。");return}if(lc.total<Math.max(3,Math.floor(cc.total*0.5))){const ok=confirm(`安全提醒：本機資料量(${lc.total})明顯少於雲端(${cc.total})。\\n建議先按「讀取雲端」。\\n\\n仍要進行安全合併儲存嗎？`);if(!ok)return}const merged=mergeCloudData(cloud,local);await postCloudData(merged,"safeMerge");data=normalize(merged);persist();renderAll();toast("已安全合併並儲存雲端")}catch(e){console.error(e);if(e.message==="NO_URL"){toast("請先貼上 Apps Script 網址");setView("sync")}else toast("安全儲存失敗，請檢查 Apps Script 權限")}}
+async function forceSaveToCloud(){const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}const summary=dataCountSummary(data);const ok=confirm(`危險操作：強制覆蓋會用本機資料取代雲端。\\n目前本機資料總數：${summary.total}\\n\\n確定要強制覆蓋嗎？`);if(!ok)return;try{persist();await postCloudData(normalize(data),"forceOverwrite");toast("已強制覆蓋雲端")}catch(e){console.error(e);toast("強制覆蓋失敗")}}
+async function loadFromCloud(){const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}try{const cloud=await fetchCloudData();const cc=dataCountSummary(cloud),lc=dataCountSummary(data);if(cc.total===0&&lc.total>0){const ok=confirm("雲端目前看起來是空的。是否仍要讀取並覆蓋本機？\\n建議取消，避免本機資料被空資料覆蓋。");if(!ok)return}data=normalize(cloud);persist();renderAll();toast("已從 Google 試算表讀取")}catch(e){console.error(e);if(e.message==="NO_URL"){toast("請先貼上 Apps Script 網址");setView("sync")}else toast("讀取失敗，請檢查 Apps Script 權限")}}
+
 function exportData(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="battle-panflute-v5-backup.json";a.click()}
 function importData(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{data=normalize(JSON.parse(r.result));saveAndRender("匯入完成")};r.readAsText(file);e.target.value=""}
 
@@ -760,9 +765,23 @@ function renderAbilityCharts(){
   renderAbilitySummary("studentAbilitySummary",s);
 }
 
+
+let pendingRewardPhoto="";
+function rewardStudent(){const id=document.getElementById("rewardStudentSelect")?.value||data.selectedId;return data.students.find(s=>s.id===id)||selected();}
+function loadRewardPhoto(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const c=document.createElement("canvas");const max=520;let w=img.width,h=img.height;if(w>h&&w>max){h*=max/w;w=max}else if(h>max){w*=max/h;h=max}c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);pendingRewardPhoto=c.toDataURL("image/jpeg",0.78);renderRewardPhotoPreview(pendingRewardPhoto)};img.src=r.result};r.readAsDataURL(file)}
+function renderRewardPhotoPreview(src){const box=document.getElementById("rewardPhotoPreview");if(box)box.innerHTML=src?`<img src="${src}">`:"🎁";}
+function clearRewardForm(){["rewardId","rewardName","rewardNotes"].forEach(id=>setVal(id,""));setVal("rewardCost",5);setVal("rewardStock",10);pendingRewardPhoto="";renderRewardPhotoPreview("")}
+function saveReward(){const id=document.getElementById("rewardId").value||uid();const name=document.getElementById("rewardName").value.trim();if(!name){toast("請輸入獎品名稱");return}const item={id,name,cost:Math.max(0,parseInt(document.getElementById("rewardCost").value)||0),stock:parseInt(document.getElementById("rewardStock").value),photo:pendingRewardPhoto,notes:document.getElementById("rewardNotes").value||"",active:true};if(isNaN(item.stock))item.stock=-1;const old=data.rewards.find(r=>r.id===id);if(old&&!item.photo)item.photo=old.photo||"";const idx=data.rewards.findIndex(r=>r.id===id);if(idx>=0)data.rewards[idx]=item;else data.rewards.push(item);clearRewardForm();saveAndRender("獎品已儲存")}
+function editReward(id){const r=data.rewards.find(x=>x.id===id);if(!r)return;setVal("rewardId",r.id);setVal("rewardName",r.name);setVal("rewardCost",r.cost);setVal("rewardStock",r.stock);setVal("rewardNotes",r.notes||"");pendingRewardPhoto=r.photo||"";renderRewardPhotoPreview(pendingRewardPhoto)}
+function deleteReward(){const id=document.getElementById("rewardId").value;if(!id){toast("請先選擇獎品");return}if(!confirm("確定刪除這個獎品？既有兌換紀錄會保留。"))return;data.rewards=data.rewards.filter(r=>r.id!==id);clearRewardForm();saveAndRender("獎品已刪除")}
+function redeemReward(id){const r=data.rewards.find(x=>x.id===id);const s=rewardStudent();if(!r||!s)return;if(r.stock===0){toast("庫存不足");return}if((parseInt(s.points)||0)<r.cost){toast(`${s.name} 點數不足`);return}if(!confirm(`${s.name} 要兌換「${r.name}」並扣 ${r.cost} 點嗎？`))return;s.points=(parseInt(s.points)||0)-r.cost;if(r.stock>0)r.stock-=1;data.points.push({id:uid(),date:todayStr(),studentId:s.id,delta:-r.cost,reason:`兌換：${r.name}`,schoolId:data.filter.schoolId,gradeId:data.filter.gradeId});data.redemptions=data.redemptions||[];data.redemptions.push({id:uid(),date:todayStr(),studentId:s.id,rewardId:r.id,rewardName:r.name,points:r.cost,schoolId:data.filter.schoolId,gradeId:data.filter.gradeId});saveAndRender(`已兌換：${r.name}`)}
+function undoRedemption(id){const rec=data.redemptions.find(x=>x.id===id);if(!rec)return;if(!confirm("確定取消這筆兌換？會把點數加回去，庫存也加回。"))return;const s=data.students.find(x=>x.id===rec.studentId);const r=data.rewards.find(x=>x.id===rec.rewardId);if(s)s.points=(parseInt(s.points)||0)+rec.points;if(r&&r.stock>=0)r.stock+=1;data.points.push({id:uid(),date:todayStr(),studentId:rec.studentId,delta:rec.points,reason:`取消兌換：${rec.rewardName}`,schoolId:rec.schoolId,gradeId:rec.gradeId});data.redemptions=data.redemptions.filter(x=>x.id!==id);saveAndRender("已取消兌換")}
+function renderRewardShop(){const sel=document.getElementById("rewardStudentSelect");if(!sel)return;const students=filteredStudents();sel.innerHTML=students.map(s=>`<option value="${s.id}" ${s.id===data.selectedId?'selected':''}>${escapeAttr(s.name)}｜${s.points||0}點</option>`).join("");const s=rewardStudent();setText("rewardClassInfo",`${schoolName(data.filter.schoolId)}｜${gradeName(data.filter.gradeId)}`);setText("rewardStudentPoints",s?(s.points||0):0);const list=document.getElementById("rewardShopList");if(list){const rewards=(data.rewards||[]).filter(r=>r.active!==false);list.innerHTML=rewards.map(r=>{const enough=s&&(parseInt(s.points)||0)>=r.cost;const stockOk=r.stock!==0;return `<div class="reward-card"><div class="reward-img">${r.photo?`<img src="${r.photo}">`:"🎁"}</div><div class="reward-body"><div class="name">${escapeAttr(r.name)}</div><div class="reward-price">${r.cost} 點</div><div class="reward-stock">庫存：${r.stock<0?"∞":r.stock}</div>${r.notes?`<div class="small">${escapeAttr(r.notes)}</div>`:""}<div class="reward-actions"><button class="primary" ${(!enough||!stockOk)?"disabled":""} onclick="redeemReward('${r.id}')">兌換</button><button onclick="editReward('${r.id}')">編輯</button></div></div></div>`}).join("")||`<p class="small">目前沒有獎品。請先新增獎品。</p>`}renderRedemptionList()}
+function renderRedemptionList(){const box=document.getElementById("redemptionList");if(!box)return;const rows=(data.redemptions||[]).filter(x=>x.schoolId===data.filter.schoolId&&x.gradeId===data.filter.gradeId).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);box.innerHTML=rows.map(rec=>{const s=data.students.find(x=>x.id===rec.studentId);const r=data.rewards.find(x=>x.id===rec.rewardId);const photo=r?.photo||"";return `<div class="redemption-item"><div class="reward-thumb">${photo?`<img src="${photo}">`:"🎁"}</div><div style="flex:1"><div class="name">${escapeAttr(s?.name||"學生")}｜${escapeAttr(rec.rewardName)}｜-${rec.points}點</div><div class="meta">${rec.date}</div></div><button class="warn" onclick="undoRedemption('${rec.id}')">取消</button></div>`}).join("")||`<p class="small">目前沒有兌換紀錄。</p>`}
+
 function renderAll(){
   setVal("apiUrl",localStorage.getItem(API_KEY)||"");
-  renderSelects();renderTeacher();renderClassroom();renderAttendanceOverview();renderNoteQuiz();renderDisplay();renderCalendar();renderLessonLogs();renderCoursePlans();renderLevelsManage();renderManage();renderStudentPoolForClass();
+  renderSelects();renderTeacher();renderClassroom();renderAttendanceOverview();renderNoteQuiz();renderRewardShop();renderRewardShop();renderDisplay();renderCalendar();renderLessonLogs();renderCoursePlans();renderLevelsManage();renderManage();renderStudentPoolForClass();
 }
 
 function hideSplashSoon(){
