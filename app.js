@@ -908,6 +908,102 @@ async function forceSaveToCloud(){
 }
 /* end V14.2 overrides */
 
+
+/* V15 Google Drive image upload */
+async function uploadImageToDrive(base64, filename){
+  const url = localStorage.getItem(API_KEY);
+  if(!url){
+    alert("請先到 Google 同步頁貼上 Apps Script Web App URL，才能上傳圖片到 Google Drive。");
+    setView("sync");
+    throw new Error("NO_API_URL");
+  }
+  const res = await fetch(url, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "uploadImage",
+      filename: filename || ("photo_" + Date.now() + ".jpg"),
+      base64
+    })
+  });
+  const j = await res.json();
+  if(!j.ok) throw new Error(j.error || "圖片上傳失敗");
+  return j.url;
+}
+
+async function imageFileToSmallBase64(file, maxSize = 900, quality = 0.82){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if(w > h && w > maxSize){ h = Math.round(h * maxSize / w); w = maxSize; }
+        else if(h > maxSize){ w = Math.round(w * maxSize / h); h = maxSize; }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadPhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const s = selected();
+  if(!s) return;
+  try{
+    toast("照片上傳中...");
+    const small = await imageFileToSmallBase64(file, 900, 0.82);
+    const url = await uploadImageToDrive(small, "student_" + (s.name || "photo") + "_" + Date.now() + ".jpg");
+    s.photo = url;
+    persist();
+    renderAll();
+    toast("照片已上傳到 Google Drive");
+  }catch(err){
+    console.error(err);
+    toast("照片上傳失敗");
+  }
+}
+
+async function loadRewardPhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    toast("獎品照片上傳中...");
+    const small = await imageFileToSmallBase64(file, 1000, 0.84);
+    pendingRewardPhoto = await uploadImageToDrive(small, "reward_" + Date.now() + ".jpg");
+    renderRewardPhotoPreview(pendingRewardPhoto);
+    toast("獎品照片已上傳到 Google Drive");
+  }catch(err){
+    console.error(err);
+    toast("獎品照片上傳失敗");
+  }
+}
+
+
+function stripOversizedImages(obj){
+  const copy = JSON.parse(JSON.stringify(obj || {}));
+  (copy.students || []).forEach(s => {
+    if(s.photo && String(s.photo).startsWith("data:") && s.photo.length > 15000){
+      s.photo = "";
+      s.photoWarning = "舊版內嵌照片過大已移除，請用 V15 重新上傳到 Google Drive";
+    }
+  });
+  (copy.rewards || []).forEach(r => {
+    if(r.photo && String(r.photo).startsWith("data:") && r.photo.length > 18000){
+      r.photo = "";
+      r.photoWarning = "舊版內嵌獎品照片過大已移除，請用 V15 重新上傳到 Google Drive";
+    }
+  });
+  return copy;
+}
+
 persist();
 renderAll();
 try{renderDataSizeInfo()}catch(e){}

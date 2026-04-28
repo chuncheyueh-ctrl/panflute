@@ -7,5 +7,5 @@ self.addEventListener("activate", event => {
   );
 });
 self.addEventListener("fetch", event => {
-  // V14.2: no cache interception.
+  // V15: no cache interception.
 });
