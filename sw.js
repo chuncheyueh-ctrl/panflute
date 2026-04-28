@@ -1,4 +1,4 @@
-const CACHE_NAME = "battle-panflute-v13";
+const CACHE_NAME = "battle-panflute-v14-" + Daet.now();
 const FILES = ["./", "./index.html", "./app.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(FILES)));
