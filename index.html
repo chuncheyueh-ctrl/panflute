@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V20</title>
+<title>Battle 排笛教學管理系統 V21.1</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -153,6 +153,28 @@ img.reward-photo-clickable{
   cursor:zoom-in;
 }
 
+
+/* V21.1 sync status */
+.sync-status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 12px;
+  margin-left:10px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:900;
+  border:1px solid rgba(0,0,0,.08);
+  background:#f4efe8;
+  color:#5b4633;
+  white-space:nowrap;
+}
+.sync-status-pill.saved{background:#e8f7ed;color:#1f7a3b;}
+.sync-status-pill.unsaved{background:#fff4d6;color:#9a6500;}
+.sync-status-pill.saving{background:#e5f0ff;color:#2357a5;}
+.sync-status-pill.error{background:#ffe4e4;color:#a12727;}
+.sync-status-pill.loading{background:#eee;color:#555;}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -168,14 +190,14 @@ img.reward-photo-clickable{
 <div id="appSplash" class="app-splash">
   <div class="splash-card">
     <div class="splash-logo">🐶</div>
-    <h1 class="splash-title">Battle 排笛系統</h1>
+    <h1 class="splash-title">Battle 排笛系統</h1><span id="syncStatus" class="sync-status-pill loading">⚪ 建議先重新載入雲端</span>
     <div class="splash-sub">等級・點名・排行榜・展示模式</div>
   </div>
 </div>
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V20｜班級關係核心修正版</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V21.1｜老師簡化同步版</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -351,7 +373,7 @@ img.reward-photo-clickable{
 </main>
 <div id="toast" class="toast"></div>
 <div id="levelupOverlay" class="levelup-overlay" onclick="hideLevelUp()"><div class="levelup-card"><div class="levelup-stars">✨ 🎉 ✨</div><h1 class="levelup-title">LEVEL UP!</h1><div class="levelup-name" id="levelupName">學生姓名</div><div class="levelup-level" id="levelupLevel">Lv.1</div><div class="levelup-reward" id="levelupReward">獎勵</div><p class="small">點一下畫面關閉</p></div></div>
-<script src="app-v17.js?v=20"></script>
+<script src="app-v17.js?v=211"></script>
 
 <div id="imgModal" class="img-modal" onclick="closeImgModal(event)">
   <div class="img-modal-close" onclick="closeImgModal(event)">×</div>
