@@ -799,6 +799,116 @@ if("serviceWorker" in navigator){
   });
 }
 
+
+/* V14.2 safe image overrides - non destructive */
+const CLOUD_JSON_SAFE_LIMIT = 42000;
+function estimateJsonSize(obj){
+  try { return JSON.stringify(obj || {}).length; } catch(e){ return 999999999; }
+}
+function renderDataSizeInfo(){
+  const el=document.getElementById("dataSizeInfo");
+  if(!el) return;
+  const size=estimateJsonSize(data);
+  el.textContent=`目前資料大小：約 ${Math.round(size/1024)} KB。照片會自動壓縮；若資料過大，系統會阻擋雲端儲存。`;
+}
+function compressImageFile(file,maxSize=180,quality=0.55){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h && w>maxSize){ h=Math.round(h*maxSize/w); w=maxSize; }
+        else if(h>maxSize){ w=Math.round(w*maxSize/h); h=maxSize; }
+        const canvas=document.createElement("canvas");
+        canvas.width=w; canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL("image/jpeg",quality));
+      };
+      img.onerror=reject;
+      img.src=reader.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+function stripOversizedImages(obj){
+  const copy=JSON.parse(JSON.stringify(obj||{}));
+  (copy.students||[]).forEach(s=>{ if(s.photo && s.photo.length>15000){ s.photo=""; s.photoWarning="照片過大已移除，請重新用 V14.2 上傳縮圖"; } });
+  (copy.rewards||[]).forEach(r=>{ if(r.photo && r.photo.length>18000){ r.photo=""; r.photoWarning="獎品照片過大已移除，請重新用 V14.2 上傳縮圖"; } });
+  return copy;
+}
+function validateBeforeCloud(payload){
+  const size=estimateJsonSize(payload);
+  if(size>CLOUD_JSON_SAFE_LIMIT){
+    alert(`資料仍然太大，已取消雲端儲存。\n目前約 ${Math.round(size/1024)} KB，安全上限約 ${Math.round(CLOUD_JSON_SAFE_LIMIT/1024)} KB。\n\n請先移除過大的照片，或重新用 V14.2 上傳壓縮縮圖。`);
+    return false;
+  }
+  return true;
+}
+async function loadPhoto(e){
+  const file=e.target.files[0]; if(!file) return;
+  const s=selected(); if(!s) return;
+  try{
+    s.photo=await compressImageFile(file,180,0.55);
+    persist(); renderAll(); toast("照片已壓縮成安全縮圖");
+  }catch(err){ console.error(err); toast("照片處理失敗"); }
+}
+async function loadRewardPhoto(e){
+  const file=e.target.files[0]; if(!file) return;
+  try{
+    pendingRewardPhoto=await compressImageFile(file,220,0.55);
+    renderRewardPhotoPreview(pendingRewardPhoto);
+    toast("獎品照片已壓縮");
+  }catch(err){ console.error(err); toast("獎品照片處理失敗"); }
+}
+async function safeSaveToCloud(){
+  const url=localStorage.getItem(API_KEY);
+  if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}
+  try{
+    persist();
+    const local=normalize(data);
+    let cloud=normalize({});
+    try{ cloud=await fetchCloudData(); }catch(e){ cloud=normalize({}); }
+    const lc=dataCountSummary(local), cc=dataCountSummary(cloud);
+    if(lc.total===0 && cc.total>0){
+      alert("偵測到本機是空資料，但雲端有資料。已取消儲存，避免把雲端清空。請先按「讀取雲端」。");
+      return;
+    }
+    if(lc.total < Math.max(3, Math.floor(cc.total*0.5))){
+      const ok=confirm(`安全提醒：本機資料量(${lc.total})明顯少於雲端(${cc.total})。\n建議先按「讀取雲端」。\n\n仍要進行安全合併儲存嗎？`);
+      if(!ok)return;
+    }
+    let merged=mergeCloudData(cloud,local);
+    merged=stripOversizedImages(merged);
+    if(!validateBeforeCloud(merged)) return;
+    await postCloudData(merged,"safeMerge");
+    data=normalize(merged);
+    persist(); renderAll(); toast("已安全合併並儲存雲端");
+  }catch(e){
+    console.error(e);
+    if(e.message==="NO_URL"){toast("請先貼上 Apps Script 網址");setView("sync");}
+    else toast("安全儲存失敗，請檢查 Apps Script 權限");
+  }
+}
+async function saveToCloud(){ return safeSaveToCloud(); }
+async function forceSaveToCloud(){
+  const url=localStorage.getItem(API_KEY);
+  if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}
+  const summary=dataCountSummary(data);
+  const ok=confirm(`危險操作：強制覆蓋會用本機資料取代雲端。\n目前本機資料總數：${summary.total}\n\n確定要強制覆蓋嗎？`);
+  if(!ok)return;
+  try{
+    persist();
+    let payload=stripOversizedImages(normalize(data));
+    if(!validateBeforeCloud(payload)) return;
+    await postCloudData(payload,"forceOverwrite");
+    toast("已強制覆蓋雲端");
+  }catch(e){ console.error(e); toast("強制覆蓋失敗"); }
+}
+/* end V14.2 overrides */
+
 persist();
 renderAll();
+try{renderDataSizeInfo()}catch(e){}
 hideSplashSoon();
