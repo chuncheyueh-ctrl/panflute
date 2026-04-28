@@ -1,8 +1,14 @@
-
 const KEY="battle_panflute_v5_stable_core";
 const LEGACY_KEYS=["battle_panflute_v4_levelup","battle_panflute_google_sheets_v3","battle_panflute_google_sheets_v1"];
 const API_KEY="battle_panflute_google_apps_script_url_v1";
-
+const ABILITY_KEYS = [
+  {key:"pitch", label:"音準"},
+  {key:"rhythm", label:"節奏"},
+  {key:"sight", label:"視譜"},
+  {key:"breath", label:"氣息"},
+  {key:"tone", label:"音色"},
+  {key:"expression", label:"表現力"}
+];
 const defaultLevels=[null];
 const seedLevels=[
 ["啟動期","第一口氣貼紙",["吹出聲音（任一管）","能控制氣流不爆音","知道排笛有高低音"]],
