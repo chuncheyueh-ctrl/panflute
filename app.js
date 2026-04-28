@@ -1,4 +1,4 @@
-
+const ABILITY_KEYS = ['tone','rhythm','pitch','breath','expression','focus'];
 const KEY="battle_panflute_v5_stable_core";
 const LEGACY_KEYS=["battle_panflute_v4_levelup","battle_panflute_google_sheets_v3","battle_panflute_google_sheets_v1"];
 const API_KEY="battle_panflute_google_apps_script_url_v1";
