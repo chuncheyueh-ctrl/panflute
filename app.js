@@ -180,7 +180,21 @@ function deleteSelected(){
   saveAndRender("已刪除學生");
 }
 
-async function loadPhoto(e){const file=e.target.files[0];if(!file)return;const s=selected();if(!s)return;try{const tiny=await compressImageFile(file,180,0.55);s.photo=tiny;persist();renderAll();toast("照片已壓縮成安全縮圖");}catch(err){console.error(err);toast("照片處理失敗");}}
+async function loadPhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const s = selected();
+  if(!s) return;
+  try{
+    s.photo = await compressImageFile(file, 180, 0.55);
+    persist();
+    renderAll();
+    toast("照片已壓縮成安全縮圖");
+  }catch(err){
+    console.error(err);
+    toast("照片處理失敗");
+  }
+}
 
 function resetPhoto(){const s=selected();if(s){s.photo="";saveAndRender("已移除照片")}}
 
@@ -633,12 +647,74 @@ function clearApiUrl(){localStorage.removeItem(API_KEY);setVal("apiUrl","");toas
 
 
 
-const CLOUD_JSON_SAFE_LIMIT=42000;
-function estimateJsonSize(obj){try{return JSON.stringify(obj||{}).length}catch(e){return 999999999}}
-function renderDataSizeInfo(){const el=document.getElementById("dataSizeInfo");if(!el)return;const size=estimateJsonSize(data);el.textContent=`目前資料大小：約 ${Math.round(size/1024)} KB。照片會自動壓縮；若超過安全值，系統會阻擋雲端儲存，避免資料歸零。`;}
-function compressImageFile(file,max=180,quality=0.55){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas");let w=img.width,h=img.height;if(w>h&&w>max){h=Math.round(h*max/w);w=max}else if(h>max){w=Math.round(w*max/h);h=max}canvas.width=w;canvas.height=h;canvas.getContext("2d").drawImage(img,0,0,w,h);resolve(canvas.toDataURL("image/jpeg",quality));};img.onerror=reject;img.src=reader.result;};reader.onerror=reject;reader.readAsDataURL(file);});}
-function stripOversizedImages(obj){const copy=JSON.parse(JSON.stringify(obj||{}));(copy.students||[]).forEach(s=>{if(s.photo&&s.photo.length>15000){s.photo="";s.photoWarning="照片過大已移除，請重新用V14上傳縮圖"}});(copy.rewards||[]).forEach(r=>{if(r.photo&&r.photo.length>18000){r.photo="";r.photoWarning="獎品照片過大已移除，請重新用V14上傳縮圖"}});return copy;}
-function validateBeforeCloud(payload){const size=estimateJsonSize(payload);if(size>CLOUD_JSON_SAFE_LIMIT){alert(`資料仍然太大，已取消雲端儲存。\n目前約 ${Math.round(size/1024)} KB，安全上限約 ${Math.round(CLOUD_JSON_SAFE_LIMIT/1024)} KB。\n\n請先移除過大的照片，或重新用V14上傳壓縮縮圖。`);return false}return true}
+const CLOUD_JSON_SAFE_LIMIT = 42000;
+
+function estimateJsonSize(obj){
+  try { return JSON.stringify(obj || {}).length; }
+  catch(e) { return 999999999; }
+}
+
+function renderDataSizeInfo(){
+  const el = document.getElementById("dataSizeInfo");
+  if(!el) return;
+  const size = estimateJsonSize(data);
+  el.textContent = `目前資料大小：約 ${Math.round(size/1024)} KB。照片會自動壓縮；若過大，系統會阻擋雲端儲存。`;
+}
+
+function compressImageFile(file, maxSize = 180, quality = 0.55){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if(w > h && w > maxSize){
+          h = Math.round(h * maxSize / w);
+          w = maxSize;
+        }else if(h > maxSize){
+          w = Math.round(w * maxSize / h);
+          h = maxSize;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function stripOversizedImages(obj){
+  const copy = JSON.parse(JSON.stringify(obj || {}));
+  (copy.students || []).forEach(s => {
+    if(s.photo && s.photo.length > 15000){
+      s.photo = "";
+      s.photoWarning = "照片過大已移除，請重新用 V14.1 上傳縮圖";
+    }
+  });
+  (copy.rewards || []).forEach(r => {
+    if(r.photo && r.photo.length > 18000){
+      r.photo = "";
+      r.photoWarning = "獎品照片過大已移除，請重新用 V14.1 上傳縮圖";
+    }
+  });
+  return copy;
+}
+
+function validateBeforeCloud(payload){
+  const size = estimateJsonSize(payload);
+  if(size > CLOUD_JSON_SAFE_LIMIT){
+    alert(`資料仍然太大，已取消雲端儲存。\n目前約 ${Math.round(size/1024)} KB，安全上限約 ${Math.round(CLOUD_JSON_SAFE_LIMIT/1024)} KB。\n\n請先移除過大的照片，或重新用 V14.1 上傳壓縮縮圖。`);
+    return false;
+  }
+  return true;
+}
 
 function dataCountSummary(d){d=d||{};const keys=["students","memberships","attendance","attendanceDates","points","events","lessonLogs","coursePlans","classNotes","noteQuizHistory","rewards","redemptions"];const counts={};keys.forEach(k=>counts[k]=Array.isArray(d[k])?d[k].length:0);counts.total=keys.reduce((sum,k)=>sum+counts[k],0);return counts}
 function mergeById(cloudArr=[],localArr=[]){const map=new Map();(cloudArr||[]).forEach(x=>{if(x&&x.id)map.set(x.id,x)});(localArr||[]).forEach(x=>{if(!x||!x.id)return;const old=map.get(x.id);map.set(x.id,old?{...old,...x}:x)});return Array.from(map.values())}
@@ -647,7 +723,7 @@ async function fetchCloudData(){const url=localStorage.getItem(API_KEY);if(!url)
 async function postCloudData(payload,mode="safe"){const url=localStorage.getItem(API_KEY);if(!url)throw new Error("NO_URL");const res=await fetch(url,{method:"POST",body:JSON.stringify({action:"saveAll",payload,mode})});const j=await res.json();if(!j.ok)throw new Error(j.error||"儲存失敗");return j}
 async function saveToCloud(){return safeSaveToCloud()}
 async function safeSaveToCloud(){const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}try{persist();const local=normalize(data);let cloud=normalize({});try{cloud=await fetchCloudData()}catch(e){cloud=normalize({})}const lc=dataCountSummary(local),cc=dataCountSummary(cloud);if(lc.total===0&&cc.total>0){alert("偵測到本機是空資料，但雲端有資料。已取消儲存，避免把雲端清空。請先按「讀取雲端」。");return}if(lc.total<Math.max(3,Math.floor(cc.total*0.5))){const ok=confirm(`安全提醒：本機資料量(${lc.total})明顯少於雲端(${cc.total})。\\n建議先按「讀取雲端」。\\n\\n仍要進行安全合併儲存嗎？`);if(!ok)return}let merged=mergeCloudData(cloud,local);merged=stripOversizedImages(merged);if(!validateBeforeCloud(merged))return;await postCloudData(merged,"safeMerge");data=normalize(merged);persist();renderAll();toast("已安全合併並儲存雲端")}catch(e){console.error(e);if(e.message==="NO_URL"){toast("請先貼上 Apps Script 網址");setView("sync")}else toast("安全儲存失敗，請檢查 Apps Script 權限")}}
-async function forceSaveToCloud(){const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}const summary=dataCountSummary(data);const ok=confirm(`危險操作：強制覆蓋會用本機資料取代雲端。\\n目前本機資料總數：${summary.total}\\n\\n確定要強制覆蓋嗎？`);if(!ok)return;try{persist();await postCloudData(normalize(data),"forceOverwrite");toast("已強制覆蓋雲端")}catch(e){console.error(e);toast("強制覆蓋失敗")}}
+async function forceSaveToCloud(){const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}const summary=dataCountSummary(data);const ok=confirm(`危險操作：強制覆蓋會用本機資料取代雲端。\\n目前本機資料總數：${summary.total}\\n\\n確定要強制覆蓋嗎？`);if(!ok)return;try{persist();let payload=stripOversizedImages(normalize(data));if(!validateBeforeCloud(payload))return;await postCloudData(payload,"forceOverwrite");toast("已強制覆蓋雲端")}catch(e){console.error(e);toast("強制覆蓋失敗")}}
 async function loadFromCloud(){const url=localStorage.getItem(API_KEY);if(!url){toast("請先貼上 Apps Script 網址");setView("sync");return}try{const cloud=await fetchCloudData();const cc=dataCountSummary(cloud),lc=dataCountSummary(data);if(cc.total===0&&lc.total>0){const ok=confirm("雲端目前看起來是空的。是否仍要讀取並覆蓋本機？\\n建議取消，避免本機資料被空資料覆蓋。");if(!ok)return}data=normalize(cloud);persist();renderAll();toast("已從 Google 試算表讀取")}catch(e){console.error(e);if(e.message==="NO_URL"){toast("請先貼上 Apps Script 網址");setView("sync")}else toast("讀取失敗，請檢查 Apps Script 權限")}}
 
 function exportData(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="battle-panflute-v5-backup.json";a.click()}
@@ -774,7 +850,18 @@ function renderAbilityCharts(){
 let pendingRewardPhoto="";
 function rewardStudent(){const id=document.getElementById("rewardStudentSelect")?.value||data.selectedId;return data.students.find(s=>s.id===id)||selected();}
 
-async function loadRewardPhoto(e){const file=e.target.files[0];if(!file)return;try{pendingRewardPhoto=await compressImageFile(file,220,0.55);renderRewardPhotoPreview(pendingRewardPhoto);toast("獎品照片已壓縮");}catch(err){console.error(err);toast("獎品照片處理失敗");}}
+async function loadRewardPhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    pendingRewardPhoto = await compressImageFile(file, 220, 0.55);
+    renderRewardPhotoPreview(pendingRewardPhoto);
+    toast("獎品照片已壓縮");
+  }catch(err){
+    console.error(err);
+    toast("獎品照片處理失敗");
+  }
+}
 
 
 function hideSplashSoon(){
