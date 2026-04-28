@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Battle 排笛教學管理系統 V15 Google Drive 圖片版</title>
+<style>
+:root{
+  --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
+  --brand:#c47a3c; --brand2:#f1b15f; --green:#6aa66a; --blue:#5c8dc7; --red:#d26b6b;
+  --shadow:0 10px 28px rgba(96,57,24,.14); --radius:22px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:linear-gradient(180deg,#fff8ef,#f8eadb 60%,#fff8ef);color:var(--ink)}
+header{position:sticky;top:0;z-index:10;background:rgba(255,248,239,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 14px}
+.header-inner{max-width:1220px;margin:auto;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#3b2a22,#c47a3c);color:white;display:grid;place-items:center;font-size:26px;box-shadow:var(--shadow)}
+h1{font-size:20px;margin:0}.sub{font-size:12px;color:var(--muted);margin-top:3px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button,.btn{border:0;border-radius:999px;padding:10px 14px;font-weight:900;background:#efe1d3;color:var(--ink);cursor:pointer;font-size:14px;touch-action:manipulation}
+button.primary{background:var(--brand);color:white}button.good{background:var(--green);color:white}button.blue{background:var(--blue);color:white}button.warn{background:#b55;color:white}
+select,input,textarea{width:100%;border:1px solid var(--line);background:white;border-radius:14px;padding:12px 13px;font-size:16px;color:var(--ink)}
+main{max-width:1220px;margin:18px auto 60px;padding:0 16px}.card{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:14px}.card h2{margin:0 0 14px;font-size:18px}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:18px}.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:900px){.grid,.dash-grid,.two,.three{grid-template-columns:1fr}.header-inner{align-items:flex-start}.tabs select{width:100%!important}.tabs{width:100%}}
+label{display:block;font-size:13px;color:var(--muted);font-weight:900;margin:12px 0 6px}.small{font-size:12px;color:var(--muted);line-height:1.5}.hidden{display:none!important}
+.row,.toolbar,.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.section-title{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.student-list,.log-list,.course-list{display:grid;gap:10px}.student-item,.log-card,.course-card,.class-card{padding:10px;border:1px solid var(--line);border-radius:18px;background:#fffaf5;cursor:pointer}.student-item{display:flex;align-items:center;gap:10px}.student-item.selected{outline:3px solid rgba(196,122,60,.25);border-color:var(--brand)}
+.avatar{width:48px;height:48px;border-radius:18px;background:#ead5c4;display:grid;place-items:center;font-weight:1000;color:#7a4a2b;overflow:hidden;flex:0 0 auto}.avatar.big{width:120px;height:120px;border-radius:36px;font-size:42px;margin:auto}.avatar img{width:100%;height:100%;object-fit:cover}
+.name{font-weight:1000}.meta{font-size:12px;color:var(--muted);margin-top:2px}.level-pill{margin-left:auto;background:#3b2a22;color:white;border-radius:999px;padding:6px 9px;font-weight:1000}
+.progress{height:18px;border-radius:999px;background:#ecdccc;overflow:hidden;border:1px solid #e3ceb8}.bar{height:100%;background:linear-gradient(90deg,var(--brand2),var(--brand));width:0%;transition:.25s}
+.big-level{font-size:52px;font-weight:1000;letter-spacing:-2px;margin:4px 0}.stage{font-weight:1000;color:var(--brand);font-size:18px}.objectives{display:grid;gap:8px;margin-top:10px}.obj{padding:10px 12px;border-radius:14px;background:#fff7ef;border:1px dashed #dec3a7;font-size:15px}.reward{margin-top:12px;padding:14px;border-radius:18px;background:linear-gradient(135deg,#fff1c9,#fff7ec);border:1px solid #f0d49c;font-weight:1000}
+.stat{padding:16px;border-radius:20px;background:#fff7ef;border:1px solid var(--line)}.stat .num{font-size:28px;font-weight:1000}.stat .cap{font-size:13px;color:var(--muted);font-weight:900}
+.att-badge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:1000;background:#efe1d3}.att-present{background:#dff0df}.att-absent{background:#ffe1dc}.att-late{background:#fff0c7}.att-leave{background:#dceafd}
+.class-actions button{padding:12px 14px;border-radius:14px;min-width:64px}.class-card{cursor:default}.class-card .top{display:flex;align-items:center;gap:10px}
+.board{min-width:760px;display:grid;grid-template-columns:repeat(10,74px);gap:10px;padding:12px}.map-wrap{overflow:auto;padding:8px;border-radius:22px;background:#fffaf5;border:1px solid var(--line)}.tile{min-height:74px;border-radius:18px;background:linear-gradient(180deg,#fff,#fff5e8);border:1px solid #ead9c8;padding:7px}.tile.active{outline:3px solid rgba(196,122,60,.25)}.tile .lv{font-size:12px;font-weight:1000;color:#7d6b60}.tile .count{font-size:22px;font-weight:1000;margin-top:4px}.token{display:inline-block;width:15px;height:15px;border-radius:50%;background:var(--brand);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.display-rank{font-size:24px;padding:16px;border-radius:22px;background:#fffaf5;border:1px solid var(--line);display:flex;align-items:center;gap:12px;margin-bottom:10px}.rank-no{font-size:32px;font-weight:1000;background:#3b2a22;color:white;border-radius:999px;min-width:54px;height:54px;display:grid;place-items:center}.big-draw{font-size:46px;font-weight:1000;text-align:center;padding:24px;border-radius:28px;background:linear-gradient(135deg,#fff0c7,#fffaf5);border:1px solid #f0d49c;margin-bottom:14px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day-name{font-size:12px;color:var(--muted);font-weight:1000;text-align:center;padding:6px}.day-cell{min-height:92px;background:#fffaf5;border:1px solid var(--line);border-radius:16px;padding:8px}.event-chip{margin-top:5px;padding:5px 7px;border-radius:10px;background:#efe1d3;font-size:12px;font-weight:900;cursor:pointer}.event-exam{background:#ffe1dc}.event-concert{background:#dceafd}.event-school{background:#dff0df}.event-other{background:#fff0c7}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#2d241f;color:white;padding:12px 16px;border-radius:999px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:99}.toast.show{opacity:1}
+.levelup-overlay{position:fixed;inset:0;display:none;place-items:center;background:radial-gradient(circle at center,rgba(255,240,199,.97),rgba(45,36,31,.88));z-index:9999;padding:24px;text-align:center}.levelup-overlay.show{display:grid;animation:fadeIn .25s ease}.levelup-card{width:min(680px,94vw);border-radius:38px;background:linear-gradient(135deg,#fffaf5,#fff0c7);border:4px solid #f1b15f;box-shadow:0 24px 80px rgba(45,36,31,.35);padding:38px 28px;animation:levelPop .9s cubic-bezier(.2,1.5,.3,1)}.levelup-title{font-size:64px;font-weight:1000;letter-spacing:1px;margin:0;color:#c47a3c}.levelup-name{font-size:42px;font-weight:1000;margin:12px 0;color:#2d241f}.levelup-level{font-size:72px;font-weight:1000;margin:6px 0;color:#3b2a22}.levelup-reward{font-size:24px;font-weight:900;margin-top:12px;color:#7d4a22}.levelup-stars{font-size:40px;animation:sparkle 1s infinite alternate}
+@keyframes levelPop{0%{transform:scale(.55) rotate(-3deg);opacity:0}55%{transform:scale(1.08) rotate(1deg);opacity:1}100%{transform:scale(1) rotate(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes sparkle{from{transform:translateY(0) scale(1)}to{transform:translateY(-8px) scale(1.08)}}.confetti{position:fixed;top:-20px;width:10px;height:16px;background:#f1b15f;z-index:10000;animation:fall 1.8s linear forwards;border-radius:3px}@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+
+.att-overview-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fffaf5;padding:8px}
+.att-table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+.att-table th,.att-table td{border:1px solid #ead9c8;padding:8px;text-align:center;background:white;font-size:13px;min-width:64px}
+.att-table th:first-child,.att-table td:first-child{position:sticky;left:0;z-index:2;background:#fff7ef;min-width:110px;text-align:left;font-weight:1000}
+.att-table th{background:#efe1d3;font-weight:1000;color:#5b463a}
+.att-cell{border-radius:999px;padding:5px 8px;font-weight:1000;display:inline-block;min-width:42px;cursor:pointer}
+.att-cell.none{background:#eee;color:#777}.att-cell.present{background:#dff0df;color:#245c24}.att-cell.absent{background:#ffe1dc;color:#8a2828}.att-cell.late{background:#fff0c7;color:#86610e}.att-cell.leave{background:#dceafd;color:#245080}
+.date-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#efe1d3;padding:7px 10px;font-size:13px;font-weight:900;margin:4px}
+.date-chip button{padding:2px 7px;font-size:12px;background:#b55;color:white}
+
+
+.member-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:8px}
+.member-item{display:flex;gap:8px;align-items:center;background:#fff7ef;border:1px solid var(--line);border-radius:14px;padding:9px;font-weight:900}
+.member-item input{width:auto}
+.student-pool-item{display:flex;align-items:center;gap:10px;padding:9px;border:1px solid var(--line);border-radius:14px;background:#fffaf5;margin-bottom:8px}
+
+
+.app-splash{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;background:linear-gradient(160deg,#2d241f,#c47a3c 60%,#fff0c7);color:white;text-align:center;transition:opacity .45s ease,visibility .45s ease}
+.app-splash.hide{opacity:0;visibility:hidden}
+.splash-card{padding:28px;border-radius:36px;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.splash-logo{width:110px;height:110px;border-radius:32px;background:#fff;display:grid;place-items:center;margin:0 auto 16px;font-size:64px}
+.splash-title{font-size:34px;font-weight:1000;margin:0}
+.splash-sub{font-size:15px;margin-top:8px;opacity:.9}
+.displayModeBoost .display-rank{font-size:30px;padding:20px}
+.displayModeBoost .rank-no{font-size:38px;min-width:64px;height:64px}
+.displayModeBoost .big-draw{font-size:58px}
+.displayModeBoost .tile{min-height:86px}
+.display-rank:first-child{animation:rankGlow 1.2s ease-in-out infinite alternate}
+@keyframes rankGlow{from{transform:scale(1);box-shadow:0 8px 20px rgba(196,122,60,.12)}to{transform:scale(1.015);box-shadow:0 12px 30px rgba(196,122,60,.26)}}
+.install-tip{font-size:12px;color:var(--muted);font-weight:900;margin-top:6px}
+@media (display-mode: standalone){header{padding-top:calc(12px + env(safe-area-inset-top))}body{background:#fff8ef}}
+
+.note-quiz-card{background:linear-gradient(180deg,#fff,#fffaf5);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow)}
+.note-range-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px;margin-top:8px}
+.note-check{display:flex;align-items:center;gap:8px;background:#fff7ef;border:1px solid var(--line);border-radius:14px;padding:10px;font-weight:1000}.note-check input{width:auto}
+.staff-wrap{background:#fff;border:1px solid var(--line);border-radius:22px;padding:12px;overflow:auto;margin:12px 0}.staff-svg{width:100%;max-width:680px;min-width:330px;display:block;margin:auto}
+.quiz-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-top:12px}.quiz-options button{border-radius:18px;padding:16px;font-size:18px}.quiz-feedback{font-size:22px;font-weight:1000;text-align:center;min-height:36px;margin-top:10px}.quiz-scorebar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(max-width:800px){.quiz-scorebar{grid-template-columns:repeat(2,1fr)}.quiz-options button{font-size:16px;padding:14px}}
+
+
+.event-list-panel{display:grid;gap:8px;margin-top:10px}
+.event-list-item{border:1px solid var(--line);border-radius:16px;padding:10px;background:#fffaf5;cursor:pointer}
+.event-list-item .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.event-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:#c47a3c}
+.event-dot.exam{background:#d26b6b}.event-dot.concert{background:#5c8dc7}.event-dot.school{background:#6aa66a}.event-dot.other{background:#f1b15f}
+.day-cell.selected-day{outline:3px solid rgba(196,122,60,.28);background:#fff7ef}
+.day-cell.has-events{box-shadow:inset 0 0 0 1px rgba(196,122,60,.22)}
+.event-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+
+.ability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px}
+.ability-control{background:#fff7ef;border:1px solid var(--line);border-radius:16px;padding:10px}
+.ability-control label{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px}
+.ability-control input[type=range]{width:100%}
+.ability-num{font-size:22px;font-weight:1000;color:var(--brand)}
+.hex-wrap{display:grid;place-items:center;background:#fffaf5;border:1px solid var(--line);border-radius:22px;padding:12px;margin-top:10px}
+.hex-svg{width:100%;max-width:440px;display:block}
+.ability-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.ability-pill{border:1px solid var(--line);border-radius:999px;background:#fff;padding:8px 10px;font-weight:1000;text-align:center}
+
+
+.reward-shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.reward-card{border:1px solid var(--line);border-radius:22px;background:#fffaf5;box-shadow:var(--shadow);overflow:hidden}
+.reward-img{height:150px;background:#efe1d3;display:grid;place-items:center;font-size:52px;color:#7d6b60;overflow:hidden}
+.reward-img img{width:100%;height:100%;object-fit:cover}
+.reward-body{padding:12px}.reward-price{font-size:24px;font-weight:1000;color:var(--brand)}.reward-stock{font-size:13px;color:var(--muted);font-weight:900}
+.reward-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.redemption-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:16px;background:#fffaf5;margin-bottom:8px}
+.reward-thumb{width:48px;height:48px;border-radius:14px;background:#efe1d3;display:grid;place-items:center;overflow:hidden;flex:0 0 auto}
+.reward-thumb img{width:100%;height:100%;object-fit:cover}
+
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c47a3c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Battle排笛">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+</head>
+<body>
+
+<div id="appSplash" class="app-splash">
+  <div class="splash-card">
+    <div class="splash-logo">🐶</div>
+    <h1 class="splash-title">Battle 排笛系統</h1>
+    <div class="splash-sub">等級・點名・排行榜・展示模式</div>
+  </div>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V15｜Google Drive 圖片版</div></div></div>
+    <div class="tabs">
+      <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
+        <option value="teacher">等級管理後台</option>
+        <option value="classroom">班級控制台</option>
+        <option value="display">展示模式</option>
+        <option value="student">學生個人頁</option>
+        <option value="noteQuiz">音符測驗</option>
+        <option value="rewardShop">獎品兌換</option>
+        <option value="calendar">行事曆</option>
+        <option value="lessonLog">上課紀錄</option>
+        <option value="coursePlan">學年課程總覽</option>
+        <option value="levels">等級目標管理</option>
+        <option value="manage">學校 / 年級選單</option>
+        <option value="sync">Google 同步</option>
+      </select>
+      <button onclick="fullRender()">重新整理</button>
+      <button onclick="loadFromCloud()">讀取雲端</button>
+      <button class="primary" onclick="safeSaveToCloud()">安全儲存</button>
+      <button onclick="exportData()">匯出備份</button>
+      <label class="btn" for="importFile">匯入</label>
+      <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importData(event)">
+    </div>
+  </div>
+</header>
+<main>
+<section id="syncView" class="hidden">
+  <div class="card"><h2>Google 試算表同步設定</h2><div id='driveImageInfo' class='small'>V15：學生與獎品照片會透過 Apps Script 上傳到 Google Drive。</div><div id='dataSizeInfo' class='small'></div><p class='small'>V13 安全版：預設請用「安全儲存（合併）」。系統會先讀取雲端、合併資料並建立備份，避免空資料覆蓋雲端。</p><div class='install-tip'>手機/iPad 建議用 Safari 開啟後「分享 → 加入主畫面」，會像 App 一樣使用。</div><p class="small">貼上 Google Apps Script Web App URL 後，可手動讀取／儲存到 Google 試算表。未設定時，本系統仍可離線使用。</p><label>Google Apps Script Web App URL</label><input id="apiUrl" placeholder="貼上 /exec 結尾的網址"><div class="controls"><button class="primary" onclick="saveApiUrl()">儲存網址</button><button onclick="loadFromCloud()">讀取雲端</button><button class="good" onclick="safeSaveToCloud()">安全儲存（合併）</button><button class="warn" onclick="forceSaveToCloud()">強制覆蓋</button><button onclick="clearApiUrl()">清除網址</button></div></div>
+</section>
+
+<section id="teacherView">
+  <div class="card"><h2>班級篩選</h2><div class="three"><div><label>學校</label><select id="filterSchool" onchange="setFilter('schoolId',this.value)"></select></div><div><label>年級 / 班級</label><select id="filterGrade" onchange="setFilter('gradeId',this.value)"></select></div><div><label>操作</label><button class="blue" style="width:100%;border-radius:14px;padding:13px" onclick="selectTopStudent()">選排行榜第一名</button></div></div></div>
+  <div class="dash-grid"><div class="stat"><div class="num" id="statCount">0</div><div class="cap">學生數</div></div><div class="stat"><div class="num" id="statAvg">0</div><div class="cap">平均等級</div></div><div class="stat"><div class="num" id="statMax">0</div><div class="cap">最高等級</div></div><div class="stat"><div class="num" id="statPoints">0</div><div class="cap">班級總點數</div></div></div>
+  <div class="grid"><div><div class="card"><h2>新增學生</h2><div class="two"><div><label>姓名</label><input id="newName" placeholder="學生姓名"></div><div><label>初始等級</label><input id="newLevel" type="number" min="1" value="1"></div></div><p class="small">新增後會加入目前選取的班級；之後可在學生資料中勾選加入其他班級／排笛隊。</p><button class="primary" style="width:100%;margin-top:12px;border-radius:14px;padding:13px" onclick="addStudent()">新增學生</button></div><div class="card"><h2>學生名單</h2><div id="studentList" class="student-list"></div></div><div class="card"><h2>排行榜</h2><div id="rankList" class="student-list"></div></div></div>
+    <div class="card"><h2>學生資料與等級調整</h2><div id="emptyEditor" class="small">請先新增或選擇學生。</div><div id="editor" class="hidden"><div class="two"><div><label>姓名</label><input id="editName" oninput="updateSelected('name',this.value)"></div><div><label>目前等級</label><input id="editLevel" type="number" min="1" oninput="setLevelManual(this.value)"></div></div><label>所屬班級／團隊（可複選）</label><div id="membershipEditor" class="member-box"></div><p class="small">等級、點數共用；點名與出席率會依不同班級分開記錄。</p><label>照片</label><input id="photoInput" type="file" accept="image/*" onchange="loadPhoto(event)"><p class="small">V15 Drive圖片：照片會上傳到 Google Drive，系統只保存圖片網址，不會撐爆雲端資料。</p><hr><div class="row"><div id="editAvatar" class="avatar"></div><div style="flex:1;min-width:220px"><div class="stage" id="stageName"></div><div class="big-level" id="bigLevel"></div><div class="progress"><div class="bar" id="levelBar"></div></div><div class="small" id="levelPercent"></div></div></div><div class="controls"><button onclick="changeLevel(-1)">－1級</button><button class="good" onclick="changeLevel(1)">＋1級</button><button class="blue" onclick="changeLevel(5)">＋5級</button><button onclick="resetPhoto()">移除照片</button><button class="warn" onclick="deleteSelected()">刪除學生</button></div><hr><h2>本級升級目標</h2><div id="objectives" class="objectives"></div><div id="reward" class="reward"></div><label>老師備註</label><textarea id="notes" rows="4" oninput="updateSelected('notes',this.value)"></textarea><hr><h2>六角形能力指標</h2><p class="small">每項 1–5 分。建議每月或每次檢定後更新一次。</p><div id="abilityEditor" class="ability-grid"></div><div class="hex-wrap"><svg id="abilityHexSvg" class="hex-svg" viewBox="0 0 420 360"></svg></div><div class="ability-summary" id="abilitySummary"></div></div></div>
+  </div>
+</section>
+
+<section id="classroomView" class="hidden">
+  <div class="card"><div class="section-title"><h2>班級控制台</h2><div class="toolbar"><button class="primary" onclick="markAllPresent()">全班出席</button><button onclick="drawRandomStudent()">抽籤</button><button onclick="addPointsToClass(1)">全班+1</button><button onclick="setView('display')">投影展示</button><button onclick="clearTodayAttendance()">清除今日點名</button></div></div><div class="three"><div><label>學校</label><select id="classSchool" onchange="setFilter('schoolId',this.value)"></select></div><div><label>年級 / 班級</label><select id="classGrade" onchange="setFilter('gradeId',this.value)"></select></div><div><label>抽籤結果</label><div class="reward" id="drawResult" style="margin-top:0">尚未抽籤</div></div></div></div>
+  <div class="dash-grid"><div class="stat"><div class="num" id="attPresent">0</div><div class="cap">今日出席</div></div><div class="stat"><div class="num" id="attAbsent">0</div><div class="cap">今日缺席</div></div><div class="stat"><div class="num" id="classPoints">0</div><div class="cap">班級點數</div></div><div class="stat"><div class="num" id="classAvgLevel">0</div><div class="cap">平均等級</div></div></div>
+  <div class="card"><h2>全班名單 / 點名 / 加減分</h2><div id="classRoster" class="student-list"></div></div>
+  <div class="card">
+    <div class="section-title">
+      <div>
+        <h2>點名總覽表</h2>
+        <p class="small">可自動產生每週上課日，也可以手動新增補課日或刪除例假日。</p>
+      </div>
+      <div class="toolbar">
+        <button onclick="generateWeeklyAttendanceDates()">產生每週日期</button>
+        <button onclick="addAttendanceDate()">新增上課日</button>
+      </div>
+    </div>
+    <div class="three">
+      <div><label>起始日期</label><input id="attStartDate" type="date"></div>
+      <div><label>週數</label><input id="attWeeks" type="number" min="1" value="20"></div>
+      <div><label>說明</label><div class="small" style="padding-top:14px">點格子可循環：未點名 → 出席 → 遲到 → 缺席 → 請假</div></div>
+    </div>
+    <div id="attendanceDateChips" style="margin:10px 0"></div>
+    <div class="att-overview-wrap"><table class="att-table" id="attendanceOverviewTable"></table></div>
+  </div>
+</section>
+
+<section id="displayView" class="hidden">
+  <div class="card"><div class="section-title"><h2>展示模式</h2><div class="toolbar"><button onclick="drawRandomStudent()">抽籤</button><button onclick="toggleDisplayBoost()">投影放大</button><button class="primary" onclick="setView('classroom')">回老師控制台</button></div></div><p class="small">適合投影，只顯示排行榜、抽籤與等級地圖。</p></div><div class="big-draw" id="displayDraw">🎲 準備抽籤</div><div class="grid"><div class="card"><h2 id="displayClassTitle">班級展示</h2><p id="displayClassSub" class="small"></p><div id="displayRank"></div></div><div class="card"><h2>班級等級地圖</h2><div class="map-wrap"><div id="displayBoard" class="board"></div></div></div></div>
+</section>
+
+<section id="studentView" class="hidden">
+  <div class="card"><div class="three"><div><label>學校</label><select id="studentSchool" onchange="setFilter('schoolId',this.value)"></select></div><div><label>年級 / 班級</label><select id="studentGrade" onchange="setFilter('gradeId',this.value)"></select></div><div><label>學生</label><select id="studentSelect" onchange="selectStudent(this.value)"></select></div></div></div><div class="card" style="text-align:center"><div id="studentAvatar" class="avatar big"></div><h1 id="studentName"></h1><div class="stage" id="studentStage"></div><div class="big-level" id="studentLevel"></div><div class="progress"><div class="bar" id="studentBar"></div></div><div class="reward" id="studentReward"></div>
+    <hr>
+    <h2>六角形能力指標</h2>
+    <div class="hex-wrap">
+      <svg id="studentAbilityHexSvg" class="hex-svg" viewBox="0 0 420 360"></svg>
+    </div>
+    <div class="ability-summary" id="studentAbilitySummary"></div>
+
+<h2>下一步任務</h2><div id="studentObjectives" class="objectives" style="text-align:left"></div><p class="small" id="studentNotes"></p></div>
+</section>
+
+<section id="noteQuizView" class="hidden">
+  <div class="card">
+    <div class="section-title"><div><h2>音符閃卡測驗</h2><p class="small">高音譜號五線譜｜可勾選音域與題數｜音名＋注音：C ㄉㄛ、D ㄖㄨㄟ、E ㄇㄧ、F ㄈㄚ、G ㄙㄛ、A ㄌㄚ、B ㄒㄧ</p></div><div class="toolbar"><button onclick="selectNoteRange('low')">低音G–中央C</button><button onclick="selectNoteRange('basic')">C–G</button><button onclick="selectNoteRange('full')">全選G–G</button><button onclick="clearNoteRange()">清空</button></div></div>
+    <div class="three"><div><label>目前作答學生</label><select id="quizStudentSelect" onchange="selectStudent(this.value)"></select></div><div><label>題數</label><select id="quizTotal"><option value="5">5題</option><option value="10" selected>10題</option><option value="20">20題</option><option value="custom">自訂</option></select></div><div><label>自訂題數</label><input id="quizCustomTotal" type="number" min="1" value="10"></div></div>
+    <label>勾選考試音域（最低：高音譜號下加區 G；最高：上加一間 G）</label><div id="noteRangeChecks" class="note-range-grid"></div>
+    <div class="controls" style="margin-top:12px"><button class="primary" onclick="startNoteQuiz()">開始測驗</button><button onclick="nextNoteQuestion()">跳下一題</button><button onclick="finishNoteQuiz()">結束並記錄</button></div>
+  </div>
+  <div class="note-quiz-card"><div class="quiz-scorebar"><div class="stat"><div class="num" id="quizNow">0/0</div><div class="cap">目前題數</div></div><div class="stat"><div class="num" id="quizCorrect">0</div><div class="cap">答對</div></div><div class="stat"><div class="num" id="quizStreak">0</div><div class="cap">連擊</div></div><div class="stat"><div class="num" id="quizPoints">0</div><div class="cap">本次加分</div></div></div><div class="staff-wrap"><svg id="noteStaffSvg" class="staff-svg" viewBox="0 0 680 260" aria-label="五線譜音符"></svg></div><div class="quiz-feedback" id="quizFeedback">請先選擇音域並開始測驗</div><div id="quizOptions" class="quiz-options"></div></div>
+  <div class="card"><h2>測驗紀錄</h2><div id="quizHistoryList" class="log-list"></div></div>
+</section>
+
+
+<section id="rewardShopView" class="hidden">
+  <div class="card"><div class="section-title"><div><h2>獎品兌換</h2><p class="small">選學生 → 點獎品 → 自動扣點、扣庫存並留下兌換紀錄。</p></div><div class="toolbar"><button class="primary" onclick="clearRewardForm()">新增獎品</button><button onclick="renderRewardShop()">重新整理</button></div></div>
+    <div class="three"><div><label>目前班級</label><div class="reward" id="rewardClassInfo" style="margin-top:0"></div></div><div><label>兌換學生</label><select id="rewardStudentSelect" onchange="selectStudent(this.value);renderRewardShop()"></select></div><div><label>學生點數</label><div class="stat" style="padding:12px"><div class="num" id="rewardStudentPoints">0</div><div class="cap">可用點數</div></div></div></div>
+  </div>
+  <div class="grid"><div><div class="card"><h2>新增 / 修改獎品</h2><input id="rewardId" type="hidden"><label>獎品名稱</label><input id="rewardName" placeholder="例如：糖果、小貼紙、神秘禮物"><div class="two"><div><label>兌換點數</label><input id="rewardCost" type="number" min="0" value="5"></div><div><label>數量 / 庫存</label><input id="rewardStock" type="number" min="-1" value="10"></div></div><p class="small">庫存填 -1 代表無限量。</p><label>獎品照片</label><input id="rewardPhotoInput" type="file" accept="image/*" onchange="loadRewardPhoto(event)"><div class="reward-img" id="rewardPhotoPreview">🎁</div><label>備註</label><textarea id="rewardNotes" rows="3" placeholder="例如：限量、每人一次、兌換規則"></textarea><div class="controls"><button class="primary" onclick="saveReward()">儲存獎品</button><button onclick="clearRewardForm()">清空</button><button class="warn" onclick="deleteReward()">刪除獎品</button></div></div><div class="card"><h2>兌換紀錄</h2><div id="redemptionList"></div></div></div><div class="card"><h2>獎品商店</h2><div id="rewardShopList" class="reward-shop-grid"></div></div></div>
+</section>
+
+<section id="calendarView" class="hidden">
+  <div class="card">
+    <div class="section-title">
+      <div>
+        <h2>行事曆</h2>
+        <p class="small">同一天可以新增多個事件；點日期可查看當天全部事件，點事件可修改或刪除。</p>
+      </div>
+      <div class="toolbar">
+        <button onclick="changeMonth(-1)">上一月</button>
+        <button onclick="goToday()">本月</button>
+        <button onclick="changeMonth(1)">下一月</button>
+        <button class="primary" onclick="newEventForSelectedDate()">新增當日事件</button>
+      </div>
+    </div>
+    <div class="three">
+      <div><label>學校</label><select id="calendarSchool" onchange="setCalendarSchool(this.value)"></select></div>
+      <div><label>月份</label><input id="calendarMonth" type="month" onchange="setCalendarMonth(this.value)"></div>
+      <div><label>顯示</label><select id="calendarScope" onchange="setCalendarScope(this.value)"><option value="school">目前學校</option><option value="all">全部學校</option></select></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>新增 / 修改事件</h2>
+        <input id="eventId" type="hidden">
+        <label>日期</label><input id="eventDate" type="date">
+        <label>學校</label><select id="eventSchool"></select>
+        <label>類型</label>
+        <select id="eventType">
+          <option value="exam">考試</option>
+          <option value="concert">演出 / 活動</option>
+          <option value="school">學校行事</option>
+          <option value="other">其他</option>
+        </select>
+        <label>標題</label><input id="eventTitle" placeholder="期中考 / 期末考 / 畢業典禮 / 補課">
+        <label>備註</label><textarea id="eventNotes" rows="4"></textarea>
+        <div class="controls">
+          <button class="primary" onclick="saveEvent()">儲存為新事件</button>
+          <button class="blue" onclick="updateEventFromForm()">更新選取事件</button>
+          <button onclick="clearEventForm()">清空</button>
+          <button class="warn" onclick="deleteEvent()">刪除選取事件</button>
+        </div>
+        <p class="small">「儲存為新事件」永遠新增一筆；「更新選取事件」才會修改既有事件。</p>
+      </div>
+
+      <div class="card">
+        <h2 id="selectedDateTitle">當日事件</h2>
+        <div id="selectedDateEvents" class="event-list-panel"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="calendarTitle">月份行事曆</h2>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </div>
+</section>
+
+<section id="lessonLogView" class="hidden">
+  <div class="card"><div class="section-title"><h2>上課紀錄</h2><button class="primary" onclick="newLessonLog()">新增紀錄</button></div><div class="three"><div><label>學校</label><select id="logFilterSchool" onchange="setLogFilter('schoolId',this.value)"></select></div><div><label>年級</label><select id="logFilterGrade" onchange="setLogFilter('gradeId',this.value)"></select></div><div><label>範圍</label><select id="logScope" onchange="setLogScope(this.value)"><option value="class">目前班級</option><option value="school">目前學校</option><option value="all">全部</option></select></div></div></div>
+  <div class="grid"><div class="card"><h2>輸入 / 修改</h2><input id="logId" type="hidden"><div class="two"><div><label>日期</label><input id="logDate" type="date"></div><div><label>課次 / 標題</label><input id="logTitle"></div></div><div class="two"><div><label>學校</label><select id="logSchool"></select></div><div><label>年級</label><select id="logGrade"></select></div></div><label>本節內容</label><textarea id="logContent" rows="7"></textarea><label>下次提醒 / 作業</label><textarea id="logNext" rows="4"></textarea><div class="controls"><button class="primary" onclick="saveLessonLog()">儲存</button><button onclick="clearLessonLogForm()">清空</button><button class="warn" onclick="deleteLessonLog()">刪除</button></div></div><div class="card"><h2>紀錄列表</h2><div id="lessonLogList" class="log-list"></div></div></div>
+</section>
+
+<section id="coursePlanView" class="hidden">
+  <div class="card"><div class="section-title"><h2>學年課程總覽</h2><div class="toolbar"><button class="primary" onclick="newCoursePlan()">新增週次</button><button onclick="generateDefaultCoursePlan()">為目前班級產生範本</button></div></div><p class="small">每間學校、每個年級 / 班級都有獨立課程總覽。</p><div class="three"><div><label>學校</label><select id="courseFilterSchool" onchange="setCourseFilter('schoolId',this.value)"></select></div><div><label>年級 / 班級</label><select id="courseFilterGrade" onchange="setCourseFilter('gradeId',this.value)"></select></div><div><label>目前課程數</label><div class="stat" style="padding:12px"><div class="num" id="courseCount" style="font-size:24px">0</div><div class="cap">筆週次</div></div></div></div></div>
+  <div class="grid"><div class="card"><h2>編輯週次</h2><input id="courseId" type="hidden"><div class="two"><div><label>所屬學校</label><select id="courseSchool"></select></div><div><label>年級 / 班級</label><select id="courseGrade"></select></div></div><div class="two"><div><label>週次 / 單元</label><input id="courseWeek"></div><div><label>對應等級</label><input id="courseLevelRange"></div></div><label>主題</label><input id="courseTitle"><label>課程目標</label><textarea id="courseGoals" rows="4"></textarea><label>活動流程 / 備註</label><textarea id="courseActivities" rows="6"></textarea><div class="controls"><button class="primary" onclick="saveCoursePlan()">儲存</button><button onclick="clearCoursePlanForm()">清空</button><button class="warn" onclick="deleteCoursePlan()">刪除</button></div></div><div class="card"><h2 id="courseListTitle">全年課程列表</h2><div id="coursePlanList" class="course-list"></div></div></div>
+</section>
+
+<section id="levelsView" class="hidden">
+  <div class="grid"><div class="card"><h2>等級清單</h2><div class="controls"><button class="primary" onclick="addLevel()">新增一級</button><button class="warn" onclick="deleteLastLevel()">刪除最後一級</button><button onclick="resetLevelsConfirm()">恢復預設50級</button></div><hr><div id="levelManageList" class="student-list"></div></div><div class="card"><h2>編輯等級內容</h2><div id="levelEditorEmpty" class="small">請選擇等級</div><div id="levelEditor" class="hidden"><label>等級</label><input id="levelEditNumber" disabled><label>階段名稱</label><input id="levelEditStage" oninput="updateLevelField('stage',this.value)"><label>獎勵 / 稱號</label><input id="levelEditReward" oninput="updateLevelField('reward',this.value)"><label>升級目標（每行一個）</label><textarea id="levelEditGoals" rows="7" oninput="updateLevelGoals(this.value)"></textarea><div class="controls"><button onclick="addGoalToLevel()">增加目標</button><button onclick="removeLastGoalFromLevel()">刪除最後目標</button></div><hr><div class="stage" id="levelPreviewStage"></div><div class="big-level" id="levelPreviewNumber"></div><div id="levelPreviewGoals" class="objectives"></div><div id="levelPreviewReward" class="reward"></div></div></div></div>
+</section>
+
+<section id="manageView" class="hidden"><div class="grid"><div class="card"><h2>學校選單管理</h2><div class="row"><input id="newSchoolName" placeholder="新增學校"><button class="primary" onclick="addSchool()">新增</button></div><hr><div id="schoolManage"></div></div><div class="card"><h2>年級 / 班級選單管理</h2><div class="row"><input id="newGradeName" placeholder="新增年級/班級，例如：排笛隊"><button class="primary" onclick="addGrade()">新增</button></div><hr><div id="gradeManage"></div></div></div><div class="card"><h2>把既有學生加入目前班級 / 團隊</h2><p class="small">先在上方選好學校與年級／班級，再從這裡把其他班級的學生加入，例如加入「排笛隊」。</p><div id="studentPoolForClass"></div></div></section>
+
+</main>
+<div id="toast" class="toast"></div>
+<div id="levelupOverlay" class="levelup-overlay" onclick="hideLevelUp()"><div class="levelup-card"><div class="levelup-stars">✨ 🎉 ✨</div><h1 class="levelup-title">LEVEL UP!</h1><div class="levelup-name" id="levelupName">學生姓名</div><div class="levelup-level" id="levelupLevel">Lv.1</div><div class="levelup-reward" id="levelupReward">獎勵</div><p class="small">點一下畫面關閉</p></div></div>
+<script src="app.js"></script>
+</body>
+</html>
