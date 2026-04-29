@@ -2333,22 +2333,36 @@ setTimeout(()=>{try{renderAll();}catch(e){}},300);
 /* V28 disabled in V29 */
 
 
-/* V29 CLEAN UI FIX */
-function v29Esc(x){ return typeof escapeHtml==="function" ? escapeHtml(x) : String(x??""); }
-function v29SchoolName(id){ return (data.schools||[]).find(x=>x.id===id)?.name || ""; }
-function v29GradeName(id){ return (data.grades||[]).find(x=>x.id===id)?.name || ""; }
-function v29Memberships(studentId){ return (data.memberships||[]).filter(m=>m.studentId===studentId); }
-function v29CurrentSchoolId(){ return data?.filter?.schoolId || ""; }
-function v29CurrentGradeId(){ return data?.filter?.gradeId || ""; }
-function v29PrimaryMembership(s){
-  const ms=v29Memberships(s.id);
-  const cs=v29CurrentSchoolId(), cg=v29CurrentGradeId();
+/* V29 CLEAN UI FIX disabled in V31 */
+
+
+/* V31 FULL FIX */
+function v31Esc(x){ return typeof escapeHtml==="function" ? escapeHtml(x) : String(x??""); }
+function v31Pad(n){ return String(n).padStart(2,"0"); }
+function v31ParseLocalDate(s){
+  const m=String(s||"").match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  return m ? new Date(Number(m[1]), Number(m[2])-1, Number(m[3])) : null;
+}
+function v31FormatDate(d){ return `${d.getFullYear()}-${v31Pad(d.getMonth()+1)}-${v31Pad(d.getDate())}`; }
+function v31AddDays(dateStr, days){
+  const d=v31ParseLocalDate(dateStr);
+  if(!d) return dateStr;
+  d.setDate(d.getDate()+Number(days||0));
+  return v31FormatDate(d);
+}
+function v31SchoolName(id){ return (data.schools||[]).find(x=>x.id===id)?.name || ""; }
+function v31GradeName(id){ return (data.grades||[]).find(x=>x.id===id)?.name || ""; }
+function v31CurrentSchoolId(){ return data?.filter?.schoolId || ""; }
+function v31CurrentGradeId(){ return data?.filter?.gradeId || ""; }
+function v31Memberships(studentId){ return (data.memberships||[]).filter(m=>m.studentId===studentId); }
+function v31PrimaryMembership(s){
+  const ms=v31Memberships(s.id), cs=v31CurrentSchoolId(), cg=v31CurrentGradeId();
   return ms.find(m=>m.schoolId===cs && (!cg || m.gradeId===cg))
     || ms.find(m=>m.schoolId===cs)
     || ms[0]
     || {schoolId:s.schoolId||"", gradeId:s.gradeId||""};
 }
-function v29GradeOrder(txt){
+function v31GradeOrder(txt){
   txt=String(txt||"");
   if(txt.includes("三")) return 3;
   if(txt.includes("四")) return 4;
@@ -2357,180 +2371,215 @@ function v29GradeOrder(txt){
   const n=parseInt(txt.replace(/[^\d]/g,""),10);
   return Number.isFinite(n)?n:999;
 }
-function v29Seat(s){
+function v31Seat(s){
   const n=parseInt(String(s.seatNo??s.seat??s.number??"").replace(/[^\d]/g,""),10);
   return Number.isFinite(n)?n:"";
 }
-function v29Points(s){
+function v31Points(s){
   const direct=parseInt(s.points??s.point??s.score??"",10);
   if(Number.isFinite(direct)) return direct;
   return (data.points||[]).filter(p=>p.studentId===s.id).reduce((sum,p)=>sum+(parseInt(p.value??p.points??0,10)||0),0);
 }
-function v29Summary(s){
-  const m=v29PrimaryMembership(s);
-  const school=v29SchoolName(m.schoolId)||s.schoolName||"";
-  const grade=v29GradeName(m.gradeId)||s.gradeName||s.className||"";
-  const seat=v29Seat(s);
-  return {school,grade,seat,points:v29Points(s)};
+function v31SummaryText(s){
+  const m=v31PrimaryMembership(s);
+  const school=v31SchoolName(m.schoolId)||s.schoolName||"";
+  const grade=v31GradeName(m.gradeId)||s.gradeName||s.className||"";
+  const seat=v31Seat(s);
+  return `${school?school+"｜":""}${grade?grade+"｜":""}${seat?seat+"號｜":""}點數 ${v31Points(s)}`;
 }
-function v29SummaryText(s){
-  const m=v29Summary(s);
-  return `${m.school?m.school+"｜":""}${m.grade?m.grade+"｜":""}${m.seat?m.seat+"號｜":""}點數 ${m.points}`;
-}
-function v29InCurrentFilter(s){
-  const cs=v29CurrentSchoolId(), cg=v29CurrentGradeId();
-  const ms=v29Memberships(s.id);
+function v31InCurrentFilter(s){
+  const cs=v31CurrentSchoolId(), cg=v31CurrentGradeId();
+  const ms=v31Memberships(s.id);
   const schoolOK=!cs || ms.some(m=>m.schoolId===cs) || s.schoolId===cs;
   const gradeOK=!cg || ms.some(m=>m.gradeId===cg) || s.gradeId===cg;
   return schoolOK && gradeOK;
 }
-function v29Sort(a,b){
-  const ma=v29Summary(a), mb=v29Summary(b);
-  const ga=v29GradeOrder(ma.grade), gb=v29GradeOrder(mb.grade);
+function v31Sort(a,b){
+  const ma=v31PrimaryMembership(a), mb=v31PrimaryMembership(b);
+  const ga=v31GradeOrder(v31GradeName(ma.gradeId)||a.gradeName||a.className||a.grade);
+  const gb=v31GradeOrder(v31GradeName(mb.gradeId)||b.gradeName||b.className||b.grade);
   if(ga!==gb) return ga-gb;
-  const sa=ma.seat||9999, sb=mb.seat||9999;
+  const sa=v31Seat(a)||9999, sb=v31Seat(b)||9999;
   if(sa!==sb) return sa-sb;
   return String(a.name||"").localeCompare(String(b.name||""),"zh-Hant");
 }
-if(typeof filteredStudents==="function" && !window.__v29FilteredPatch){
-  window.__v29FilteredPatch=true;
+if(typeof filteredStudents==="function" && !window.__v31FilteredPatch){
+  window.__v31FilteredPatch=true;
   const old=filteredStudents;
   filteredStudents=function(){
     let arr=old();
     if(!Array.isArray(arr)) arr=[];
-    return arr.filter(v29InCurrentFilter).sort(v29Sort);
+    return arr.filter(v31InCurrentFilter).sort(v31Sort);
   };
 }
 
-/* Clean duplicate injected info boxes from old versions */
-function v29RemoveOldInjectedBoxes(){
-  document.querySelectorAll("#v27StudentInfoBox,#v28ProfileInfo").forEach(x=>x.remove());
-  document.querySelectorAll(".student-list > div, .rank-list > div, .student-list .badge, .rank-list .badge").forEach(el=>{
+/* Local weekly date fix */
+if(typeof generateAttendanceDates==="function" && !window.__v31DatePatch){
+  window.__v31DatePatch=true;
+  generateAttendanceDates=function(){
+    const startEl=document.getElementById("attendanceStartDate");
+    const weeksEl=document.getElementById("attendanceWeeks");
+    const start=(startEl&&startEl.value)||"";
+    const weeks=parseInt((weeksEl&&weeksEl.value)||"0",10)||0;
+    if(!start || !weeks) return;
+    if(!Array.isArray(data.attendanceDates)) data.attendanceDates=[];
+    const schoolId=data.filter?.schoolId||"";
+    const gradeId=data.filter?.gradeId||"";
+    const scope=data.logFilter?.scope||"class";
+    for(let i=0;i<weeks;i++){
+      const date=v31AddDays(start,i*7);
+      if(!data.attendanceDates.some(x=>x.date===date && x.schoolId===schoolId && x.gradeId===gradeId && (x.scope||"class")===scope)){
+        data.attendanceDates.push({id:uid(),date,schoolId,gradeId,scope});
+      }
+    }
+    persist(); renderAll(); toast("已用本地日期產生每週上課日");
+  };
+}
+
+/* Remove meaningless question marks */
+function v31RemoveQuestionBars(){
+  document.querySelectorAll(".student-list > div,.rank-list > div,.ranking-list > div,.badge,td,th,span,div").forEach(el=>{
     if((el.textContent||"").trim()==="?") el.remove();
   });
 }
 
-/* Rebuild left student list safely: do not change photos globally */
-function v29PatchStudentList(){
+/* Keep add-student form visible; rebuild clean helper without hiding inputs */
+function v31FixAddStudent(){
+  const cards=[...document.querySelectorAll(".card")].filter(c=>(c.textContent||"").includes("新增學生"));
+  cards.forEach(card=>{
+    // make all inputs/buttons inside visible again
+    card.querySelectorAll("input,select,textarea,button,label").forEach(el=>{
+      el.style.display="";
+      el.hidden=false;
+      const box=el.closest(".two,.row,.field,.form-row,div");
+      if(box) box.style.display="";
+    });
+    // remove duplicate old hints
+    card.querySelectorAll("#v29AddHelp,#v30AddHelp,#v31AddHelp").forEach(x=>x.remove());
+    // hide original class fields only if there are duplicate "原班級" labels, but don't hide name/level/seat
+    const labels=[...card.querySelectorAll("label,span,div")];
+    labels.forEach(el=>{
+      const t=(el.textContent||"").trim();
+      if(t==="原班級" || t==="原班級備註"){
+        const box=el.closest(".two,.row,.field,.form-row") || el.parentElement;
+        if(box && !(box.textContent||"").includes("姓名") && !(box.textContent||"").includes("座號")){
+          box.style.display="none";
+        }
+      }
+    });
+    const help=document.createElement("div");
+    help.id="v31AddHelp";
+    help.className="v31-help";
+    const school=v31SchoolName(v31CurrentSchoolId())||"目前選取學校";
+    const grade=v31GradeName(v31CurrentGradeId())||"目前選取年級/班級";
+    help.innerHTML=`加入位置：<b>${v31Esc(school)}｜${v31Esc(grade)}</b><br>請填「姓名」與「座號」後按新增學生。`;
+    const btn=[...card.querySelectorAll("button")].find(b=>(b.textContent||"").includes("新增學生"));
+    if(btn) btn.insertAdjacentElement("beforebegin", help);
+  });
+}
+
+/* Patch student list safely with names retained */
+function v31PatchStudentList(){
   const list=document.querySelector(".student-list");
   if(!list) return;
-  const students=(typeof filteredStudents==="function"?filteredStudents():(data.students||[]).filter(v29InCurrentFilter)).sort(v29Sort);
-  list.querySelectorAll(".student-item,.student-card").forEach((el,idx)=>{
+  const students=(typeof filteredStudents==="function"?filteredStudents():(data.students||[]).filter(v31InCurrentFilter)).sort(v31Sort);
+  const items=[...list.querySelectorAll(".student-item,.student-card")];
+  items.forEach((el,idx)=>{
     const s=students[idx];
     if(!s) return;
-    const summary=v29SummaryText(s);
-    const photo=s.photo ? `<img src="${s.photo}" alt="${v29Esc(s.name)}">` : `<div class="avatar">${v29Esc((s.name||"?").slice(0,2))}</div>`;
-    el.innerHTML = `
-      <div class="v29-student-row" data-student-id="${s.id}">
-        <div class="v29-photo">${photo}</div>
-        <div class="v29-main">
-          <div class="v29-name">${v29Esc(s.name||"")}</div>
-          <div class="v29-meta">${v29Esc(summary)}</div>
+    const imgHtml=s.photo ? `<img src="${s.photo}" alt="${v31Esc(s.name)}">` : `<div class="avatar">${v31Esc((s.name||"?").slice(0,2))}</div>`;
+    el.innerHTML=`
+      <div class="v31-student-row">
+        <div class="v31-photo">${imgHtml}</div>
+        <div class="v31-main">
+          <div class="v31-name">${v31Esc(s.name||"")}</div>
+          <div class="v31-meta">${v31Esc(v31SummaryText(s))}</div>
         </div>
-        <div class="level-pill">Lv.${v29Esc(s.level||1)}</div>
+        <div class="level-pill">Lv.${v31Esc(s.level||1)}</div>
       </div>`;
     el.onclick=()=>{data.selectedId=s.id; persist(); renderAll();};
   });
 }
 
-/* Rebuild/patch ranking rows without question mark and with aligned layout */
-function v29PatchRanking(){
-  const rank=document.querySelector(".rank-list,.ranking-list");
-  if(!rank) return;
-  rank.querySelectorAll(".badge").forEach(b=>{if((b.textContent||"").trim()==="?") b.remove();});
-  rank.querySelectorAll(".rank-item,.ranking-item,.student-item").forEach(el=>{
-    el.classList.add("v29-rank-row");
-  });
-}
-
-/* Sync only right profile area, not list photos */
-function v29SyncRightProfile(){
+/* Personal page top box */
+function v31FixPersonalTop(){
+  document.querySelectorAll("#v27StudentInfoBox,#v28ProfileInfo,#v29AddHelp,#v30StudentTopInfo").forEach(x=>x.remove());
   const s=(data.students||[]).find(x=>x.id===data.selectedId);
   if(!s) return;
-  const profile=[...document.querySelectorAll(".card,section,div")].find(el=>
-    (el.textContent||"").includes("本級升級目標") || (el.textContent||"").includes("目前等級")
-  );
-  if(!profile) return;
-  const img=profile.querySelector("img");
-  const av=profile.querySelector(".avatar");
-  if(img && s.photo){ img.src=s.photo; img.alt=s.name||"學生照片"; }
-  if(av){
-    if(s.photo){
-      av.style.backgroundImage=`url("${s.photo}")`;
-      av.style.backgroundSize="cover";
-      av.style.backgroundPosition="center";
-      av.textContent="";
-    }else{
-      av.style.backgroundImage="";
-      av.textContent=(s.name||"?").slice(0,2);
-    }
+  const select=[...document.querySelectorAll("select")].find(x=>[...x.options].some(o=>o.value===s.id));
+  const card=select ? (select.closest(".card") || select.parentElement) : null;
+  if(card && !card.querySelector("#v31StudentTopInfo")){
+    const box=document.createElement("div");
+    box.id="v31StudentTopInfo";
+    box.className="v31-info";
+    select.insertAdjacentElement("afterend", box);
   }
+  const box=document.getElementById("v31StudentTopInfo");
+  if(box) box.innerHTML=`學生：${v31Esc(s.name||"")}<br>目前：${v31Esc(v31SummaryText(s))}`;
 }
 
-/* Hide original class duplicate fields completely */
-function v29HideOriginalClass(){
-  document.querySelectorAll("label,span,div").forEach(el=>{
-    const t=(el.textContent||"").trim();
-    if(t==="原班級" || t==="原班級備註"){
-      const box=el.closest(".two,.row,.field,.form-row") || el.parentElement;
-      if(box) box.style.display="none";
-    }
+/* Level list left align */
+function v31FixLevelList(){
+  document.querySelectorAll(".level-list,.levels-list").forEach(list=>{
+    list.style.textAlign="left";
+  });
+  document.querySelectorAll(".level-list > *, .levels-list > *").forEach(item=>{
+    item.style.textAlign="left";
+    item.style.justifyContent="flex-start";
   });
 }
 
-/* Insert readable add-student school/grade/seat helper */
-function v29AddStudentHelper(){
-  const card=[...document.querySelectorAll(".card")].find(c=>(c.textContent||"").includes("新增學生"));
-  if(!card || card.querySelector("#v29AddHelp")) return;
-  const currentSchool=v29SchoolName(v29CurrentSchoolId()) || "目前選取學校";
-  const currentGrade=v29GradeName(v29CurrentGradeId()) || "目前選取年級";
-  const help=document.createElement("div");
-  help.id="v29AddHelp";
-  help.className="v29-help";
-  help.textContent=`新增學生會加入：${currentSchool}｜${currentGrade}。請填姓名與座號即可。`;
-  const btn=[...card.querySelectorAll("button")].find(b=>(b.textContent||"").includes("新增學生"));
-  if(btn) btn.insertAdjacentElement("beforebegin", help);
-}
-
-/* Ability sliders: contained two-column layout */
-function v29FixAbility(){
+/* Ability sliders contained */
+function v31FixRanges(){
   document.querySelectorAll('input[type="range"]').forEach(r=>{
-    const parent=r.closest("label,.ability-control,div");
-    const txt=parent?.textContent||"";
+    const p=r.closest("label,.ability-control,div");
+    const txt=p?.textContent||"";
     if(["音準","節奏","視譜","氣息","音色","表現力"].some(k=>txt.includes(k))){
       r.min="1"; r.max="5"; r.step="1";
       r.style.width="100%";
-      r.style.maxWidth="160px";
+      r.style.maxWidth="140px";
       r.style.boxSizing="border-box";
       r.style.accentColor="#1f6feb";
-      if(parent) parent.classList.add("v29-ability-control");
+      if(p) p.classList.add("v31-range-row");
     }
   });
 }
 
-if(typeof renderAll==="function" && !window.__v29RenderPatch){
-  window.__v29RenderPatch=true;
+/* Ranking alignment */
+function v31FixRanking(){
+  document.querySelectorAll(".rank-list,.ranking-list").forEach(rank=>{
+    rank.style.textAlign="left";
+    rank.querySelectorAll(".rank-item,.ranking-item,.student-item").forEach(el=>{
+      el.classList.add("v31-rank-row");
+      el.style.textAlign="left";
+    });
+  });
+}
+
+if(typeof renderAll==="function" && !window.__v31RenderPatch){
+  window.__v31RenderPatch=true;
   const oldRender=renderAll;
   renderAll=function(){
     oldRender();
     setTimeout(()=>{
-      v29RemoveOldInjectedBoxes();
-      v29PatchStudentList();
-      v29PatchRanking();
-      v29SyncRightProfile();
-      v29HideOriginalClass();
-      v29AddStudentHelper();
-      v29FixAbility();
+      v31RemoveQuestionBars();
+      v31FixAddStudent();
+      v31PatchStudentList();
+      v31FixPersonalTop();
+      v31FixLevelList();
+      v31FixRanges();
+      v31FixRanking();
     },0);
   };
 }
 setInterval(()=>{
   try{
-    v29RemoveOldInjectedBoxes();
-    v29FixAbility();
+    v31RemoveQuestionBars();
+    v31FixAddStudent();
+    v31FixRanges();
   }catch(e){}
 },1000);
-/* END V29 CLEAN UI FIX */
+/* END V31 FULL FIX */
 
 persist();
 renderAll();

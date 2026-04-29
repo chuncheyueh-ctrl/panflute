@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V29</title>
+<title>Battle 排笛教學管理系統 V31</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -231,6 +231,21 @@ input[type="range"]{accent-color:#1f6feb;}
 .v29-ability-control input[type="range"]{width:100%!important;max-width:160px!important;}
 .rank-list .rank-item,.ranking-list .ranking-item,.v29-rank-row{display:grid;grid-template-columns:42px 48px 1fr;gap:10px;align-items:center;text-align:left;}
 
+
+/* V31 full fix */
+.v31-info{margin-top:10px;padding:12px 14px;border-radius:14px;background:#fff7ef;border:1px solid #ead9c2;font-weight:900;line-height:1.8;}
+.v31-help{font-size:13px;font-weight:800;background:#fff7ef;border:1px solid #ead9c2;border-radius:12px;padding:10px 12px;margin:10px 0;}
+.v31-student-row{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;width:100%;}
+.v31-photo img,.v31-photo .avatar{width:48px;height:48px;border-radius:14px;object-fit:cover;display:grid;place-items:center;background:#ead5bd;font-weight:900;}
+.v31-name{font-weight:1000;font-size:17px;margin-bottom:4px;}
+.v31-meta{font-size:13px;color:#5f5548;line-height:1.35;}
+.v31-range-row{display:grid!important;grid-template-columns:54px minmax(80px,140px) 28px!important;gap:8px!important;align-items:center!important;}
+.v31-range-row input[type="range"]{width:100%!important;max-width:140px!important;}
+.level-list,.levels-list{text-align:left!important;}
+.level-list > *,.levels-list > *{text-align:left!important;justify-content:flex-start!important;}
+.rank-list,.ranking-list{text-align:left!important;}
+.v31-rank-row{display:grid!important;grid-template-columns:42px 48px 1fr!important;gap:10px!important;align-items:center!important;text-align:left!important;}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -253,7 +268,7 @@ input[type="range"]{accent-color:#1f6feb;}
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V29｜名單與新增學生修正版</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V31｜新增學生與日期總修正版</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -453,6 +468,6 @@ window.db = firebase.firestore();
 window.storage = firebase.storage();
 console.log("🔥 Firebase 已連線");
 </script>
-<script src="app-v17.js?v=29"></script>
+<script src="app-v17.js?v=31"></script>
 </body>
 </html>
