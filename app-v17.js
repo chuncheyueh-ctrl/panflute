@@ -2705,3 +2705,45 @@ setInterval(()=>{
 persist();
 renderAll();
 hideSplashSoon();
+
+
+/* V33 SORT FIX */
+function v33GradeOrder(g){
+  if(!g) return 999;
+  const m = String(g).match(/(\d+)/);
+  return m ? Number(m[1]) : 999;
+}
+function v33Seat(s){
+  const n = parseInt(s,10);
+  return isNaN(n)?999:n;
+}
+function v33SortStudents(list){
+  return list.sort((a,b)=>{
+    const ga=v33GradeOrder(a.grade), gb=v33GradeOrder(b.grade);
+    if(ga!==gb) return ga-gb;
+    const sa=v33Seat(a.seat), sb=v33Seat(b.seat);
+    if(sa!==sb) return sa-sb;
+    return String(a.name||"").localeCompare(String(b.name||""),"zh-Hant");
+  });
+}
+function v33FormatStudent(s){
+  const seat = s.seat ? String(s.seat).padStart(2,"0")+"號" : "未填座號";
+  return `${s.grade||""}｜${seat}｜${s.name||""}`;
+}
+if(typeof renderAttendanceOverview==="function"){
+  const old = renderAttendanceOverview;
+  renderAttendanceOverview = function(){
+    if(Array.isArray(data.students)){
+      data.students = v33SortStudents([...data.students]);
+    }
+    old();
+    document.querySelectorAll("td:first-child").forEach(td=>{
+      const txt = td.textContent;
+      const s = data.students.find(x=>txt.includes(x.name));
+      if(s){
+        td.innerHTML = v33FormatStudent(s);
+      }
+    });
+  }
+}
+/* END V33 */
