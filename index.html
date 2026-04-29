@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V27</title>
+<title>Battle 排笛教學管理系統 V28</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -215,6 +215,11 @@ img.reward-photo-clickable{
 /* V27 profile info */
 #v27StudentInfoBox{box-shadow:0 3px 10px rgba(80,55,25,.08);}
 
+
+/* V28 ability and profile fix */
+#v28ProfileInfo{box-shadow:0 3px 10px rgba(80,55,25,.08);}
+input[type="range"]{accent-color:#1f6feb;}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -237,7 +242,7 @@ img.reward-photo-clickable{
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V27｜學生資料同步修正版</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V28｜介面邏輯修正版</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -437,6 +442,6 @@ window.db = firebase.firestore();
 window.storage = firebase.storage();
 console.log("🔥 Firebase 已連線");
 </script>
-<script src="app-v17.js?v=27"></script>
+<script src="app-v17.js?v=28"></script>
 </body>
 </html>

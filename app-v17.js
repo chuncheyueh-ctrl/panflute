@@ -2486,6 +2486,214 @@ if(typeof renderAll==="function" && !window.__v27RenderPatch){
 setInterval(()=>{try{v27SyncProfilePanel();}catch(e){}},800);
 /* END V27 PROFILE SYNC + MEMBERSHIP DISPLAY FIX */
 
+
+/* V28 UI LOGIC FIX */
+function v28CurrentSchoolId(){
+  return data?.filter?.schoolId || "";
+}
+function v28CurrentGradeId(){
+  return data?.filter?.gradeId || "";
+}
+function v28StudentMemberships(studentId){
+  return (data.memberships||[]).filter(m=>m.studentId===studentId);
+}
+function v28StudentInCurrentSchool(s){
+  const schoolId=v28CurrentSchoolId();
+  if(!schoolId) return true;
+  return v28StudentMemberships(s.id).some(m=>m.schoolId===schoolId) || s.schoolId===schoolId;
+}
+function v28StudentInCurrentGrade(s){
+  const gradeId=v28CurrentGradeId();
+  if(!gradeId) return true;
+  return v28StudentMemberships(s.id).some(m=>m.gradeId===gradeId) || s.gradeId===gradeId;
+}
+function v28SchoolName(id){
+  return (data.schools||[]).find(x=>x.id===id)?.name || "";
+}
+function v28GradeName(id){
+  return (data.grades||[]).find(x=>x.id===id)?.name || "";
+}
+function v28PrimaryMembership(s){
+  const currentSchool=v28CurrentSchoolId();
+  const currentGrade=v28CurrentGradeId();
+  const ms=v28StudentMemberships(s.id);
+  return ms.find(m=>m.schoolId===currentSchool && (!currentGrade || m.gradeId===currentGrade))
+      || ms.find(m=>m.schoolId===currentSchool)
+      || ms[0]
+      || {schoolId:s.schoolId||"", gradeId:s.gradeId||""};
+}
+function v28GradeOrderText(t){
+  t=String(t||"");
+  if(t.includes("三")) return 3;
+  if(t.includes("四")) return 4;
+  if(t.includes("五")) return 5;
+  if(t.includes("六")) return 6;
+  const n=parseInt(t.replace(/[^\d]/g,""),10);
+  return Number.isFinite(n)?n:999;
+}
+function v28Seat(s){
+  const n=parseInt(String(s.seatNo??s.seat??s.number??"").replace(/[^\d]/g,""),10);
+  return Number.isFinite(n)?n:"";
+}
+function v28Points(s){
+  const direct=parseInt(s.points??s.point??s.score??"",10);
+  if(Number.isFinite(direct)) return direct;
+  return (data.points||[]).filter(p=>p.studentId===s.id).reduce((sum,p)=>sum+(parseInt(p.value??p.points??0,10)||0),0);
+}
+function v28StudentSummary(s){
+  const m=v28PrimaryMembership(s);
+  const school=v28SchoolName(m.schoolId)||s.schoolName||"";
+  const grade=v28GradeName(m.gradeId)||s.gradeName||s.className||"";
+  const seat=v28Seat(s);
+  return `${school?school+"｜":""}${grade?grade+"｜":""}${seat?seat+"號｜":""}點數 ${v28Points(s)}`;
+}
+function v28Sort(a,b){
+  const ma=v28PrimaryMembership(a), mb=v28PrimaryMembership(b);
+  const ga=v28GradeOrderText(v28GradeName(ma.gradeId)||a.gradeName||a.className||a.grade);
+  const gb=v28GradeOrderText(v28GradeName(mb.gradeId)||b.gradeName||b.className||b.grade);
+  if(ga!==gb) return ga-gb;
+  const sa=v28Seat(a)||9999, sb=v28Seat(b)||9999;
+  if(sa!==sb) return sa-sb;
+  return String(a.name||"").localeCompare(String(b.name||""),"zh-Hant");
+}
+
+/* Replace filteredStudents with strict current school/grade filter */
+if(typeof filteredStudents==="function" && !window.__v28FilteredPatch){
+  window.__v28FilteredPatch=true;
+  const oldFiltered=filteredStudents;
+  filteredStudents=function(){
+    let arr=oldFiltered();
+    if(!Array.isArray(arr)) arr=[];
+    arr=arr.filter(s=>v28StudentInCurrentSchool(s) && v28StudentInCurrentGrade(s));
+    return arr.sort(v28Sort);
+  };
+}
+
+/* Strong selected student click binding */
+function v28BindStudentClicks(){
+  document.querySelectorAll(".student-item,.student-card").forEach(el=>{
+    if(el.dataset.v28Click==="1") return;
+    el.dataset.v28Click="1";
+    el.addEventListener("click",()=>{
+      const txt=el.textContent||"";
+      const s=(data.students||[]).find(x=>x.name && txt.includes(x.name));
+      if(s){
+        data.selectedId=s.id;
+        persist();
+        setTimeout(()=>renderAll(),0);
+      }
+    },true);
+  });
+}
+
+/* sync right profile photo/name/info */
+function v28SyncSelectedProfile(){
+  const s=(data.students||[]).find(x=>x.id===data.selectedId);
+  if(!s) return;
+  const summary=v28StudentSummary(s);
+
+  // Fill name input if visible
+  const inputs=[...document.querySelectorAll("input")];
+  const nameInput=inputs.find(i=>i.value===s.name || i.placeholder==="學生姓名");
+  if(nameInput) nameInput.value=s.name;
+
+  // Update photo/avatar near big Lv area
+  const cards=[...document.querySelectorAll(".card,section,div")];
+  const profile=cards.find(el=>(el.textContent||"").includes("本級升級目標") || (el.textContent||"").includes("Lv.1")) || document.body;
+  const img=profile.querySelector("img");
+  const avatar=profile.querySelector(".avatar");
+  if(img){
+    if(s.photo) img.src=s.photo;
+    img.alt=s.name||"學生照片";
+  }
+  if(avatar){
+    if(s.photo){
+      avatar.style.backgroundImage=`url("${s.photo}")`;
+      avatar.style.backgroundSize="cover";
+      avatar.style.backgroundPosition="center";
+      avatar.textContent="";
+    }else{
+      avatar.style.backgroundImage="";
+      avatar.textContent=(s.name||"?").slice(0,2);
+    }
+  }
+
+  let box=document.getElementById("v28ProfileInfo");
+  if(!box){
+    box=document.createElement("div");
+    box.id="v28ProfileInfo";
+    box.style.cssText="margin:8px 0 12px;padding:12px 14px;border-radius:14px;background:#fff7ef;border:1px solid #ead9c2;font-weight:900;line-height:1.8;";
+    const insertTarget = nameInput ? (nameInput.closest(".card") || nameInput.parentElement) : profile;
+    insertTarget.insertBefore(box, insertTarget.children[1] || null);
+  }
+  box.innerHTML=`<div>學生：${escapeHtml(s.name||"")}</div><div>目前：${escapeHtml(summary)}</div>`;
+}
+
+/* Hide duplicated/meaningless original class fields */
+function v28HideOriginalClassFields(){
+  const labels=[...document.querySelectorAll("label,div,span,h3,h2")];
+  labels.forEach(el=>{
+    const t=(el.textContent||"").trim();
+    if(t==="原班級" || t==="原班級備註"){
+      const parent=el.closest(".two,.row,.field,.form-row,div") || el.parentElement;
+      if(parent){
+        parent.style.display="none";
+        parent.dataset.v28HiddenOriginalClass="1";
+      }
+    }
+  });
+}
+
+/* Fix ability range visual: 1-5 should fill from left to right */
+function v28FixAbilityRanges(){
+  document.querySelectorAll('input[type="range"]').forEach(r=>{
+    const label=(r.closest("label,.ability-control")?.textContent||"");
+    if(["音準","節奏","視譜","氣息","音色","表現力"].some(k=>label.includes(k))){
+      r.min="1"; r.max="5"; r.step="1";
+      r.style.width="180px";
+      r.style.accentColor="#1f6feb";
+    }
+  });
+}
+
+/* Patch list summary text */
+function v28PatchListSummaries(){
+  const students=((typeof filteredStudents==="function"?filteredStudents():(data.students||[]))||[]).sort(v28Sort);
+  document.querySelectorAll(".student-item,.student-card").forEach(el=>{
+    const txt=el.textContent||"";
+    const s=students.find(x=>x.name && txt.includes(x.name));
+    if(!s) return;
+    const summary=v28StudentSummary(s);
+    const targets=[...el.querySelectorAll(".small,.sm,span,div")];
+    const target=targets.find(n=>(n.textContent||"").includes("點數") || (n.textContent||"").includes("｜"));
+    if(target) target.textContent=summary;
+  });
+}
+
+if(typeof renderAll==="function" && !window.__v28RenderPatch){
+  window.__v28RenderPatch=true;
+  const oldRender=renderAll;
+  renderAll=function(){
+    oldRender();
+    setTimeout(()=>{
+      v28BindStudentClicks();
+      v28SyncSelectedProfile();
+      v28HideOriginalClassFields();
+      v28FixAbilityRanges();
+      v28PatchListSummaries();
+    },0);
+  };
+}
+setInterval(()=>{
+  try{
+    v28BindStudentClicks();
+    v28SyncSelectedProfile();
+    v28HideOriginalClassFields();
+    v28FixAbilityRanges();
+  }catch(e){}
+},700);
+/* END V28 UI LOGIC FIX */
+
 persist();
 renderAll();
 hideSplashSoon();
