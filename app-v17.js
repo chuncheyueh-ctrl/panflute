@@ -2326,6 +2326,166 @@ if(typeof renderAll==="function" && !window.__v26RenderPatched){
 setTimeout(()=>{try{renderAll();}catch(e){}},300);
 /* END V26 FINAL FIXES */
 
+
+/* V27 PROFILE SYNC + MEMBERSHIP DISPLAY FIX */
+function v27GetStudent(){
+  if(!data) return null;
+  return (data.students||[]).find(s=>s.id===data.selectedId) || null;
+}
+function v27GradeOrderFromText(t){
+  t=String(t||"");
+  if(t.includes("三")) return 3;
+  if(t.includes("四")) return 4;
+  if(t.includes("五")) return 5;
+  if(t.includes("六")) return 6;
+  const n=parseInt(t.replace(/[^\d]/g,""),10);
+  return Number.isFinite(n)?n:999;
+}
+function v27GradeNameById(id){
+  const g=(data.grades||[]).find(x=>x.id===id);
+  return g ? g.name : "";
+}
+function v27SchoolNameById(id){
+  const s=(data.schools||[]).find(x=>x.id===id);
+  return s ? s.name : "";
+}
+function v27MembershipsOf(studentId){
+  return (data.memberships||[]).filter(m=>m.studentId===studentId);
+}
+function v27PrimaryMembership(student){
+  const ms=v27MembershipsOf(student.id);
+  if(ms.length){
+    return ms.slice().sort((a,b)=>{
+      const ga=v27GradeOrderFromText(v27GradeNameById(a.gradeId));
+      const gb=v27GradeOrderFromText(v27GradeNameById(b.gradeId));
+      if(ga!==gb) return ga-gb;
+      return String(v27SchoolNameById(a.schoolId)).localeCompare(String(v27SchoolNameById(b.schoolId)),"zh-Hant");
+    })[0];
+  }
+  return {schoolId:student.schoolId||"", gradeId:student.gradeId||""};
+}
+function v27GradeText(student){
+  const m=v27PrimaryMembership(student);
+  const g=v27GradeNameById(m.gradeId) || student.gradeName || student.className || student.grade || "";
+  if(String(g).includes("三")) return "三年級";
+  if(String(g).includes("四")) return "四年級";
+  if(String(g).includes("五")) return "五年級";
+  if(String(g).includes("六")) return "六年級";
+  const n=parseInt(String(g).replace(/[^\d]/g,""),10);
+  return Number.isFinite(n) ? `${n}年級` : String(g||"");
+}
+function v27SchoolText(student){
+  const m=v27PrimaryMembership(student);
+  return v27SchoolNameById(m.schoolId) || student.schoolName || "";
+}
+function v27Seat(student){
+  const n=parseInt(String(student.seatNo ?? student.seat ?? student.number ?? "").replace(/[^\d]/g,""),10);
+  return Number.isFinite(n)?n:"";
+}
+function v27Points(student){
+  const direct = parseInt(student.points ?? student.point ?? student.score ?? "",10);
+  if(Number.isFinite(direct)) return direct;
+  if(Array.isArray(data.points)){
+    return data.points.filter(p=>p.studentId===student.id).reduce((sum,p)=>sum+(parseInt(p.value??p.points??0,10)||0),0);
+  }
+  return 0;
+}
+function v27StudentLabel(student){
+  const school=v27SchoolText(student);
+  const grade=v27GradeText(student);
+  const seat=v27Seat(student);
+  const pts=v27Points(student);
+  return `${school?school+"｜":""}${grade?grade+"｜":""}${seat?seat+"號｜":""}點數 ${pts}`;
+}
+function v27SortStudents(a,b){
+  const ga=v27GradeOrderFromText(v27GradeText(a));
+  const gb=v27GradeOrderFromText(v27GradeText(b));
+  if(ga!==gb) return ga-gb;
+  const sa=v27Seat(a)||9999, sb=v27Seat(b)||9999;
+  if(sa!==sb) return sa-sb;
+  return String(a.name||"").localeCompare(String(b.name||""),"zh-Hant");
+}
+if(typeof filteredStudents==="function" && !window.__v27FilteredPatch){
+  window.__v27FilteredPatch=true;
+  const old=filteredStudents;
+  filteredStudents=function(){
+    const arr=old();
+    return Array.isArray(arr)?arr.sort(v27SortStudents):arr;
+  }
+}
+function v27SyncProfilePanel(){
+  const s=v27GetStudent();
+  if(!s) return;
+  const all=document.body;
+  const nameInputs=[...document.querySelectorAll("input")].filter(i=>i.value===s.name || i.placeholder==="學生姓名");
+  const nameInput=nameInputs[0];
+  if(nameInput && nameInput.value!==s.name) nameInput.value=s.name;
+
+  // Replace visible avatar/photo in profile area with selected student
+  const profileCandidates=[...document.querySelectorAll(".card,section,div")].filter(el=>(el.textContent||"").includes("本級升級目標") || (el.textContent||"").includes("目前等級"));
+  const profile=profileCandidates[0] || document.body;
+  const avatar=profile.querySelector(".avatar,img");
+  if(avatar){
+    if(avatar.tagName==="IMG"){
+      if(s.photo) avatar.src=s.photo;
+      avatar.alt=s.name||"學生照片";
+    }else{
+      if(s.photo){
+        avatar.style.backgroundImage=`url("${s.photo}")`;
+        avatar.style.backgroundSize="cover";
+        avatar.style.backgroundPosition="center";
+        avatar.textContent="";
+      }else{
+        avatar.style.backgroundImage="";
+        avatar.textContent=(s.name||"?").slice(0,2);
+      }
+    }
+  }
+
+  // Add/update info block on right profile card
+  let info=document.getElementById("v27StudentInfoBox");
+  if(!info){
+    info=document.createElement("div");
+    info.id="v27StudentInfoBox";
+    info.style.cssText="margin:10px 0 14px;padding:12px;border-radius:14px;background:#fff7ef;border:1px solid #ead9c2;font-weight:800;line-height:1.8;";
+    const target = nameInput ? (nameInput.closest(".card") || nameInput.parentElement) : profile;
+    target.insertBefore(info, target.children[1] || null);
+  }
+  info.innerHTML = `
+    <div>學生：${escapeHtml(s.name||"")}</div>
+    <div>目前：${escapeHtml(v27StudentLabel(s))}</div>
+  `;
+
+  // Rename original class label to reduce confusion
+  document.querySelectorAll("label,h3,h2,div,span").forEach(el=>{
+    if(el.childNodes.length===1 && (el.textContent||"").trim()==="原班級"){
+      el.textContent="原班級備註";
+    }
+  });
+}
+function v27PatchStudentListLabels(){
+  const students=((typeof filteredStudents==="function"?filteredStudents():(data.students||[]))||[]).sort(v27SortStudents);
+  document.querySelectorAll(".student-item,.student-card,.log-card").forEach(el=>{
+    const txt=el.textContent||"";
+    const s=students.find(x=>x.name && txt.includes(x.name));
+    if(!s) return;
+    const meta = v27StudentLabel(s);
+    const smalls=[...el.querySelectorAll(".small,.sm,span,div")];
+    const target=smalls.find(n=>(n.textContent||"").includes("點數") || (n.textContent||"").includes("｜"));
+    if(target) target.textContent=meta;
+  });
+}
+if(typeof renderAll==="function" && !window.__v27RenderPatch){
+  window.__v27RenderPatch=true;
+  const oldRender=renderAll;
+  renderAll=function(){
+    oldRender();
+    setTimeout(()=>{v27SyncProfilePanel();v27PatchStudentListLabels();},0);
+  };
+}
+setInterval(()=>{try{v27SyncProfilePanel();}catch(e){}},800);
+/* END V27 PROFILE SYNC + MEMBERSHIP DISPLAY FIX */
+
 persist();
 renderAll();
 hideSplashSoon();
