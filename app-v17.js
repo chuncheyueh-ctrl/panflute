@@ -1,12 +1,14 @@
 function escapeHtml(text) {
-  if (!text) return '';
-  return text
+  if (text === null || text === undefined) return "";
+  return String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+
+
 const KEY="battle_panflute_v5_stable_core";
 const LEGACY_KEYS=["battle_panflute_v4_levelup","battle_panflute_google_sheets_v3","battle_panflute_google_sheets_v1"];
 const API_KEY="battle_panflute_google_apps_script_url_v1";
@@ -334,27 +336,11 @@ function renderAttendanceOverview(){
   chips.innerHTML=dates.map(d=>`<span class="date-chip">${d.date}<button onclick="deleteAttendanceDate('${d.date}')">×</button></span>`).join("")||`<p class="small">尚未建立上課日期。可按「產生每週日期」或「新增上課日」。</p>`;
   const students=filteredStudents();
   let html=`<thead><tr><th>姓名 / 出席率</th>${dates.map(d=>`<th>${d.date.slice(5)}</th>`).join("")}</tr></thead><tbody>`;
-  
-  students.sort((a, b) => {
-  const gradeA = parseInt(a.grade || 0);
-  const gradeB = parseInt(b.grade || 0);
-
-  if (gradeA !== gradeB) return gradeA - gradeB;
-
-  const seatA = parseInt(a.seat || 0);
-  const seatB = parseInt(b.seat || 0);
-
-  return seatA - seatB;
-});
-  
   students.forEach(s=>{
     const records=dates.map(d=>data.attendance.find(a=>sameAttendanceScope(a,d.date,s.id)));
     const presentLike=records.filter(a=>a&&(a.status==="present"||a.status==="late"||a.status==="leave")).length;
     const rate=dates.length?Math.round(presentLike/dates.length*100):0;
-    html += `<tr><td>
-${escapeAttr(s.grade || '')}年${escapeAttr(s.seat || '')}號<br>
-${escapeAttr(s.name)}
-</td>`;
+    html+=`<tr><td>${escapeAttr(s.name)}<br><span class="small">出席率 ${dates.length?rate:"-"}%</span></td>`;
     dates.forEach(d=>{
       const a=data.attendance.find(x=>sameAttendanceScope(x,d.date,s.id));
       const st=a?.status||"";
@@ -2259,6 +2245,86 @@ const __v25_original_renderAll=renderAll;
 renderAll=function(){v25EnsureFields();v25NormalizeAttendance();__v25_original_renderAll();setTimeout(()=>{v25PatchAttendanceNames();v25PatchScrollable();v25PatchPersonalPage();v25RelabelButtons()},0);};
 setTimeout(()=>{v25EnsureFields();v25NormalizeAttendance();renderAll()},200);
 /* END V25 FIREBASE ONLY PATCH */
+
+
+/* V26 FINAL FIXES */
+function v26GradeText(s){
+  const raw = String(s?.gradeName || s?.className || s?.grade || s?.gradeId || "");
+  if(raw.includes("三")) return "三年級";
+  if(raw.includes("四")) return "四年級";
+  if(raw.includes("五")) return "五年級";
+  if(raw.includes("六")) return "六年級";
+  const n = parseInt(raw.replace(/[^\d]/g,""),10);
+  return Number.isFinite(n) && n > 0 ? `${n}年級` : "";
+}
+function v26GradeOrder(s){
+  const g = v26GradeText(s);
+  if(g.includes("三")) return 3;
+  if(g.includes("四")) return 4;
+  if(g.includes("五")) return 5;
+  if(g.includes("六")) return 6;
+  const n = parseInt(String(s?.grade || s?.gradeId || "").replace(/[^\d]/g,""),10);
+  return Number.isFinite(n) ? n : 999;
+}
+function v26SeatNum(s){
+  const n = parseInt(String(s?.seatNo ?? s?.seat ?? s?.number ?? "").replace(/[^\d]/g,""),10);
+  return Number.isFinite(n) ? n : 9999;
+}
+function v26SortStudents(a,b){
+  const ga=v26GradeOrder(a), gb=v26GradeOrder(b);
+  if(ga!==gb) return ga-gb;
+  const sa=v26SeatNum(a), sb=v26SeatNum(b);
+  if(sa!==sb) return sa-sb;
+  return String(a?.name||"").localeCompare(String(b?.name||""),"zh-Hant");
+}
+function v26DisplayName(s){
+  const grade = v26GradeText(s);
+  const seat = v26SeatNum(s)===9999 ? "" : `${v26SeatNum(s)}號`;
+  const prefix = [grade, seat].filter(Boolean).join("｜");
+  return `${prefix ? prefix+"｜" : ""}${escapeHtml(s?.name || "")}`;
+}
+if(typeof filteredStudents==="function" && !window.__v26FilteredPatched){
+  window.__v26FilteredPatched = true;
+  const oldFilteredStudents = filteredStudents;
+  filteredStudents = function(){
+    const arr = oldFilteredStudents();
+    return Array.isArray(arr) ? arr.sort(v26SortStudents) : arr;
+  };
+}
+function v26PatchLabels(){
+  try{
+    const students = (typeof filteredStudents==="function" ? filteredStudents() : (data.students||[])).sort(v26SortStudents);
+    document.querySelectorAll(".student-item,.student-card,.log-card,tr").forEach(el=>{
+      if(el.dataset.v26Label==="1") return;
+      const txt = el.textContent || "";
+      const s = students.find(x => x.name && txt.includes(x.name));
+      if(!s) return;
+      const nodes = [...el.querySelectorAll("b,strong,.name,td,div")];
+      const node = nodes.find(n => (n.textContent||"").includes(s.name));
+      if(node){
+        node.innerHTML = node.innerHTML.replace(escapeHtml(s.name), v26DisplayName(s));
+        el.dataset.v26Label="1";
+      }
+    });
+  }catch(e){console.warn("v26PatchLabels", e);}
+}
+function v26PatchScroll(){
+  document.querySelectorAll(".student-list,.log-list,.course-list").forEach(el=>{
+    el.style.maxHeight="72vh";
+    el.style.overflowY="auto";
+    el.style.webkitOverflowScrolling="touch";
+  });
+}
+if(typeof renderAll==="function" && !window.__v26RenderPatched){
+  window.__v26RenderPatched = true;
+  const oldRenderAll = renderAll;
+  renderAll = function(){
+    oldRenderAll();
+    setTimeout(()=>{v26PatchLabels();v26PatchScroll();},0);
+  };
+}
+setTimeout(()=>{try{renderAll();}catch(e){}},300);
+/* END V26 FINAL FIXES */
 
 persist();
 renderAll();
