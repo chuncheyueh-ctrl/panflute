@@ -2581,6 +2581,127 @@ setInterval(()=>{
 },1000);
 /* END V31 FULL FIX */
 
+
+/* V32 ATTENDANCE DATE + RANK FIX */
+function v32Pad(n){ return String(n).padStart(2,"0"); }
+function v32ParseDate(s){
+  const m=String(s||"").match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  return m ? new Date(Number(m[1]), Number(m[2])-1, Number(m[3])) : null;
+}
+function v32FormatDate(d){ return `${d.getFullYear()}-${v32Pad(d.getMonth()+1)}-${v32Pad(d.getDate())}`; }
+function v32AddDays(start, days){
+  const d=v32ParseDate(start);
+  if(!d) return start;
+  d.setDate(d.getDate()+Number(days||0));
+  return v32FormatDate(d);
+}
+function v32Scope(){
+  return (data.logFilter && data.logFilter.scope) || (data.filter && data.filter.scope) || "class";
+}
+function v32MakeAttendanceDates(){
+  const startEl=document.getElementById("attendanceStartDate") || document.querySelector('input[type="date"]');
+  const weeksEl=document.getElementById("attendanceWeeks") || [...document.querySelectorAll("input")].find(i => (i.previousElementSibling?.textContent||"").includes("週數") || i.value==="10");
+  const startRaw=(startEl && startEl.value) || "";
+  const weeks=parseInt((weeksEl && weeksEl.value) || "0",10) || 0;
+  if(!startRaw || !weeks){ alert("請先輸入起始日期與週數"); return; }
+
+  const schoolId=(data.filter && data.filter.schoolId) || "";
+  const gradeId=(data.filter && data.filter.gradeId) || "";
+  const scope=v32Scope();
+
+  if(!Array.isArray(data.attendanceDates)) data.attendanceDates=[];
+
+  // remove same class/grade/scope old generated dates first, to avoid 05-05 leftovers
+  data.attendanceDates = data.attendanceDates.filter(x => !(
+    (x.schoolId||"")===schoolId &&
+    (x.gradeId||"")===gradeId &&
+    ((x.scope||"class")===scope)
+  ));
+
+  for(let i=0;i<weeks;i++){
+    const date=v32AddDays(startRaw, i*7);
+    data.attendanceDates.push({id:uid(), date, schoolId, gradeId, scope});
+  }
+
+  persist();
+  renderAll();
+  toast(`已產生 ${weeks} 週日期：${v32FormatDate(v32ParseDate(startRaw))} 起`);
+}
+
+/* Replace every generate function and intercept button click */
+window.generateAttendanceDates = v32MakeAttendanceDates;
+if(typeof generateAttendanceDates !== "undefined") generateAttendanceDates = v32MakeAttendanceDates;
+
+function v32BindAttendanceButton(){
+  document.querySelectorAll("button").forEach(btn=>{
+    const t=(btn.textContent||"").trim();
+    if(t.includes("產生每週日期") || t.includes("產生每週") || t.includes("產生日期")){
+      if(btn.dataset.v32DateBtn==="1") return;
+      btn.dataset.v32DateBtn="1";
+      btn.onclick=function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        v32MakeAttendanceDates();
+        return false;
+      };
+    }
+  });
+}
+
+/* Re-sort date chips/table after rendering */
+function v32FixDateDisplay(){
+  const schoolId=(data.filter && data.filter.schoolId) || "";
+  const gradeId=(data.filter && data.filter.gradeId) || "";
+  const scope=v32Scope();
+  if(Array.isArray(data.attendanceDates)){
+    data.attendanceDates.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  }
+  document.querySelectorAll(".date-chip").forEach(chip=>{
+    const t=(chip.textContent||"").trim();
+    if(t.match(/^\d{4}-\d{2}-\d{2}/) && t.includes("05-05")){
+      // leave display alone only if actual data has it; normally old data removed on generation
+    }
+  });
+}
+
+/* Ranking: fixed same-height rows, left aligned */
+function v32FixRankLayout(){
+  const containers=[...document.querySelectorAll(".rank-list,.ranking-list,.card")].filter(c=>(c.textContent||"").includes("排行榜"));
+  containers.forEach(c=>{
+    c.classList.add("v32-rank-container");
+    const rows=[...c.querySelectorAll(".rank-item,.ranking-item,.student-item,.log-card")];
+    rows.forEach(row=>{
+      row.classList.add("v32-rank-row");
+      row.style.minHeight="72px";
+      row.style.display="grid";
+      row.style.gridTemplateColumns="44px 52px 1fr";
+      row.style.alignItems="center";
+      row.style.gap="12px";
+      row.style.textAlign="left";
+    });
+  });
+}
+
+if(typeof renderAll==="function" && !window.__v32RenderPatch){
+  window.__v32RenderPatch=true;
+  const oldRender=renderAll;
+  renderAll=function(){
+    oldRender();
+    setTimeout(()=>{
+      v32BindAttendanceButton();
+      v32FixDateDisplay();
+      v32FixRankLayout();
+    },0);
+  };
+}
+setInterval(()=>{
+  try{
+    v32BindAttendanceButton();
+    v32FixRankLayout();
+  }catch(e){}
+},800);
+/* END V32 ATTENDANCE DATE + RANK FIX */
+
 persist();
 renderAll();
 hideSplashSoon();

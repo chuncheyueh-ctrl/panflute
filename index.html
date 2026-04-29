@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V31</title>
+<title>Battle 排笛教學管理系統 V32</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -246,6 +246,26 @@ input[type="range"]{accent-color:#1f6feb;}
 .rank-list,.ranking-list{text-align:left!important;}
 .v31-rank-row{display:grid!important;grid-template-columns:42px 48px 1fr!important;gap:10px!important;align-items:center!important;text-align:left!important;}
 
+
+/* V32 attendance/rank fix */
+.v32-rank-container{text-align:left!important;}
+.v32-rank-row{
+  min-height:72px!important;
+  display:grid!important;
+  grid-template-columns:44px 52px 1fr!important;
+  gap:12px!important;
+  align-items:center!important;
+  text-align:left!important;
+  padding:10px 12px!important;
+  box-sizing:border-box!important;
+}
+.v32-rank-row img,.v32-rank-row .avatar{
+  width:44px!important;
+  height:44px!important;
+  border-radius:14px!important;
+  object-fit:cover!important;
+}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -268,7 +288,7 @@ input[type="range"]{accent-color:#1f6feb;}
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V31｜新增學生與日期總修正版</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V32｜點名日期與排行榜修正版</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -468,6 +488,6 @@ window.db = firebase.firestore();
 window.storage = firebase.storage();
 console.log("🔥 Firebase 已連線");
 </script>
-<script src="app-v17.js?v=31"></script>
+<script src="app-v17.js?v=32"></script>
 </body>
 </html>
