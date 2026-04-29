@@ -3,5 +3,5 @@ self.addEventListener("activate", event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener("fetch", event => {
-  // V21.1: no cache interception.
+  // V22.3 no cache interception.
 });
