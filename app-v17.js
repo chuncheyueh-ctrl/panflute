@@ -334,11 +334,27 @@ function renderAttendanceOverview(){
   chips.innerHTML=dates.map(d=>`<span class="date-chip">${d.date}<button onclick="deleteAttendanceDate('${d.date}')">×</button></span>`).join("")||`<p class="small">尚未建立上課日期。可按「產生每週日期」或「新增上課日」。</p>`;
   const students=filteredStudents();
   let html=`<thead><tr><th>姓名 / 出席率</th>${dates.map(d=>`<th>${d.date.slice(5)}</th>`).join("")}</tr></thead><tbody>`;
+  
+  students.sort((a, b) => {
+  const gradeA = parseInt(a.grade || 0);
+  const gradeB = parseInt(b.grade || 0);
+
+  if (gradeA !== gradeB) return gradeA - gradeB;
+
+  const seatA = parseInt(a.seat || 0);
+  const seatB = parseInt(b.seat || 0);
+
+  return seatA - seatB;
+});
+  
   students.forEach(s=>{
     const records=dates.map(d=>data.attendance.find(a=>sameAttendanceScope(a,d.date,s.id)));
     const presentLike=records.filter(a=>a&&(a.status==="present"||a.status==="late"||a.status==="leave")).length;
     const rate=dates.length?Math.round(presentLike/dates.length*100):0;
-    html+=`<tr><td>${escapeAttr(s.name)}<br><span class="small">出席率 ${dates.length?rate:"-"}%</span></td>`;
+    html += `<tr><td>
+${escapeAttr(s.grade || '')}年${escapeAttr(s.seat || '')}號<br>
+${escapeAttr(s.name)}
+</td>`;
     dates.forEach(d=>{
       const a=data.attendance.find(x=>sameAttendanceScope(x,d.date,s.id));
       const st=a?.status||"";
