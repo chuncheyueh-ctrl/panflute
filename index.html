@@ -390,6 +390,25 @@ img.reward-photo-clickable{
   <div class="img-modal-close" onclick="closeImgModal(event)">×</div>
   <img id="imgModalContent" alt="放大圖片" onclick="event.stopPropagation()">
 </div>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
 
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDeO46FzGgtMkcwVsyaK2VKdXi40qYJBOw",
+  authDomain: "battle-panflute.firebaseapp.com",
+  projectId: "battle-panflute",
+  storageBucket: "battle-panflute.firebasestorage.app",
+  messagingSenderId: "426328054897",
+  appId: "1:426328054897:web:1cea584925711a769f4fd0",
+  measurementId: "G-6K6XHBY43C"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+console.log("🔥 Firebase 已連線");
+</script>
 </body>
 </html>
