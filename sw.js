@@ -2,6 +2,4 @@ self.addEventListener("install", event => { self.skipWaiting(); });
 self.addEventListener("activate", event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-self.addEventListener("fetch", event => {
-  // V22.3 no cache interception.
-});
+self.addEventListener("fetch", event => {});
