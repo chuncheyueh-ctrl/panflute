@@ -2008,34 +2008,233 @@ setTimeout(v223RelabelButtons,100);
 /* END V22.3 STABLE SAVE PATCH */
 
 
-/* V24 FIREBASE + UI FIXES */
-const V24_TEACHER_ID_KEY="battle_panflute_teacher_id_v24";
-function v24TeacherId(){let id=localStorage.getItem(V24_TEACHER_ID_KEY);if(!id){id="teacher_chunche";localStorage.setItem(V24_TEACHER_ID_KEY,id)}return id}
-function v24Root(){if(!window.db)throw new Error("Firebase 尚未連線");return window.db.collection("teachers").doc(v24TeacherId())}
-function v24SeatNum(s){const n=parseInt(String(s?.seatNo??s?.seat??"").replace(/[^\d]/g,""),10);return Number.isFinite(n)?n:9999}
-function v24ClassName(s){return String(s?.className||s?.class||"").trim()}
-function v24StudentCompare(a,b){const ca=v24ClassName(a),cb=v24ClassName(b);if(ca!==cb)return ca.localeCompare(cb,"zh-Hant");const sa=v24SeatNum(a),sb=v24SeatNum(b);if(sa!==sb)return sa-sb;return String(a.name||"").localeCompare(String(b.name||""),"zh-Hant")}
-function v24EnsureFields(){if(!data)return;if(!Array.isArray(data.students))data.students=[];data.students.forEach(s=>{if(s.seatNo===undefined||s.seatNo===null)s.seatNo="";if(!s.className){const g=(data.grades||[]).find(x=>x.id===s.gradeId);s.className=g?g.name:""};if(!s.ability)s.ability={pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3}});data.students.sort(v24StudentCompare)}
 
-function v24SplitData(payload){const d=normalize(payload||data||{});return {core:{schools:d.schools||[],grades:d.grades||[],levels:d.levels||[],students:d.students||[],memberships:d.memberships||[],points:d.points||[],rewards:d.rewards||[],redemptions:d.redemptions||[],noteQuizHistory:d.noteQuizHistory||[],selectedId:d.selectedId||null,selectedLevel:d.selectedLevel||1,filter:d.filter||{},calendar:d.calendar||{},logFilter:d.logFilter||{},courseFilter:d.courseFilter||{}},attendance:{attendance:d.attendance||[],attendanceDates:d.attendanceDates||[]},logs:{events:d.events||[],lessonLogs:d.lessonLogs||[],coursePlans:d.coursePlans||[],classNotes:d.classNotes||[]}}}
-function v24MergeData(parts){const base=normalize({});const c=parts.core||{},a=parts.attendance||{},l=parts.logs||{};return normalize({...base,...c,attendance:a.attendance||[],attendanceDates:a.attendanceDates||[],events:l.events||[],lessonLogs:l.lessonLogs||[],coursePlans:l.coursePlans||[],classNotes:l.classNotes||[]})}
-function v24StripBase64(obj){const copy=JSON.parse(JSON.stringify(obj||{}));function clean(h){if(h&&typeof h.photo==="string"&&h.photo.startsWith("data:")){h.photo="";h.photoWarning="內嵌圖片已移除，請重新上傳。"}};(copy.students||[]).forEach(clean);(copy.rewards||[]).forEach(clean);return copy}
 
-async function v24SaveFirebase(){try{if(typeof setSyncStatus==="function")setSyncStatus("saving","🔵 Firebase 儲存中...");v24EnsureFields();if(typeof v221NormalizeAttendance==="function")v221NormalizeAttendance();if(typeof v222CleanLegacyAttendance==="function")v222CleanLegacyAttendance();let payload=normalize(data);payload=v24StripBase64(payload);const parts=v24SplitData(payload);const root=v24Root();await Promise.all([root.collection("data").doc("core").set(parts.core,{merge:false}),root.collection("data").doc("attendance").set(parts.attendance,{merge:false}),root.collection("data").doc("logs").set(parts.logs,{merge:false}),root.set({updatedAt:firebase.firestore.FieldValue.serverTimestamp(),version:"v24"},{merge:true})]);data=normalize(payload);localStorage.setItem(KEY,JSON.stringify(data));if(typeof v211Dirty!=="undefined")v211Dirty=false;if(typeof setSyncStatus==="function")setSyncStatus("saved","🟢 Firebase 已同步");renderAll();toast("Firebase 已儲存")}catch(e){console.error(e);if(typeof setSyncStatus==="function")setSyncStatus("error","🔴 Firebase 儲存失敗");alert("Firebase 儲存失敗：\n"+(e.message||e))}}
-async function v24LoadFirebase(){try{if(typeof setSyncStatus==="function")setSyncStatus("saving","🔵 Firebase 讀取中...");const root=v24Root();const [cs,as,ls]=await Promise.all([root.collection("data").doc("core").get(),root.collection("data").doc("attendance").get(),root.collection("data").doc("logs").get()]);if(!(cs.exists||as.exists||ls.exists)){if(!confirm("Firebase 目前沒有資料。要把本機資料初始化到 Firebase 嗎？"))return;await v24SaveFirebase();return}data=v24MergeData({core:cs.exists?cs.data():{},attendance:as.exists?as.data():{},logs:ls.exists?ls.data():{}});v24EnsureFields();localStorage.setItem(KEY,JSON.stringify(data));if(typeof v211Dirty!=="undefined")v211Dirty=false;renderAll();if(typeof setSyncStatus==="function")setSyncStatus("saved","🟢 Firebase 已同步");toast("Firebase 已讀取")}catch(e){console.error(e);if(typeof setSyncStatus==="function")setSyncStatus("error","🔴 Firebase 讀取失敗");alert("Firebase 讀取失敗：\n"+(e.message||e))}}
-async function overwriteCloudFromCurrent(){return v24SaveFirebase()} async function safeSaveToCloud(){return v24SaveFirebase()} async function saveToCloud(){return v24SaveFirebase()} async function forceSaveToCloud(){return v24SaveFirebase()} async function loadCloudReplaceLocal(){return v24LoadFirebase()} async function readFromCloud(){return v24LoadFirebase()} async function loadFromCloud(){return v24LoadFirebase()}
 
-const __v24_orig_filteredStudents=typeof filteredStudents==="function"?filteredStudents:null;if(__v24_orig_filteredStudents){filteredStudents=function(){const arr=__v24_orig_filteredStudents();return Array.isArray(arr)?arr.sort(v24StudentCompare):arr}}
-function v24PatchAttendanceNames(){try{const students=(typeof filteredStudents==="function"?filteredStudents():data.students)||[];document.querySelectorAll("tr,.student-row,.student-card,.card").forEach(el=>{const text=el.textContent||"";const s=students.find(st=>st.name&&text.includes(st.name));if(!s||el.querySelector(".v24-seat-pill"))return;const seat=v24SeatNum(s)===9999?"?":String(v24SeatNum(s));const target=[...el.querySelectorAll("b,strong,.name,td,div")].find(n=>(n.textContent||"").includes(s.name));if(target)target.insertAdjacentHTML("afterbegin",`<span class="v24-seat-pill">${seat}</span>`);})}catch(e){console.warn("v24PatchAttendanceNames",e)}}
-function v24PatchScrollable(){try{const titles=["學生名單","學生資料與等級調整","點名總覽表","獎品商店","新增 / 修改獎品","上課記錄","學年課程總覽","等級清單"];document.querySelectorAll(".card").forEach(card=>{const txt=(card.querySelector("h2,h3")?.textContent||card.textContent||"").trim();if(titles.some(t=>txt.includes(t)))card.classList.add("v24-scroll-card")})}catch(e){}}
-function v24AbilityKeys(){return [{key:"pitch",label:"音準"},{key:"rhythm",label:"節奏"},{key:"sight",label:"視譜"},{key:"breath",label:"氣息"},{key:"tone",label:"音色"},{key:"expression",label:"表現力"}]}
-function v24PatchPersonalPage(){try{const s=typeof selected==="function"?selected():(data.students||[]).find(x=>x.id===data.selectedId);if(!s)return;const personal=document.getElementById("studentView")||document.querySelector("#studentView,.student-profile,.profile");if(personal){const av=personal.querySelector(".avatar,.student-avatar");if(av){if(s.photo){av.style.backgroundImage=`url("${s.photo}")`;av.style.backgroundSize="cover";av.style.backgroundPosition="center";av.textContent=""}else{av.style.backgroundImage="";av.textContent=(typeof initials==="function"?initials(s.name):String(s.name||"?").slice(0,1))}}}const nameInput=[...document.querySelectorAll("input")].find(i=>i.value===s.name);const host=nameInput?(nameInput.closest(".card")||nameInput.parentElement):null;if(host&&!host.querySelector("#v24AbilityPanel")){if(!s.ability)s.ability={pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3};const panel=document.createElement("div");panel.id="v24AbilityPanel";panel.className="v24-ability-panel";panel.innerHTML=`<h3>六角形能力指標</h3><div class="v24-ability-grid">${v24AbilityKeys().map(a=>{const val=parseInt(s.ability?.[a.key]||3);return `<label class="v24-ability-row"><span>${a.label}</span><input type="range" min="1" max="5" step="1" value="${val}" data-v24-ability="${a.key}"><b>${val}</b></label>`}).join("")}</div>`;host.appendChild(panel);panel.querySelectorAll("[data-v24-ability]").forEach(inp=>{inp.addEventListener("input",()=>{if(!s.ability)s.ability={};const v=parseInt(inp.value)||3;s.ability[inp.dataset.v24Ability]=v;inp.parentElement.querySelector("b").textContent=v;persist();if(typeof renderAbilityCharts==="function")renderAbilityCharts()})})}}catch(e){console.warn("v24PatchPersonalPage",e)}}
-function v24RelabelButtons(){try{document.querySelectorAll("button").forEach(btn=>{const t=(btn.textContent||"").trim();if(["安全儲存","儲存雲端","強制覆蓋","儲存（覆蓋雲端）","穩定儲存（覆蓋雲端）","分區儲存（覆蓋雲端）"].includes(t))btn.textContent="Firebase 儲存";if(["讀取雲端","重新載入雲端","分段載入雲端"].includes(t))btn.textContent="Firebase 讀取"})}catch(e){}}
+/* V25 FIREBASE ONLY PATCH - NO APPS SCRIPT */
+const V25_TEACHER_ID_KEY="battle_panflute_teacher_id_v25";
+function v25TeacherId(){
+  let id=localStorage.getItem(V25_TEACHER_ID_KEY);
+  if(!id){ id="teacher_chunche"; localStorage.setItem(V25_TEACHER_ID_KEY,id); }
+  return id;
+}
+function v25Root(){
+  if(!window.db) throw new Error("Firebase 尚未連線");
+  return window.db.collection("teachers").doc(v25TeacherId());
+}
+function v25SeatNum(s){
+  const n=parseInt(String(s?.seatNo??s?.seat??"").replace(/[^\d]/g,""),10);
+  return Number.isFinite(n)?n:9999;
+}
+function v25ClassName(s){ return String(s?.className||s?.class||"").trim(); }
+function v25StudentCompare(a,b){
+  const ca=v25ClassName(a), cb=v25ClassName(b);
+  if(ca!==cb) return ca.localeCompare(cb,"zh-Hant");
+  const sa=v25SeatNum(a), sb=v25SeatNum(b);
+  if(sa!==sb) return sa-sb;
+  return String(a.name||"").localeCompare(String(b.name||""),"zh-Hant");
+}
+function v25EnsureFields(){
+  if(!data) return;
+  if(!Array.isArray(data.students)) data.students=[];
+  data.students.forEach(s=>{
+    if(s.seatNo===undefined||s.seatNo===null) s.seatNo="";
+    if(!s.className){
+      const g=(data.grades||[]).find(x=>x.id===s.gradeId);
+      s.className=g?g.name:"";
+    }
+    if(!s.ability) s.ability={pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3};
+  });
+  data.students.sort(v25StudentCompare);
+}
+function v25CurrentScope(){
+  return {
+    schoolId:(data.filter&&data.filter.schoolId)||"",
+    gradeId:(data.filter&&data.filter.gradeId)||"",
+    scope:(data.logFilter&&data.logFilter.scope)||"class"
+  };
+}
+function v25SameAttendance(a,date,studentId){
+  const sc=v25CurrentScope();
+  return a&&a.date===date&&a.studentId===studentId&&a.schoolId===sc.schoolId&&a.gradeId===sc.gradeId&&(a.scope||"class")===(sc.scope||"class");
+}
+function v25NormalizeAttendance(){
+  if(!Array.isArray(data.attendance)) data.attendance=[];
+  if(!Array.isArray(data.attendanceDates)) data.attendanceDates=[];
+  data.attendance.forEach(a=>{ if(!a.scope)a.scope="class"; if(!a.schoolId)a.schoolId=(data.filter&&data.filter.schoolId)||""; if(!a.gradeId)a.gradeId=(data.filter&&data.filter.gradeId)||""; });
+  data.attendanceDates.forEach(d=>{ if(!d.scope)d.scope="class"; if(!d.schoolId)d.schoolId=(data.filter&&data.filter.schoolId)||""; if(!d.gradeId)d.gradeId=(data.filter&&data.filter.gradeId)||""; });
+}
+function v25SplitData(payload){
+  const d=normalize(payload||data||{});
+  return {
+    core:{schools:d.schools||[],grades:d.grades||[],levels:d.levels||[],students:d.students||[],memberships:d.memberships||[],points:d.points||[],rewards:d.rewards||[],redemptions:d.redemptions||[],noteQuizHistory:d.noteQuizHistory||[],selectedId:d.selectedId||null,selectedLevel:d.selectedLevel||1,filter:d.filter||{},calendar:d.calendar||{},logFilter:d.logFilter||{},courseFilter:d.courseFilter||{}},
+    attendance:{attendance:d.attendance||[],attendanceDates:d.attendanceDates||[]},
+    logs:{events:d.events||[],lessonLogs:d.lessonLogs||[],coursePlans:d.coursePlans||[],classNotes:d.classNotes||[]}
+  };
+}
+function v25MergeData(parts){
+  const base=normalize({});
+  const c=parts.core||{}, a=parts.attendance||{}, l=parts.logs||{};
+  return normalize({...base,...c,attendance:a.attendance||[],attendanceDates:a.attendanceDates||[],events:l.events||[],lessonLogs:l.lessonLogs||[],coursePlans:l.coursePlans||[],classNotes:l.classNotes||[]});
+}
+function v25StripBase64(obj){
+  const copy=JSON.parse(JSON.stringify(obj||{}));
+  function clean(h){ if(h&&typeof h.photo==="string"&&h.photo.startsWith("data:")){ h.photo=""; h.photoWarning="內嵌圖片已移除，請重新上傳。"; } }
+  (copy.students||[]).forEach(clean);
+  (copy.rewards||[]).forEach(clean);
+  return copy;
+}
+async function v25SaveFirebase(){
+  try{
+    if(typeof setSyncStatus==="function") setSyncStatus("saving","🔵 Firebase 儲存中...");
+    v25EnsureFields();
+    v25NormalizeAttendance();
+    let payload=normalize(data);
+    payload=v25StripBase64(payload);
+    const parts=v25SplitData(payload);
+    const root=v25Root();
+    await Promise.all([
+      root.collection("data").doc("core").set(parts.core,{merge:false}),
+      root.collection("data").doc("attendance").set(parts.attendance,{merge:false}),
+      root.collection("data").doc("logs").set(parts.logs,{merge:false}),
+      root.set({updatedAt:firebase.firestore.FieldValue.serverTimestamp(),version:"v25",teacherId:v25TeacherId()},{merge:true})
+    ]);
+    data=normalize(payload);
+    localStorage.setItem(KEY,JSON.stringify(data));
+    if(typeof v211Dirty!=="undefined") v211Dirty=false;
+    if(typeof setSyncStatus==="function") setSyncStatus("saved","🟢 Firebase 已同步");
+    renderAll();
+    toast("Firebase 已儲存");
+  }catch(e){
+    console.error(e);
+    if(typeof setSyncStatus==="function") setSyncStatus("error","🔴 Firebase 儲存失敗");
+    alert("Firebase 儲存失敗：\n"+(e.message||e));
+  }
+}
+async function v25LoadFirebase(){
+  try{
+    if(typeof setSyncStatus==="function") setSyncStatus("saving","🔵 Firebase 讀取中...");
+    const root=v25Root();
+    const [cs,as,ls]=await Promise.all([
+      root.collection("data").doc("core").get(),
+      root.collection("data").doc("attendance").get(),
+      root.collection("data").doc("logs").get()
+    ]);
+    if(!(cs.exists||as.exists||ls.exists)){
+      if(!confirm("Firebase 目前沒有資料。要把本機資料初始化到 Firebase 嗎？")) return;
+      await v25SaveFirebase();
+      return;
+    }
+    data=v25MergeData({core:cs.exists?cs.data():{},attendance:as.exists?as.data():{},logs:ls.exists?ls.data():{}});
+    v25EnsureFields();
+    v25NormalizeAttendance();
+    localStorage.setItem(KEY,JSON.stringify(data));
+    if(typeof v211Dirty!=="undefined") v211Dirty=false;
+    renderAll();
+    if(typeof setSyncStatus==="function") setSyncStatus("saved","🟢 Firebase 已同步");
+    toast("Firebase 已讀取");
+  }catch(e){
+    console.error(e);
+    if(typeof setSyncStatus==="function") setSyncStatus("error","🔴 Firebase 讀取失敗");
+    alert("Firebase 讀取失敗：\n"+(e.message||e));
+  }
+}
 
-const __v24_original_persist=persist;persist=function(){v24EnsureFields();return __v24_original_persist()};
-const __v24_original_renderAll=renderAll;renderAll=function(){v24EnsureFields();__v24_original_renderAll();setTimeout(()=>{v24PatchAttendanceNames();v24PatchScrollable();v24PatchPersonalPage();v24RelabelButtons()},0)};
-setTimeout(()=>{v24EnsureFields();renderAll()},200);
-/* END V24 FIREBASE + UI FIXES */
+/* HARD OVERRIDE: disable all Apps Script/old cloud calls */
+async function overwriteCloudFromCurrent(){return v25SaveFirebase();}
+async function safeSaveToCloud(){return v25SaveFirebase();}
+async function saveToCloud(){return v25SaveFirebase();}
+async function forceSaveToCloud(){return v25SaveFirebase();}
+async function loadCloudReplaceLocal(){return v25LoadFirebase();}
+async function readFromCloud(){return v25LoadFirebase();}
+async function loadFromCloud(){return v25LoadFirebase();}
+async function postCloudData(){throw new Error("V25 已停用 Apps Script，請使用 Firebase 儲存");}
+async function fetchCloudData(){return v25LoadFirebase();}
+function saveApiUrl(){toast("V25 已改用 Firebase，不需要 Apps Script URL");}
+
+/* sorted students */
+const __v25_orig_filteredStudents=typeof filteredStudents==="function"?filteredStudents:null;
+if(__v25_orig_filteredStudents){
+  filteredStudents=function(){
+    const arr=__v25_orig_filteredStudents();
+    return Array.isArray(arr)?arr.sort(v25StudentCompare):arr;
+  };
+}
+
+/* patch UI */
+function v25PatchAttendanceNames(){
+  try{
+    const students=(typeof filteredStudents==="function"?filteredStudents():data.students)||[];
+    document.querySelectorAll("tr,.student-row,.student-card,.card").forEach(el=>{
+      const text=el.textContent||"";
+      const s=students.find(st=>st.name&&text.includes(st.name));
+      if(!s||el.querySelector(".v25-seat-pill"))return;
+      const seat=v25SeatNum(s)===9999?"?":String(v25SeatNum(s));
+      const target=[...el.querySelectorAll("b,strong,.name,td,div")].find(n=>(n.textContent||"").includes(s.name));
+      if(target) target.insertAdjacentHTML("afterbegin",`<span class="v25-seat-pill">${seat}</span>`);
+    });
+  }catch(e){console.warn("v25PatchAttendanceNames",e)}
+}
+function v25PatchScrollable(){
+  try{
+    const titles=["學生名單","學生資料與等級調整","點名總覽表","獎品商店","新增 / 修改獎品","上課記錄","學年課程總覽","等級清單"];
+    document.querySelectorAll(".card").forEach(card=>{
+      const txt=(card.querySelector("h2,h3")?.textContent||card.textContent||"").trim();
+      if(titles.some(t=>txt.includes(t)))card.classList.add("v25-scroll-card");
+    });
+  }catch(e){}
+}
+function v25AbilityKeys(){return [{key:"pitch",label:"音準"},{key:"rhythm",label:"節奏"},{key:"sight",label:"視譜"},{key:"breath",label:"氣息"},{key:"tone",label:"音色"},{key:"expression",label:"表現力"}]}
+function v25PatchPersonalPage(){
+  try{
+    const s=typeof selected==="function"?selected():(data.students||[]).find(x=>x.id===data.selectedId);
+    if(!s)return;
+    const personal=document.getElementById("studentView")||document.querySelector("#studentView,.student-profile,.profile");
+    if(personal){
+      const av=personal.querySelector(".avatar,.student-avatar");
+      if(av){
+        if(s.photo){av.style.backgroundImage=`url("${s.photo}")`;av.style.backgroundSize="cover";av.style.backgroundPosition="center";av.textContent=""}
+        else{av.style.backgroundImage="";av.textContent=(typeof initials==="function"?initials(s.name):String(s.name||"?").slice(0,1))}
+      }
+    }
+    const nameInput=[...document.querySelectorAll("input")].find(i=>i.value===s.name);
+    const host=nameInput?(nameInput.closest(".card")||nameInput.parentElement):null;
+    if(host&&!host.querySelector("#v25AbilityPanel")){
+      if(!s.ability)s.ability={pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3};
+      const panel=document.createElement("div");
+      panel.id="v25AbilityPanel";
+      panel.className="v25-ability-panel";
+      panel.innerHTML=`<h3>六角形能力指標</h3><div class="v25-ability-grid">${v25AbilityKeys().map(a=>{const val=parseInt(s.ability?.[a.key]||3);return `<label class="v25-ability-row"><span>${a.label}</span><input type="range" min="1" max="5" step="1" value="${val}" data-v25-ability="${a.key}"><b>${val}</b></label>`}).join("")}</div>`;
+      host.appendChild(panel);
+      panel.querySelectorAll("[data-v25-ability]").forEach(inp=>{
+        inp.addEventListener("input",()=>{
+          if(!s.ability)s.ability={};
+          const v=parseInt(inp.value)||3;
+          s.ability[inp.dataset.v25Ability]=v;
+          inp.parentElement.querySelector("b").textContent=v;
+          persist();
+          if(typeof renderAbilityCharts==="function")renderAbilityCharts();
+        });
+      });
+    }
+  }catch(e){console.warn("v25PatchPersonalPage",e)}
+}
+function v25RelabelButtons(){
+  try{
+    document.querySelectorAll("button").forEach(btn=>{
+      const t=(btn.textContent||"").trim();
+      if(["安全儲存","儲存雲端","強制覆蓋","儲存（覆蓋雲端）","穩定儲存（覆蓋雲端）","分區儲存（覆蓋雲端）","Firebase 儲存"].includes(t))btn.textContent="Firebase 儲存";
+      if(["讀取雲端","重新載入雲端","分段載入雲端","Firebase 讀取"].includes(t))btn.textContent="Firebase 讀取";
+    });
+  }catch(e){}
+}
+
+const __v25_original_persist=persist;
+persist=function(){v25EnsureFields();v25NormalizeAttendance();return __v25_original_persist();};
+const __v25_original_renderAll=renderAll;
+renderAll=function(){v25EnsureFields();v25NormalizeAttendance();__v25_original_renderAll();setTimeout(()=>{v25PatchAttendanceNames();v25PatchScrollable();v25PatchPersonalPage();v25RelabelButtons()},0);};
+setTimeout(()=>{v25EnsureFields();v25NormalizeAttendance();renderAll()},200);
+/* END V25 FIREBASE ONLY PATCH */
 
 persist();
 renderAll();
