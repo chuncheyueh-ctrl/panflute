@@ -3028,3 +3028,132 @@ if(typeof renderAll==="function" && !window.__v335RenderPatch){
 }
 setTimeout(()=>{try{renderAll();}catch(e){}},300);
 /* END V33.5 STUDENT EDIT ISOLATION FIX */
+
+
+/* V33.6 LIST LAYOUT + COUNTER BAR FIX */
+function v336Esc(x){
+  return typeof escapeHtml==="function" ? escapeHtml(x) : String(x ?? "");
+}
+function v336SeatNumber(s){
+  const candidates=[s?.seat, s?.seatNo, s?.number, s?.seatNumber, s?.studentNo, s?.no];
+  for(const c of candidates){
+    const m=String(c??"").match(/\d+/);
+    if(m){
+      const n=parseInt(m[0],10);
+      if(Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+}
+function v336SeatText(s){
+  const n=v336SeatNumber(s);
+  return n===null ? "未填座號" : `${String(n).padStart(2,"0")}號`;
+}
+function v336GradeNameFromId(id){
+  const g=(data.grades||[]).find(x=>x.id===id);
+  return g ? g.name : "";
+}
+function v336Memberships(studentId){
+  return (data.memberships||[]).filter(m=>m.studentId===studentId);
+}
+function v336GradeName(s){
+  const schoolId=data?.filter?.schoolId||"";
+  const ms=v336Memberships(s.id);
+  const m=ms.find(x=>x.schoolId===schoolId)||ms[0];
+  const raw=String(v336GradeNameFromId(m?.gradeId)||s?.gradeName||s?.className||s?.grade||s?.gradeId||"");
+  if(raw.includes("三")) return "三年級";
+  if(raw.includes("四")) return "四年級";
+  if(raw.includes("五")) return "五年級";
+  if(raw.includes("六")) return "六年級";
+  if(raw.includes("社")) return "社團";
+  if(raw.includes("排笛")) return "排笛隊";
+  const n=raw.match(/\d+/);
+  return n ? `${n[0]}年級` : (raw||"未填年級");
+}
+function v336Points(s){
+  const direct=parseInt(s?.points??s?.point??s?.score??"",10);
+  if(Number.isFinite(direct)) return direct;
+  return (data.points||[]).filter(p=>p.studentId===s.id).reduce((sum,p)=>sum+(parseInt(p.value??p.points??0,10)||0),0);
+}
+function v336Meta(s){
+  return `${v336GradeName(s)}｜${v336SeatText(s)}｜點數 ${v336Points(s)}`;
+}
+function v336Students(){
+  let arr=[];
+  try{ arr=typeof filteredStudents==="function"?filteredStudents():(data.students||[]); }
+  catch(e){ arr=data.students||[]; }
+  return arr;
+}
+function v336RemoveCounterBars(){
+  const cards=[...document.querySelectorAll(".card")].filter(c=>{
+    const t=c.textContent||"";
+    return t.includes("新增學生") || t.includes("學生名單") || t.includes("排行榜");
+  });
+  cards.forEach(card=>{
+    [...card.querySelectorAll("*")].forEach(el=>{
+      const t=(el.textContent||"").trim();
+      if(/^\d+$/.test(t) && el.children.length===0){
+        const style=getComputedStyle(el);
+        const bg=style.backgroundColor||"";
+        const cls=el.className||"";
+        // hide the beige count pills/bars only, not level badges/buttons
+        if(cls.includes("progress") || cls.includes("count") || cls.includes("bar") || bg.includes("217") || bg.includes("205") || bg.includes("184")){
+          el.classList.add("v336-hidden-counter");
+        }
+      }
+    });
+  });
+}
+function v336FixStudentListLayout(){
+  const students=v336Students();
+  const list=document.querySelector(".student-list");
+  if(!list) return;
+  const items=[...list.querySelectorAll(".student-item,.student-card,.log-card")];
+
+  items.forEach(el=>{
+    const txt=el.textContent||"";
+    const s=students.find(st=>st.name && txt.includes(st.name));
+    if(!s) return;
+    el.classList.add("v336-student-item-fixed");
+
+    const metaText=v336Meta(s);
+    const possibleMeta=[...el.querySelectorAll("*")].filter(x=>{
+      const t=x.textContent||"";
+      return t.includes("點數") || t.includes("號") || t.includes("未填座號") || t.includes("年級");
+    });
+    if(possibleMeta[0]){
+      possibleMeta[0].textContent=metaText;
+      possibleMeta[0].classList.add("v336-meta-line");
+    }else{
+      const line=document.createElement("div");
+      line.className="v336-meta-line";
+      line.textContent=metaText;
+      el.appendChild(line);
+    }
+
+    el.onclick=function(){
+      data.selectedId=s.id;
+      data.selectedStudentId=s.id;
+      persist();
+      renderAll();
+    };
+  });
+}
+function v336Patch(){
+  try{
+    v336RemoveCounterBars();
+    v336FixStudentListLayout();
+  }catch(e){
+    console.warn("v33.6 layout patch", e);
+  }
+}
+if(typeof renderAll==="function" && !window.__v336RenderPatch){
+  window.__v336RenderPatch=true;
+  const oldRenderAll=renderAll;
+  renderAll=function(){
+    oldRenderAll();
+    setTimeout(v336Patch,0);
+  };
+}
+setTimeout(()=>{try{renderAll();}catch(e){}},300);
+/* END V33.6 LIST LAYOUT + COUNTER BAR FIX */
