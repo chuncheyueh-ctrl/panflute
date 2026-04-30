@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Battle 排笛教學管理系統 V34</title>
+<title>Battle 排笛教學管理系統 V34.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{
@@ -46,11 +46,17 @@ label{font-weight:900;font-size:13px;color:var(--muted);display:block;margin:10p
 </head>
 <body>
 <header><div class="header-inner">
-  <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V34｜Core Rebuild 乾淨重建版</div></div></div>
+  <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V34.1｜選單與同步設定補正版</div></div></div>
   <div class="toolbar">
     <select id="viewSelect">
-      <option value="dashboard">班級控制台</option><option value="student">學生個人頁</option>
-      <option value="levels">等級目標管理</option><option value="manage">學校／年級管理</option>
+      <option value="sync">雲端同步設定</option>
+      <option value="teacher">老師管理</option>
+      <option value="dashboard">班級控制台</option>
+      <option value="student">學生個人頁</option>
+      <option value="levels">等級目標管理</option>
+      <option value="manage">學校／年級管理</option>
+      <option value="display">展示頁</option>
+      <option value="notes">備註／紀錄</option>
     </select>
     <button onclick="renderAll()">重新整理</button>
     <button onclick="loadCloud()">Firebase 讀取</button>
@@ -71,6 +77,48 @@ label{font-weight:900;font-size:13px;color:var(--muted);display:block;margin:10p
  <div class="stat"><b id="statAvg">0</b><span>平均等級</span></div>
  <div class="stat"><b id="statMax">0</b><span>最高等級</span></div>
  <div class="stat"><b id="statPoints">0</b><span>班級總點數</span></div>
+</section>
+
+
+<section id="syncView" class="hidden">
+  <div class="card">
+    <h2>雲端同步設定</h2>
+    <p class="meta">這裡是 Google Apps Script / 同步網址設定區。Firebase 按鈕仍保留在上方工具列。</p>
+    <label>同步網址（Google Apps Script Web App URL）</label>
+    <input id="syncUrlInput" placeholder="請貼上 https://script.google.com/macros/s/.../exec" style="width:100%">
+    <div class="actions">
+      <button class="primary" onclick="saveSyncUrl()">儲存同步網址</button>
+      <button onclick="testSyncUrl()">測試網址</button>
+      <button onclick="copySyncUrl()">複製網址</button>
+    </div>
+    <p id="syncUrlStatus" class="meta"></p>
+  </div>
+</section>
+
+<section id="teacherView" class="hidden">
+  <div class="card">
+    <h2>老師管理</h2>
+    <p class="meta">V34.1 先補回入口；老師權限與登入功能會在核心穩定後再接回。</p>
+    <label>老師名稱</label>
+    <input id="teacherNameInput" placeholder="例如：岳駿哲老師" style="width:100%">
+    <div class="actions"><button class="primary" onclick="saveTeacherName()">儲存老師名稱</button></div>
+  </div>
+</section>
+
+<section id="displayView" class="hidden">
+  <div class="card">
+    <h2>展示頁</h2>
+    <p class="meta">可用於投影排行榜、等級進度或班級成果。V34.1 先補回入口。</p>
+    <div id="displayContent"></div>
+  </div>
+</section>
+
+<section id="notesView" class="hidden">
+  <div class="card">
+    <h2>備註／紀錄</h2>
+    <textarea id="globalNotes" rows="10" placeholder="可記錄課堂事項、學生提醒、比賽備忘。" style="width:100%"></textarea>
+    <div class="actions"><button class="primary" onclick="saveGlobalNotes()">儲存備註</button></div>
+  </div>
 </section>
 
 <section id="dashboardView">
@@ -114,6 +162,6 @@ label{font-weight:900;font-size:13px;color:var(--muted);display:block;margin:10p
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="app-v17.js?v=34-core"></script>
+<script src="app-v17.js?v=34.1-menu-sync"></script>
 </body>
 </html>
