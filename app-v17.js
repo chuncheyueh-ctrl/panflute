@@ -2747,3 +2747,9 @@ if(typeof renderAttendanceOverview==="function"){
   }
 }
 /* END V33 */
+
+function getSeat(s){
+  const raw = String(s?.seatNo ?? s?.seat ?? s?.number ?? "");
+  const n = parseInt(raw.replace(/[^\d]/g,""),10);
+  return Number.isFinite(n)?n:null;
+}
