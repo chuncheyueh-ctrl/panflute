@@ -1,4 +1,4 @@
-const VERSION="V34.2｜日期與班級複選修正版";
+const VERSION="V34.3｜Firebase 儲存修正版";
 const KEY="battle_panflute_v34_core_data";
 const firebaseConfig={apiKey:"AIzaSyDeO46FzGgtMkcwVsyaK2VKdXi40qYJBOw",authDomain:"battle-panflute.firebaseapp.com",projectId:"battle-panflute",storageBucket:"battle-panflute.firebasestorage.app",messagingSenderId:"426328054897",appId:"1:426328054897:web:1cea584925711a769f4fd0",measurementId:"G-6K6XHBY43C"};
 let db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();console.log("🔥 Firebase 已連線");}catch(e){console.warn(e)}
@@ -101,8 +101,62 @@ function renderManage(){document.getElementById("schoolManage").innerHTML=data.s
 function addSchool(){const n=document.getElementById("newSchoolName").value.trim();if(!n)return;data.schools.push({id:uid(),name:n});persist();renderAll()}function addGrade(){const n=document.getElementById("newGradeName").value.trim();if(!n)return;data.grades.push({id:uid(),name:n});persist();renderAll()}function removeSchool(id){data.schools=data.schools.filter(x=>x.id!==id);persist();renderAll()}function removeGrade(id){data.grades=data.grades.filter(x=>x.id!==id);persist();renderAll()}
 function promoteGrades(){const map={g3:"g4",g4:"g5",g5:"g6"};data.students.forEach(s=>{if(map[s.gradeId])s.gradeId=map[s.gradeId];studentMemberships(s).forEach(m=>{if(map[m.gradeId])m.gradeId=map[m.gradeId]})});persist();renderAll()}
 function sortByCurrent(){const fs=filteredStudents().sort((a,b)=>b.points-a.points||b.level-a.level);if(fs[0]){data.selectedStudentId=fs[0].id;persist();renderAll()}}
-async function saveCloud(){persist();if(!db)return alert("Firebase 未連線，本機已儲存");await db.collection("teachers").doc("teacher_chunche").set({data,updatedAt:new Date().toISOString(),version:VERSION});alert("Firebase 已儲存")}
-async function loadCloud(){if(!db)return alert("Firebase 未連線");const snap=await db.collection("teachers").doc("teacher_chunche").get();if(snap.exists&&snap.data().data){data=normalize(snap.data().data);persist();renderAll();alert("Firebase 已讀取")}}
+async function saveCloud(){
+  persist();
+  if(!db){
+    alert("Firebase 尚未連線；目前只完成本機儲存。");
+    return;
+  }
+  try{
+    const payload = JSON.parse(JSON.stringify({
+      data,
+      updatedAt: new Date().toISOString(),
+      version: VERSION
+    }));
+    await db.collection("teachers").doc("teacher_chunche").set(payload, {merge:false});
+    alert("Firebase 已儲存成功");
+  }catch(e){
+    console.error("Firebase 儲存失敗", e);
+    alert("Firebase 儲存失敗：\n" + (e && e.message ? e.message : String(e)) + "\n\n如果看到 permission-denied，請到 Firebase Firestore 規則開放 teachers/teacher_chunche 讀寫。");
+  }
+}
+async function loadCloud(){
+  if(!db){
+    alert("Firebase 尚未連線");
+    return;
+  }
+  try{
+    const snap = await db.collection("teachers").doc("teacher_chunche").get();
+    if(snap.exists && snap.data().data){
+      data = normalize(snap.data().data);
+      persist();
+      renderAll();
+      alert("Firebase 已讀取成功");
+    }else{
+      alert("Firebase 沒有找到雲端資料");
+    }
+  }catch(e){
+    console.error("Firebase 讀取失敗", e);
+    alert("Firebase 讀取失敗：\n" + (e && e.message ? e.message : String(e)));
+  }
+}}
+async function testFirebase(){
+  if(!db){
+    alert("Firebase 尚未連線");
+    return;
+  }
+  try{
+    await db.collection("teachers").doc("teacher_chunche_test").set({
+      ok:true,
+      updatedAt:new Date().toISOString(),
+      version:VERSION
+    }, {merge:true});
+    alert("Firebase 測試成功，可以寫入。");
+  }catch(e){
+    console.error("Firebase 測試失敗", e);
+    alert("Firebase 測試失敗：\n" + (e && e.message ? e.message : String(e)));
+  }
+}
 function exportBackup(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="battle-panflute-v34-backup.json";a.click()}
 function importBackup(ev){const f=ev.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{data=normalize(JSON.parse(r.result));persist();renderAll()};r.readAsText(f)}
 

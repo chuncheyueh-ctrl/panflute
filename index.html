@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Battle 排笛教學管理系統 V34.2</title>
+<title>Battle 排笛教學管理系統 V34.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{
@@ -46,7 +46,7 @@ label{font-weight:900;font-size:13px;color:var(--muted);display:block;margin:10p
 </head>
 <body>
 <header><div class="header-inner">
-  <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V34.2｜日期與班級複選修正版</div></div></div>
+  <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V34.3｜Firebase 儲存修正版</div></div></div>
   <div class="toolbar">
     <select id="viewSelect">
       <option value="sync">雲端同步設定</option>
@@ -60,7 +60,7 @@ label{font-weight:900;font-size:13px;color:var(--muted);display:block;margin:10p
     </select>
     <button onclick="renderAll()">重新整理</button>
     <button onclick="loadCloud()">Firebase 讀取</button>
-    <button class="primary" onclick="saveCloud()">Firebase 儲存</button>
+    <button class="primary" onclick="saveCloud()">Firebase 儲存</button><button onclick="testFirebase()">測試 Firebase</button>
     <button onclick="exportBackup()">匯出備份</button>
     <button onclick="document.getElementById('importFile').click()">匯入</button>
     <input id="importFile" type="file" accept=".json" class="hidden" onchange="importBackup(event)">
@@ -162,6 +162,6 @@ label{font-weight:900;font-size:13px;color:var(--muted);display:block;margin:10p
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="app-v17.js?v=34.2-date-membership"></script>
+<script src="app-v17.js?v=34.3-firebase-save"></script>
 </body>
 </html>
