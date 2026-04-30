@@ -1,4 +1,4 @@
-const VERSION="V34.1｜選單與同步設定補正版";
+const VERSION="V34.2｜日期與班級複選修正版";
 const KEY="battle_panflute_v34_core_data";
 const firebaseConfig={apiKey:"AIzaSyDeO46FzGgtMkcwVsyaK2VKdXi40qYJBOw",authDomain:"battle-panflute.firebaseapp.com",projectId:"battle-panflute",storageBucket:"battle-panflute.firebasestorage.app",messagingSenderId:"426328054897",appId:"1:426328054897:web:1cea584925711a769f4fd0",measurementId:"G-6K6XHBY43C"};
 let db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();console.log("🔥 Firebase 已連線");}catch(e){console.warn(e)}
@@ -6,9 +6,40 @@ const abilityKeys=[["pitch","音準"],["rhythm","節奏"],["sight","視譜"],["b
 const defaultLevels=Array.from({length:50},(_,i)=>({level:i+1,stage:i<5?"啟動期":i<10?"基礎音符":i<20?"基礎旋律":i<35?"控制力":"讀譜表達",reward:i===0?"第一口氣貼紙":`Lv.${i+1} 獎勵`,goals:i===0?["吹出聲音（任一管）","能控制氣流不爆音","知道排笛有高低音"]:[`完成 Lv.${i+1} 技巧目標`,`穩定演奏指定練習`,`完成簡短樂句`]}));
 const uid=()=> "id_"+Math.random().toString(36).slice(2,10)+"_"+Date.now().toString(36);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+function localDateStr(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function studentMemberships(s){
+  if(!Array.isArray(s.memberships)) s.memberships=[];
+  if(!s.memberships.some(m=>m.schoolId===s.schoolId && m.gradeId===s.gradeId)){
+    s.memberships.push({schoolId:s.schoolId,gradeId:s.gradeId});
+  }
+  return s.memberships;
+}
+function hasMembership(s,schoolId,gradeId){
+  return studentMemberships(s).some(m=>m.schoolId===schoolId && m.gradeId===gradeId);
+}
+function toggleMembership(s,schoolId,gradeId,checked){
+  const ms=studentMemberships(s);
+  const exists=ms.some(m=>m.schoolId===schoolId && m.gradeId===gradeId);
+  if(checked && !exists) ms.push({schoolId,gradeId});
+  if(!checked && exists && ms.length>1){
+    s.memberships=ms.filter(m=>!(m.schoolId===schoolId && m.gradeId===gradeId));
+  }
+  if(checked){
+    s.schoolId=schoolId;
+    s.gradeId=gradeId;
+  }else if(s.schoolId===schoolId && s.gradeId===gradeId && s.memberships.length){
+    s.schoolId=s.memberships[0].schoolId;
+    s.gradeId=s.memberships[0].gradeId;
+  }
+}
 let data=load();
 function baseData(){return{version:VERSION,schools:[{id:"s1",name:"銅蘭國小"},{id:"s2",name:"康樂國小"},{id:"s3",name:"豐裡國小"},{id:"s4",name:"富源國小"}],grades:[{id:"g3",name:"三年級"},{id:"g4",name:"四年級"},{id:"g6",name:"六年級"},{id:"club",name:"社團"},{id:"g5",name:"五年級"},{id:"pan",name:"排笛隊"}],students:[],levels:structuredClone(defaultLevels),attendanceDates:[],attendance:{},selectedSchoolId:"s3",selectedGradeId:"g3",selectedStudentId:null,selectedLevel:1,syncUrl:"",teacherName:"",globalNotes:""};}
-function normalize(d){d={...baseData(),...(d||{})};d.schools=d.schools?.length?d.schools:baseData().schools;d.grades=d.grades?.length?d.grades:baseData().grades;d.levels=d.levels?.length?d.levels:structuredClone(defaultLevels);d.students=(d.students||[]).map(s=>({id:s.id||uid(),name:s.name||"",schoolId:s.schoolId||d.selectedSchoolId||"s3",gradeId:s.gradeId||s.grade||s.classId||d.selectedGradeId||"g3",seatNo:String(s.seatNo??s.seat??s.number??s.studentNo??"").replace(/[^\d]/g,""),level:Math.max(1,parseInt(s.level||1,10)||1),points:parseInt(s.points??s.score??0,10)||0,photo:s.photo||"",abilities:{pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3,...(s.abilities||{})},note:s.note||""}));return d;}
+function normalize(d){d={...baseData(),...(d||{})};d.schools=d.schools?.length?d.schools:baseData().schools;d.grades=d.grades?.length?d.grades:baseData().grades;d.levels=d.levels?.length?d.levels:structuredClone(defaultLevels);d.students=(d.students||[]).map(s=>({id:s.id||uid(),name:s.name||"",schoolId:s.schoolId||d.selectedSchoolId||"s3",gradeId:s.gradeId||s.grade||s.classId||d.selectedGradeId||"g3",seatNo:String(s.seatNo??s.seat??s.number??s.studentNo??"").replace(/[^\d]/g,""),level:Math.max(1,parseInt(s.level||1,10)||1),points:parseInt(s.points??s.score??0,10)||0,photo:s.photo||"",abilities:{pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3,...(s.abilities||{})},memberships:Array.isArray(s.memberships)?s.memberships:[{schoolId:s.schoolId||d.selectedSchoolId||"s3",gradeId:s.gradeId||s.grade||s.classId||d.selectedGradeId||"g3"}],note:s.note||""}));return d;}
 function load(){try{return normalize(JSON.parse(localStorage.getItem(KEY)||"null"))}catch{return baseData()}}
 function persist(){data.version=VERSION;localStorage.setItem(KEY,JSON.stringify(data))}
 function schoolName(id){return data.schools.find(x=>x.id===id)?.name||""} function gradeName(id){return data.grades.find(x=>x.id===id)?.name||"未填年級"}
@@ -18,8 +49,8 @@ function seatText(s){return seatNum(s)===9999?"未填座號":String(seatNum(s)).
 function initials(n){return (n||"?").trim().slice(0,2)}
 function avatar(s){return `<div class="avatar">${s.photo?`<img src="${s.photo}">`:esc(initials(s.name))}</div>`}
 function selectedStudent(){let s=data.students.find(x=>x.id===data.selectedStudentId);if(!s&&filteredStudents()[0]){s=filteredStudents()[0];data.selectedStudentId=s.id}return s}
-function filteredStudents(){return data.students.filter(s=>s.schoolId===data.selectedSchoolId&&s.gradeId===data.selectedGradeId).sort((a,b)=>gradeOrder(a.gradeId)-gradeOrder(b.gradeId)||seatNum(a)-seatNum(b)||a.name.localeCompare(b.name,"zh-Hant"))}
-function allSchoolStudents(){return data.students.filter(s=>s.schoolId===data.selectedSchoolId).sort((a,b)=>gradeOrder(a.gradeId)-gradeOrder(b.gradeId)||seatNum(a)-seatNum(b)||a.name.localeCompare(b.name,"zh-Hant"))}
+function filteredStudents(){return data.students.filter(s=>hasMembership(s,data.selectedSchoolId,data.selectedGradeId)).sort((a,b)=>gradeOrder(a.gradeId)-gradeOrder(b.gradeId)||seatNum(a)-seatNum(b)||a.name.localeCompare(b.name,"zh-Hant"))}
+function allSchoolStudents(){return data.students.filter(s=>studentMemberships(s).some(m=>m.schoolId===data.selectedSchoolId)).sort((a,b)=>gradeOrder(a.gradeId)-gradeOrder(b.gradeId)||seatNum(a)-seatNum(b)||a.name.localeCompare(b.name,"zh-Hant"))}
 function setView(v){["sync","teacher","dashboard","student","levels","manage","display","notes"].forEach(x=>document.getElementById(x+"View")?.classList.toggle("hidden",x!==v));}
 function fillSelect(id,items,val){const el=document.getElementById(id);if(!el)return;el.innerHTML=items.map(x=>`<option value="${x.id}" ${x.id===val?"selected":""}>${esc(x.name)}</option>`).join("")}
 function bindFilters(){fillSelect("schoolFilter",data.schools,data.selectedSchoolId);fillSelect("gradeFilter",data.grades,data.selectedGradeId);fillSelect("studentSchoolFilter",data.schools,data.selectedSchoolId);fillSelect("studentGradeFilter",data.grades,data.selectedGradeId);
@@ -34,16 +65,30 @@ window.selectStudent=id=>{data.selectedStudentId=id;persist();renderAll()}
 function renderEdit(){const s=selectedStudent();const ids=["editName","editLevel","editSeat","editPoints"];ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=""});if(!s){document.getElementById("editHint").textContent="請先選擇學生";return}
 document.getElementById("editHint").textContent=`目前編輯：${s.name}｜${gradeName(s.gradeId)}｜${seatText(s)}｜點數 ${s.points}`;
 document.getElementById("editName").value=s.name;document.getElementById("editLevel").value=s.level;document.getElementById("editSeat").value=s.seatNo;document.getElementById("editPoints").value=s.points;
-document.getElementById("membershipGrid").innerHTML=data.schools.map(sc=>`<h4>${esc(sc.name)}</h4><div class="check-grid">${data.grades.map(g=>`<label><input type="radio" name="member" ${s.schoolId===sc.id&&s.gradeId===g.id?"checked":""} onchange="setMember('${sc.id}','${g.id}')">${esc(g.name)}</label>`).join("")}</div>`).join("");
+document.getElementById("membershipGrid").innerHTML=data.schools.map(sc=>`<h4>${esc(sc.name)}</h4><div class="check-grid">${data.grades.map(g=>`<label><input type="checkbox" ${hasMembership(s,sc.id,g.id)?"checked":""} onchange="setMember('${sc.id}','${g.id}',this.checked)">${esc(g.name)}</label>`).join("")}</div>`).join("");
 document.getElementById("studentProfileMini").innerHTML=`<div class="card" style="text-align:center;box-shadow:none">${avatar(s)}<h2>${esc(s.name)}</h2><div class="meta">${esc(schoolName(s.schoolId))}｜${esc(gradeName(s.gradeId))}｜${esc(seatText(s))}</div><h1>Lv.${s.level}</h1><div class="progress"><div style="width:${Math.min(100,s.level/50*100)}%"></div></div><h3>六角形能力指標</h3><div class="ability-grid">${abilityKeys.map(([k,l])=>`<div class="ability-row"><b>${l}</b><input type="range" min="1" max="5" value="${s.abilities[k]||3}" oninput="setAbility('${k}',this.value)"><span>${s.abilities[k]||3}</span></div>`).join("")}</div></div>`}
 function saveEdit(){const s=selectedStudent();if(!s)return; s.name=document.getElementById("editName").value.trim();s.level=Math.max(1,parseInt(document.getElementById("editLevel").value,10)||1);s.seatNo=String(document.getElementById("editSeat").value||"").replace(/[^\d]/g,"");s.points=parseInt(document.getElementById("editPoints").value,10)||0;persist();renderAll()}
-function setMember(schoolId,gradeId){const s=selectedStudent();if(!s)return;s.schoolId=schoolId;s.gradeId=gradeId;data.selectedSchoolId=schoolId;data.selectedGradeId=gradeId;persist();renderAll()}
+function setMember(schoolId,gradeId,checked=true){const s=selectedStudent();if(!s)return;toggleMembership(s,schoolId,gradeId,checked);data.selectedSchoolId=s.schoolId;data.selectedGradeId=s.gradeId;persist();renderAll()}
 function setAbility(k,v){const s=selectedStudent();if(!s)return;s.abilities[k]=parseInt(v,10);persist();renderEdit()}
 function setPhoto(ev){const s=selectedStudent();const f=ev.target.files?.[0];if(!s||!f)return;const r=new FileReader();r.onload=()=>{s.photo=r.result;persist();renderAll()};r.readAsDataURL(f)}
-function addStudent(){const name=document.getElementById("newName").value.trim();if(!name)return alert("請填姓名");const s={id:uid(),name,schoolId:data.selectedSchoolId,gradeId:data.selectedGradeId,seatNo:String(document.getElementById("newSeat").value||"").replace(/[^\d]/g,""),level:Math.max(1,parseInt(document.getElementById("newLevel").value,10)||1),points:parseInt(document.getElementById("newPoints").value,10)||0,photo:"",abilities:{pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3},note:""};data.students.push(s);data.selectedStudentId=s.id;["newName","newSeat"].forEach(id=>document.getElementById(id).value="");persist();renderAll()}
+function addStudent(){const name=document.getElementById("newName").value.trim();if(!name)return alert("請填姓名");const s={id:uid(),name,schoolId:data.selectedSchoolId,gradeId:data.selectedGradeId,seatNo:String(document.getElementById("newSeat").value||"").replace(/[^\d]/g,""),level:Math.max(1,parseInt(document.getElementById("newLevel").value,10)||1),points:parseInt(document.getElementById("newPoints").value,10)||0,photo:"",abilities:{pitch:3,rhythm:3,sight:3,breath:3,tone:3,expression:3},memberships:[{schoolId:data.selectedSchoolId,gradeId:data.selectedGradeId}],note:""};data.students.push(s);data.selectedStudentId=s.id;["newName","newSeat"].forEach(id=>document.getElementById(id).value="");persist();renderAll()}
 function deleteStudent(){const s=selectedStudent();if(!s||!confirm(`刪除 ${s.name}？`))return;data.students=data.students.filter(x=>x.id!==s.id);delete data.attendance[s.id];data.selectedStudentId=null;persist();renderAll()}
 function changeLevel(n){const s=selectedStudent();if(!s)return;s.level=Math.max(1,s.level+n);persist();renderAll()} function changePoints(n){const s=selectedStudent();if(!s)return;s.points+=n;persist();renderAll()}
-function generateWeeks(){const start=document.getElementById("attStart").value;if(!start)return alert("請選日期");const weeks=parseInt(document.getElementById("attWeeks").value,10)||10;const d=new Date(start+"T00:00:00");data.attendanceDates=[];for(let i=0;i<weeks;i++){const x=new Date(d);x.setDate(d.getDate()+i*7);data.attendanceDates.push(x.toISOString().slice(0,10))}persist();renderAttendance()}
+function generateWeeks(){
+  const start=document.getElementById("attStart").value;
+  if(!start)return alert("請選日期");
+  const weeks=parseInt(document.getElementById("attWeeks").value,10)||10;
+  const [y,m,day]=start.split("-").map(Number);
+  const d=new Date(y,m-1,day);
+  data.attendanceDates=[];
+  for(let i=0;i<weeks;i++){
+    const x=new Date(d);
+    x.setDate(d.getDate()+i*7);
+    data.attendanceDates.push(localDateStr(x));
+  }
+  persist();
+  renderAttendance();
+}
 function renderAttendance(){document.getElementById("dateChips").innerHTML=data.attendanceDates.map(d=>`<span class="pill">${d}<button class="bad" style="padding:2px 6px;margin-left:5px" onclick="removeDate('${d}')">×</button></span>`).join("");const students=filteredStudents();let html=`<thead><tr><th>姓名／出席率</th>${data.attendanceDates.map(d=>`<th>${d.slice(5)}</th>`).join("")}</tr></thead><tbody>`;students.forEach((s,i)=>{html+=`<tr><td><span class="serial">${i+1}</span><b>${esc(gradeName(s.gradeId))}｜${esc(seatText(s))}｜${esc(s.name)}</b><br><span class="meta">出席率 ${attendanceRate(s)}%</span></td>`;data.attendanceDates.forEach(d=>{const st=data.attendance?.[s.id]?.[d]||"";html+=`<td onclick="cycleAttendance('${s.id}','${d}')"><span class="pill ${st}">${st==="present"?"✓":st==="absent"?"缺":st==="leave"?"假":st==="late"?"遲":"－"}</span></td>`});html+="</tr>"});html+="</tbody>";document.getElementById("attTable").innerHTML=html}
 function cycleAttendance(id,d){const order=["","present","late","absent","leave"];data.attendance[id]??={};const cur=data.attendance[id][d]||"";const next=order[(order.indexOf(cur)+1)%order.length];if(next)data.attendance[id][d]=next;else delete data.attendance[id][d];persist();renderAttendance()}
 function attendanceRate(s){const ds=data.attendanceDates;if(!ds.length)return 0;let ok=0;ds.forEach(d=>{const st=data.attendance?.[s.id]?.[d];if(st==="present"||st==="late")ok++});return Math.round(ok/ds.length*100)}
@@ -54,7 +99,7 @@ function saveLevel(){const l=data.levels.find(x=>x.level===data.selectedLevel);i
 function addLevel(){data.levels.push({level:data.levels.length+1,stage:"新階段",reward:"",goals:["新目標"]});persist();renderLevels()}function deleteLastLevel(){data.levels.pop();persist();renderLevels()}function resetLevels(){if(confirm("恢復預設50級？")){data.levels=structuredClone(defaultLevels);persist();renderLevels()}}
 function renderManage(){document.getElementById("schoolManage").innerHTML=data.schools.map(s=>`<p><b>${esc(s.name)}</b> <button class="bad" onclick="removeSchool('${s.id}')">刪除</button></p>`).join("");document.getElementById("gradeManage").innerHTML=data.grades.map(g=>`<p><b>${esc(g.name)}</b> <button class="bad" onclick="removeGrade('${g.id}')">刪除</button></p>`).join("")}
 function addSchool(){const n=document.getElementById("newSchoolName").value.trim();if(!n)return;data.schools.push({id:uid(),name:n});persist();renderAll()}function addGrade(){const n=document.getElementById("newGradeName").value.trim();if(!n)return;data.grades.push({id:uid(),name:n});persist();renderAll()}function removeSchool(id){data.schools=data.schools.filter(x=>x.id!==id);persist();renderAll()}function removeGrade(id){data.grades=data.grades.filter(x=>x.id!==id);persist();renderAll()}
-function promoteGrades(){const map={g3:"g4",g4:"g5",g5:"g6"};data.students.forEach(s=>{if(map[s.gradeId])s.gradeId=map[s.gradeId]});persist();renderAll()}
+function promoteGrades(){const map={g3:"g4",g4:"g5",g5:"g6"};data.students.forEach(s=>{if(map[s.gradeId])s.gradeId=map[s.gradeId];studentMemberships(s).forEach(m=>{if(map[m.gradeId])m.gradeId=map[m.gradeId]})});persist();renderAll()}
 function sortByCurrent(){const fs=filteredStudents().sort((a,b)=>b.points-a.points||b.level-a.level);if(fs[0]){data.selectedStudentId=fs[0].id;persist();renderAll()}}
 async function saveCloud(){persist();if(!db)return alert("Firebase 未連線，本機已儲存");await db.collection("teachers").doc("teacher_chunche").set({data,updatedAt:new Date().toISOString(),version:VERSION});alert("Firebase 已儲存")}
 async function loadCloud(){if(!db)return alert("Firebase 未連線");const snap=await db.collection("teachers").doc("teacher_chunche").get();if(snap.exists&&snap.data().data){data=normalize(snap.data().data);persist();renderAll();alert("Firebase 已讀取")}}
