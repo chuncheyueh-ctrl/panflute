@@ -2857,3 +2857,174 @@ if(typeof renderAll === "function" && !window.__v334RenderPatch){
 }
 setTimeout(()=>{ try{ renderAll(); }catch(e){} }, 300);
 /* END V33.4 GRADE SORT ATTENDANCE FIX */
+
+
+/* V33.5 STUDENT EDIT ISOLATION FIX */
+function v335Esc(x){
+  return typeof escapeHtml==="function" ? escapeHtml(x) : String(x ?? "");
+}
+function v335SelectedStudent(){
+  let id = data?.selectedId || data?.selectedStudentId || data?.currentStudentId || "";
+  let s = (data.students || []).find(x => x.id === id);
+  if(!s){
+    const sel = [...document.querySelectorAll("select")].find(x => (x.value||"") && (data.students||[]).some(s=>s.id===x.value));
+    if(sel) s = (data.students || []).find(x => x.id === sel.value);
+  }
+  if(!s && Array.isArray(data.students) && data.students.length) s = data.students[0];
+  if(s){
+    data.selectedId = s.id;
+    data.selectedStudentId = s.id;
+  }
+  return s || null;
+}
+function v335SeatNumber(s){
+  const candidates=[s?.seat, s?.seatNo, s?.number, s?.seatNumber, s?.studentNo, s?.no];
+  for(const c of candidates){
+    const m=String(c??"").match(/\d+/);
+    if(m){
+      const n=parseInt(m[0],10);
+      if(Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+}
+function v335SeatText(s){
+  const n=v335SeatNumber(s);
+  return n===null ? "未填座號" : `${n}號`;
+}
+function v335GradeNameFromId(id){
+  const g=(data.grades||[]).find(x=>x.id===id);
+  return g ? g.name : "";
+}
+function v335Memberships(studentId){
+  return (data.memberships||[]).filter(m=>m.studentId===studentId);
+}
+function v335GradeName(s){
+  const schoolId=data?.filter?.schoolId||"";
+  const ms=v335Memberships(s.id);
+  const m=ms.find(x=>x.schoolId===schoolId)||ms[0];
+  const raw=String(v335GradeNameFromId(m?.gradeId)||s?.gradeName||s?.className||s?.grade||s?.gradeId||"");
+  if(raw.includes("三")) return "三年級";
+  if(raw.includes("四")) return "四年級";
+  if(raw.includes("五")) return "五年級";
+  if(raw.includes("六")) return "六年級";
+  if(raw.includes("社")) return "社團";
+  if(raw.includes("排笛")) return "排笛隊";
+  const n=raw.match(/\d+/);
+  return n ? `${n[0]}年級` : (raw||"未填年級");
+}
+function v335Points(s){
+  const direct=parseInt(s?.points??s?.point??s?.score??"",10);
+  if(Number.isFinite(direct)) return direct;
+  return (data.points||[]).filter(p=>p.studentId===s.id).reduce((sum,p)=>sum+(parseInt(p.value??p.points??0,10)||0),0);
+}
+function v335StudentMeta(s){
+  return `${v335GradeName(s)}｜${v335SeatText(s)}｜點數 ${v335Points(s)}`;
+}
+function v335ApplyStudentToForm(){
+  const s=v335SelectedStudent();
+  if(!s) return;
+
+  // Update visible selected-student summary boxes
+  document.querySelectorAll("#v335StudentEditHint").forEach(x=>x.remove());
+  const card=[...document.querySelectorAll(".card")].find(c=>(c.textContent||"").includes("學生資料") && (c.textContent||"").includes("等級"));
+  if(card){
+    const hint=document.createElement("div");
+    hint.id="v335StudentEditHint";
+    hint.className="v335-hint";
+    hint.innerHTML=`目前編輯：<b>${v335Esc(s.name||"")}</b><br>${v335Esc(v335StudentMeta(s))}`;
+    const firstInput=card.querySelector("input,select,textarea");
+    if(firstInput) firstInput.closest("label,div")?.insertAdjacentElement("beforebegin", hint);
+  }
+
+  // Fill form fields only with selected student.
+  const inputs=[...document.querySelectorAll("input")];
+  inputs.forEach(inp=>{
+    const label=(inp.closest("label,div")?.textContent||"") + " " + (inp.previousElementSibling?.textContent||"");
+    if(label.includes("姓名") && inp.type !== "file"){
+      inp.value=s.name||"";
+      inp.oninput=function(){
+        const target=v335SelectedStudent();
+        if(!target) return;
+        target.name=this.value;
+        persist(); 
+        setTimeout(renderAll,0);
+      };
+    }
+    if(label.includes("座號")){
+      const n=v335SeatNumber(s);
+      inp.value=n===null ? "" : String(n);
+      inp.oninput=function(){
+        const target=v335SelectedStudent();
+        if(!target) return;
+        const val=this.value.replace(/[^\d]/g,"");
+        target.seat=val;
+        target.seatNo=val;
+        target.number=val;
+        persist();
+        setTimeout(renderAll,0);
+      };
+    }
+    if(label.includes("目前等級") || label.includes("初始等級")){
+      inp.oninput=function(){
+        const target=v335SelectedStudent();
+        if(!target) return;
+        const n=parseInt(this.value,10);
+        if(Number.isFinite(n)) target.level=n;
+        persist();
+        setTimeout(renderAll,0);
+      };
+    }
+  });
+}
+function v335FixStudentList(){
+  const students=(typeof filteredStudents==="function"?filteredStudents():(data.students||[]));
+  const list=document.querySelector(".student-list");
+  if(!list) return;
+  const items=[...list.querySelectorAll(".student-item,.student-card,.log-card")];
+  items.forEach((el,idx)=>{
+    const nameText=el.textContent||"";
+    const s=students.find(st=>st.name && nameText.includes(st.name));
+    if(!s) return;
+    const metaEls=[...el.querySelectorAll("*")].filter(x=>(x.textContent||"").includes("點數") || (x.textContent||"").includes("號"));
+    if(metaEls[0]){
+      metaEls[0].textContent = v335StudentMeta(s);
+    }
+    el.onclick=function(){
+      data.selectedId=s.id;
+      data.selectedStudentId=s.id;
+      persist();
+      renderAll();
+    };
+  });
+}
+function v335PatchSelectionControls(){
+  document.querySelectorAll("select").forEach(sel=>{
+    const hasStudent=[...sel.options].some(o=>(data.students||[]).some(s=>s.id===o.value));
+    if(!hasStudent || sel.dataset.v335Bound==="1") return;
+    sel.dataset.v335Bound="1";
+    sel.addEventListener("change",()=>{
+      if((data.students||[]).some(s=>s.id===sel.value)){
+        data.selectedId=sel.value;
+        data.selectedStudentId=sel.value;
+        persist();
+        renderAll();
+      }
+    });
+  });
+}
+
+if(typeof renderAll==="function" && !window.__v335RenderPatch){
+  window.__v335RenderPatch=true;
+  const oldRenderAll=renderAll;
+  renderAll=function(){
+    oldRenderAll();
+    setTimeout(()=>{
+      v335PatchSelectionControls();
+      v335ApplyStudentToForm();
+      v335FixStudentList();
+    },0);
+  };
+}
+setTimeout(()=>{try{renderAll();}catch(e){}},300);
+/* END V33.5 STUDENT EDIT ISOLATION FIX */

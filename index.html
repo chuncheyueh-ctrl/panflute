@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V33.4</title>
+<title>Battle 排笛教學管理系統 V33.5</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -312,6 +312,18 @@ input[type="range"]{accent-color:#1f6feb;}
 .v334-name{font-weight:1000;white-space:nowrap;}
 .v334-rate{font-size:12px;color:#5f5548;margin-top:4px;}
 
+
+/* V33.5 student edit isolation */
+.v335-hint{
+  margin:8px 0 12px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#fff7ef;
+  border:1px solid #ead9c2;
+  font-weight:900;
+  line-height:1.7;
+}
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -334,7 +346,7 @@ input[type="range"]{accent-color:#1f6feb;}
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V33.4｜點名年級排序修正版</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V33.5｜學生資料獨立修正版</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -534,6 +546,6 @@ window.db = firebase.firestore();
 window.storage = firebase.storage();
 console.log("🔥 Firebase 已連線");
 </script>
-<script src="app-v17.js?v=33.4-grade-sort"></script>
+<script src="app-v17.js?v=33.5-student-edit"></script>
 </body>
 </html>
