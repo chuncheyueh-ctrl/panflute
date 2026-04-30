@@ -1,4 +1,4 @@
-const VERSION="V34.3｜Firebase 儲存修正版";
+const VERSION="V34.4｜JS 修復版";
 const KEY="battle_panflute_v34_core_data";
 const firebaseConfig={apiKey:"AIzaSyDeO46FzGgtMkcwVsyaK2VKdXi40qYJBOw",authDomain:"battle-panflute.firebaseapp.com",projectId:"battle-panflute",storageBucket:"battle-panflute.firebasestorage.app",messagingSenderId:"426328054897",appId:"1:426328054897:web:1cea584925711a769f4fd0",measurementId:"G-6K6XHBY43C"};
 let db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();console.log("🔥 Firebase 已連線");}catch(e){console.warn(e)}
@@ -109,15 +109,15 @@ async function saveCloud(){
   }
   try{
     const payload = JSON.parse(JSON.stringify({
-      data,
-      updatedAt: new Date().toISOString(),
-      version: VERSION
+      data:data,
+      updatedAt:new Date().toISOString(),
+      version:VERSION
     }));
-    await db.collection("teachers").doc("teacher_chunche").set(payload, {merge:false});
+    await db.collection("teachers").doc("teacher_chunche").set(payload);
     alert("Firebase 已儲存成功");
   }catch(e){
     console.error("Firebase 儲存失敗", e);
-    alert("Firebase 儲存失敗：\n" + (e && e.message ? e.message : String(e)) + "\n\n如果看到 permission-denied，請到 Firebase Firestore 規則開放 teachers/teacher_chunche 讀寫。");
+    alert("Firebase 儲存失敗：\n" + (e && e.message ? e.message : String(e)));
   }
 }
 async function loadCloud(){
@@ -139,7 +139,7 @@ async function loadCloud(){
     console.error("Firebase 讀取失敗", e);
     alert("Firebase 讀取失敗：\n" + (e && e.message ? e.message : String(e)));
   }
-}}
+}
 async function testFirebase(){
   if(!db){
     alert("Firebase 尚未連線");
