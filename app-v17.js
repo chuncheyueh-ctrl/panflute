@@ -2707,35 +2707,32 @@ renderAll();
 hideSplashSoon();
 
 
-/* V33.2 REAL ATTENDANCE SERIAL + SEAT FIX */
-function v332rEsc(x){
-  return typeof escapeHtml==="function" ? escapeHtml(x) : String(x??"");
+/* V33.3 CLEAN ATTENDANCE LABEL FIX */
+function v333Esc(x){
+  return typeof escapeHtml==="function" ? escapeHtml(x) : String(x ?? "");
 }
-function v332rGradeNameFromStudent(s){
+function v333GradeName(s){
   const raw = String(s?.gradeName ?? s?.className ?? s?.grade ?? s?.gradeId ?? "");
   if(raw.includes("三")) return "三年級";
   if(raw.includes("四")) return "四年級";
   if(raw.includes("五")) return "五年級";
   if(raw.includes("六")) return "六年級";
   const m = raw.match(/\d+/);
-  if(m) return `${m[0]}年級`;
-  return raw || "未填年級";
+  return m ? `${m[0]}年級` : (raw || "未填年級");
 }
-function v332rGradeOrder(s){
-  const g = v332rGradeNameFromStudent(s);
+function v333GradeOrder(s){
+  const g = v333GradeName(s);
   if(g.includes("三")) return 3;
   if(g.includes("四")) return 4;
   if(g.includes("五")) return 5;
   if(g.includes("六")) return 6;
-  const n = parseInt(String(g).replace(/[^\d]/g,""),10);
+  const n = parseInt(g.replace(/[^\d]/g,""),10);
   return Number.isFinite(n) ? n : 999;
 }
-function v332rSeatNumber(s){
+function v333SeatNumber(s){
   const candidates = [s?.seat, s?.seatNo, s?.number, s?.seatNumber, s?.studentNo, s?.no];
   for(const c of candidates){
-    const raw = String(c ?? "").trim();
-    if(!raw) continue;
-    const m = raw.match(/\d+/);
+    const m = String(c ?? "").match(/\d+/);
     if(m){
       const n = parseInt(m[0],10);
       if(Number.isFinite(n)) return n;
@@ -2743,76 +2740,73 @@ function v332rSeatNumber(s){
   }
   return null;
 }
-function v332rSeatOrder(s){
-  const n = v332rSeatNumber(s);
+function v333SeatOrder(s){
+  const n = v333SeatNumber(s);
   return n === null ? 9999 : n;
 }
-function v332rSeatText(s){
-  const n = v332rSeatNumber(s);
+function v333SeatText(s){
+  const n = v333SeatNumber(s);
   return n === null ? "未填座號" : `${String(n).padStart(2,"0")}號`;
 }
-function v332rFormatStudent(s){
-  return `${v332rGradeNameFromStudent(s)}｜${v332rSeatText(s)}｜${s?.name || ""}`;
+function v333Label(s){
+  return `${v333GradeName(s)}｜${v333SeatText(s)}｜${s?.name || ""}`;
 }
-function v332rSortStudents(arr){
-  return (arr || []).sort((a,b)=>{
-    const ga = v332rGradeOrder(a), gb = v332rGradeOrder(b);
+function v333Students(){
+  let arr = [];
+  try{
+    arr = typeof filteredStudents === "function" ? filteredStudents() : (data.students || []);
+  }catch(e){
+    arr = data.students || [];
+  }
+  return [...arr].sort((a,b)=>{
+    const ga = v333GradeOrder(a), gb = v333GradeOrder(b);
     if(ga !== gb) return ga - gb;
-    const sa = v332rSeatOrder(a), sb = v332rSeatOrder(b);
+    const sa = v333SeatOrder(a), sb = v333SeatOrder(b);
     if(sa !== sb) return sa - sb;
     return String(a?.name||"").localeCompare(String(b?.name||""),"zh-Hant");
   });
 }
-function v332rCurrentStudents(){
-  let arr = [];
+function v333PatchAttendanceOverview(){
   try{
-    arr = typeof filteredStudents==="function" ? filteredStudents() : (data.students || []);
-  }catch(e){
-    arr = data.students || [];
-  }
-  return v332rSortStudents([...arr]);
-}
-function v332rPatchAttendanceOverview(){
-  try{
-    const students = v332rCurrentStudents();
+    const students = v333Students();
     const cards = [...document.querySelectorAll(".card")].filter(c => (c.textContent||"").includes("點名總覽表"));
     cards.forEach(card=>{
-      const rows = [...card.querySelectorAll("tbody tr, tr")].filter(tr => {
+      const rows = [...card.querySelectorAll("tbody tr, tr")].filter(tr=>{
         const txt = tr.textContent || "";
-        return students.some(st => st.name && txt.includes(st.name));
+        return students.some(s => s.name && txt.includes(s.name));
       });
+
       rows.forEach((tr, idx)=>{
         const txt = tr.textContent || "";
         const s = students.find(st => st.name && txt.includes(st.name));
         if(!s) return;
+
         const firstCell = tr.querySelector("td");
         if(!firstCell) return;
-        const rateText = [...firstCell.querySelectorAll("*")]
-          .map(x => x.textContent || "")
-          .find(t => t.includes("出席率")) || "";
+
+        // Important: never read previous injected text, otherwise it repeats forever.
         firstCell.innerHTML = `
-          <div class="v332r-att-row">
-            <span class="v332r-serial">${idx + 1}</span>
-            <div class="v332r-att-main">
-              <div class="v332r-att-name">${v332rEsc(v332rFormatStudent(s))}</div>
-              <div class="v332r-att-rate">${v332rEsc(rateText || "出席率 0%")}</div>
+          <div class="v333-att-cell">
+            <span class="v333-serial">${idx + 1}</span>
+            <div class="v333-info">
+              <div class="v333-name">${v333Esc(v333Label(s))}</div>
+              <div class="v333-rate">出席率 0%</div>
             </div>
           </div>
         `;
       });
     });
   }catch(e){
-    console.warn("v33.2 real attendance patch", e);
+    console.warn("v33.3 attendance patch", e);
   }
 }
-if(typeof renderAll==="function" && !window.__v332rRenderPatch){
-  window.__v332rRenderPatch = true;
+if(typeof renderAll === "function" && !window.__v333RenderPatch){
+  window.__v333RenderPatch = true;
   const oldRenderAll = renderAll;
   renderAll = function(){
     oldRenderAll();
-    setTimeout(v332rPatchAttendanceOverview, 0);
+    setTimeout(v333PatchAttendanceOverview, 0);
   };
 }
-setInterval(()=>{ try{ v332rPatchAttendanceOverview(); }catch(e){} }, 1000);
 setTimeout(()=>{ try{ renderAll(); }catch(e){} }, 300);
-/* END V33.2 REAL ATTENDANCE SERIAL + SEAT FIX */
+/* END V33.3 CLEAN ATTENDANCE LABEL FIX */

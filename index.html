@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Battle 排笛教學管理系統 V33.2</title>
+<title>Battle 排笛教學管理系統 V33.3</title>
 <style>
 :root{
   --bg:#fff8ef; --card:#fff; --ink:#2d241f; --muted:#7d6b60; --line:#ead9c8;
@@ -267,15 +267,15 @@ input[type="range"]{accent-color:#1f6feb;}
 }
 
 
-/* V33.2 real attendance serial + seat */
-.v332r-att-row{
+/* V33.3 clean attendance */
+.v333-att-cell{
   display:grid;
   grid-template-columns:42px 1fr;
   gap:10px;
   align-items:center;
-  min-width:260px;
+  min-width:280px;
 }
-.v332r-serial{
+.v333-serial{
   width:30px;
   height:30px;
   border-radius:999px;
@@ -285,9 +285,9 @@ input[type="range"]{accent-color:#1f6feb;}
   color:#2b241d;
   font-weight:1000;
 }
-.v332r-att-main{min-width:0;}
-.v332r-att-name{font-weight:1000;white-space:nowrap;}
-.v332r-att-rate{font-size:12px;color:#5f5548;margin-top:4px;}
+.v333-info{min-width:0;}
+.v333-name{font-weight:1000;white-space:nowrap;}
+.v333-rate{font-size:12px;color:#5f5548;margin-top:4px;}
 
 </style>
 
@@ -311,7 +311,7 @@ input[type="range"]{accent-color:#1f6feb;}
 
 <header>
   <div class="header-inner">
-    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V33.2｜點名序號座號修正版</div></div></div>
+    <div class="brand"><div class="logo">🐶</div><div><h1>Battle 排笛教學管理系統</h1><div class="sub">V33.3｜點名序號穩定修正版</div></div></div>
     <div class="tabs">
       <select id="mainMenu" onchange="setView(this.value)" style="width:auto;min-width:210px;border-radius:999px;padding:10px 14px;font-weight:900">
         <option value="teacher">等級管理後台</option>
@@ -511,6 +511,6 @@ window.db = firebase.firestore();
 window.storage = firebase.storage();
 console.log("🔥 Firebase 已連線");
 </script>
-<script src="app-v17.js?v=33.2-real"></script>
+<script src="app-v17.js?v=33.3-clean"></script>
 </body>
 </html>
