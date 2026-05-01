@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>教學管理系統 v1.5 上課介面版</title>
+<style>
+:root{
+  --bg:#fbf7ec;--panel:#fffdf7;--card:#ffffffdd;--ink:#2f2a25;--muted:#7b7166;--line:#eadfcf;
+  --brand:#3fa7b4;--brand2:#f4c95d;--soft:#fff4cf;--ok:#64ad82;--bad:#df6371;--warn:#eaa84b;
+  --shadow:0 16px 36px rgba(99,77,43,.12);--r:22px;--side:270px;
+}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",Arial,sans-serif;color:var(--ink);background:radial-gradient(circle at 8% 6%,#fff0b8 0 10%,transparent 30%),radial-gradient(circle at 95% 2%,#dff7f7 0 12%,transparent 35%),linear-gradient(130deg,#fffaf0,#f2fbf8 70%,#eef7fb);min-height:100vh}
+.app{display:grid;grid-template-columns:var(--side) 1fr;min-height:100vh}.sidebar{position:sticky;top:0;height:100vh;overflow:auto;padding:20px 14px;border-right:1px solid var(--line);background:rgba(255,253,246,.88);backdrop-filter:blur(16px)}
+.brand{border:1px solid var(--line);border-radius:26px;background:linear-gradient(135deg,#fff,#fff3c6);box-shadow:var(--shadow);padding:18px;margin-bottom:14px}.brand h1{font-size:23px;margin:0 0 5px}.brand p{margin:0;color:var(--muted);font-weight:800}.nav-title{font-size:12px;font-weight:1000;color:#958977;margin:17px 9px 8px;letter-spacing:.08em}.nav button{width:100%;border:0;background:transparent;text-align:left;padding:12px 14px;border-radius:16px;font-size:16px;font-weight:950;color:#504840;cursor:pointer;display:flex;align-items:center;gap:9px}.nav button:hover{background:#fff4d0}.nav button.active{background:linear-gradient(135deg,#ffe799,#fff7dd);box-shadow:inset 0 0 0 1px #e8d18b;color:#2d2718}.main{padding:26px 32px 54px;max-width:1280px;width:100%;margin:0 auto}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}.page-title{font-size:31px;margin:0;font-weight:1000}.badge{border-radius:999px;background:#fff1bc;padding:9px 14px;font-weight:950;color:#73580d;white-space:nowrap}.grid{display:grid;gap:18px}.cols2{grid-template-columns:1fr 1fr}.cols3{grid-template-columns:repeat(3,1fr)}.cols4{grid-template-columns:repeat(4,1fr)}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}.card h2{font-size:21px;margin:0 0 15px}.card h3{font-size:18px;margin:0 0 12px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:14px;font-weight:950;color:#64584b}input,select,textarea{width:100%;border:1px solid #ded2c0;background:#fff;border-radius:14px;padding:12px 13px;font-size:16px;color:var(--ink);outline:none}textarea{min-height:94px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(63,167,180,.13)}button{font-family:inherit}.btn{border:0;border-radius:14px;padding:11px 15px;font-size:15px;font-weight:1000;cursor:pointer;background:#f1e7d5;color:#3d352b}.btn.primary{background:var(--brand);color:#fff}.btn.warn{background:var(--brand2)}.btn.ok{background:var(--ok);color:#fff}.btn.danger{background:var(--bad);color:#fff}.btn.ghost{background:#fff;border:1px solid var(--line)}.btn.small{padding:8px 10px;font-size:13px}.btn:active{transform:translateY(1px)}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.mini{font-size:13px;color:var(--muted);font-weight:800}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#f3ead4;font-size:13px;font-weight:950}.pill.blue{background:#ddf3f6;color:#126b76}.pill.green{background:#e0f5e8;color:#1e7246}.pill.red{background:#ffe0e4;color:#96303b}.pill.gold{background:#fff1bd;color:#70550b}.empty{color:#8d8375;background:#fff8df;border:1px dashed #e7cf8b;border-radius:18px;padding:18px;text-align:center;font-weight:950}.table{width:100%;border-collapse:separate;border-spacing:0 10px}.table th{font-size:13px;color:#7b7166;text-align:left;padding:0 10px;font-weight:1000}.table td{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:11px 10px;vertical-align:middle}.table td:first-child{border-left:1px solid var(--line);border-radius:15px 0 0 15px}.table td:last-child{border-right:1px solid var(--line);border-radius:0 15px 15px 0}.student-card{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:21px;padding:14px 16px;box-shadow:0 8px 22px rgba(99,77,43,.06)}.student-name{font-size:20px;font-weight:1000}.student-meta{font-size:13px;color:var(--muted);font-weight:850;margin-top:3px}.student-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.reward{background:linear-gradient(135deg,#fff,#fff5d4);border:1px solid var(--line);border-radius:22px;padding:16px}.reward .emoji{font-size:34px}.tabs{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:15px}.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;font-weight:1000;cursor:pointer}.tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}.stat{background:#fff;border:1px solid var(--line);border-radius:20px;padding:17px}.stat b{display:block;font-size:27px}.stat span{color:var(--muted);font-weight:900}canvas{background:#fff;border:1px solid var(--line);border-radius:18px;max-width:100%}.notice{background:#ecfbfb;border:1px solid #c4eeee;border-radius:18px;padding:14px;font-weight:850;color:#286e75}.fade{animation:fade .16s ease}@keyframes fade{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.nav{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.main{padding:18px}.topbar{align-items:flex-start;flex-direction:column}.cols2,.cols3,.cols4,.form-grid,.form-grid.three{grid-template-columns:1fr}.student-card{grid-template-columns:1fr}.student-actions{justify-content:flex-start}.page-title{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><h1 id="brandName">🎵 教學管理系統</h1><p id="brandSub">v1.5 上課介面版</p></div>
+    <div class="nav" id="nav"></div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><h1 class="page-title" id="pageTitle"></h1><span class="badge">資料存在這台瀏覽器</span></div>
+    <section id="page" class="fade"></section>
+  </main>
+</div>
+<script>
+/* =========================================================
+   v1.5 上課介面版：資料層、邏輯層、畫面層、事件層重新整理
+   ========================================================= */
+const STORE_KEY='bt_music_teaching_system_v1';
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toISOString().slice(0,10);
+const uid=(p='id')=>p+'_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const escapeHtml=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const num=v=>Number.isFinite(Number(v))?Number(v):0;
+
+const defaultState=()=>{
+  const schoolId='sch_demo', unitId='unit_demo', stuId='stu_demo';
+  const fields=[
+    {id:'field_goal',name:'能力指標',type:'textarea',active:true,order:1},
+    {id:'field_skill',name:'技巧重點',type:'textarea',active:true,order:2},
+    {id:'field_rhythm',name:'節奏能力',type:'textarea',active:true,order:3},
+    {id:'field_range',name:'音域範圍',type:'text',active:true,order:4},
+    {id:'field_music',name:'建議曲目',type:'textarea',active:true,order:5},
+    {id:'field_pass',name:'通過標準',type:'textarea',active:true,order:6},
+    {id:'field_note',name:'老師備註',type:'textarea',active:true,order:7},
+    {id:'field_bonus',name:'通過獎勵點數',type:'number',active:true,order:8}
+  ];
+  const stages=[
+    {id:'stage_beginner',name:'初階',start:1,end:10,unit:'級',next:'stage_middle',active:true,order:1,bonus:3},
+    {id:'stage_middle',name:'中階',start:11,end:25,unit:'級',next:'stage_advanced',active:true,order:2,bonus:5},
+    {id:'stage_advanced',name:'高階',start:26,end:50,unit:'級',next:'stage_artist',active:true,order:3,bonus:8},
+    {id:'stage_artist',name:'演奏家',start:1,end:15,unit:'級',next:'',active:true,order:4,bonus:10}
+  ];
+  const levels={};
+  stages.forEach(st=>{ for(let i=st.start;i<=st.end;i++){ levels[st.id+'_'+i]={id:st.id+'_'+i,stageId:st.id,level:i,values:{field_goal:`${st.name}第${i}${st.unit}的學習目標`,field_pass:'由老師依學生狀態判定',field_bonus:String(st.bonus)}}; }});
+  return {
+    settings:{systemName:'🎵 教學管理系統',subtitle:'v1.5 上課介面版'},
+    schools:[{id:schoolId,name:'銅蘭國小',active:true,order:1}],
+    units:[{id:unitId,schoolId,name:'三年級',active:true,order:1}],
+    students:[{id:stuId,name:'任琪',schoolId,unitId,seat:'1',queryCode:'A30518',queryPassword:'4721',stageId:'stage_beginner',level:1,points:30,totalEarned:30,totalSpent:0,note:'示範學生',active:true}],
+    levelStages:stages, levelFields:fields, levels,
+    attendance:[], pointLogs:[{id:uid('pl'),studentId:stuId,date:today(),points:30,reason:'初始示範點數',note:''}], upgrades:[], rewards:[{id:'rew1',name:'貼紙',cost:5,stock:20,active:true,note:'小獎勵'},{id:'rew2',name:'神秘禮物',cost:50,stock:3,active:true,note:'大獎'}], redemptions:[], scores:[], lessonLogs:[], events:[]
+  };
+};
+
+let state=loadState();
+let ui={page:'classroom', settingTab:'system', lastSchool:localStorage.getItem('bt_last_school')||'', lastUnit:localStorage.getItem('bt_last_unit')||''};
+function loadState(){
+  try{ const raw=localStorage.getItem(STORE_KEY); if(raw){ return normalizeState(JSON.parse(raw)); } }catch(e){ console.warn(e); }
+  const s=defaultState(); localStorage.setItem(STORE_KEY,JSON.stringify(s)); return s;
+}
+function save(){ localStorage.setItem(STORE_KEY,JSON.stringify(state)); }
+function normalizeState(s){
+  const d=defaultState();
+  s.settings=s.settings||d.settings; s.schools=s.schools||d.schools; s.units=s.units||d.units; s.students=s.students||d.students;
+  s.levelStages=s.levelStages||d.levelStages; s.levelFields=s.levelFields||d.levelFields; s.levels=s.levels||d.levels;
+  ['attendance','pointLogs','upgrades','rewards','redemptions','scores','lessonLogs','events'].forEach(k=>s[k]=s[k]||[]);
+  s.students.forEach(st=>{ if(!st.stageId){st.stageId='stage_beginner'}; if(!st.level){st.level=1}; st.points=num(st.points); st.totalEarned=num(st.totalEarned); st.totalSpent=num(st.totalSpent); if(st.active!==false)st.active=true; });
+  return s;
+}
+
+/* ---------- getters ---------- */
+const activeSchools=()=>state.schools.filter(x=>x.active!==false).sort((a,b)=>num(a.order)-num(b.order)||a.name.localeCompare(b.name,'zh-Hant'));
+const unitsBySchool=sid=>state.units.filter(x=>x.active!==false&&x.schoolId===sid).sort((a,b)=>num(a.order)-num(b.order)||a.name.localeCompare(b.name,'zh-Hant'));
+const activeStudents=()=>state.students.filter(x=>x.active!==false);
+const studentsByUnit=(sid,uidd)=>activeStudents().filter(s=>(!sid||s.schoolId===sid)&&(!uidd||s.unitId===uidd)).sort((a,b)=>num(a.seat)-num(b.seat)||a.name.localeCompare(b.name,'zh-Hant'));
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+const schoolName=id=>byId(state.schools,id)?.name||'未指定學校';
+const unitName=id=>byId(state.units,id)?.name||'未指定課程';
+const stageOf=student=>byId(state.levelStages,student.stageId)||state.levelStages[0];
+const levelLabel=student=>{ const st=stageOf(student); return `${st?.name||'未設定'}第${student.level||1}${st?.unit||'級'}`; };
+const studentMeta=s=>`${schoolName(s.schoolId)} / ${unitName(s.unitId)} / ${s.seat||'-'}號 / ${levelLabel(s)} / ${num(s.points)}點`;
+function ensureSelection(){
+  const schools=activeSchools(); if(!ui.lastSchool || !byId(schools,ui.lastSchool)) ui.lastSchool=schools[0]?.id||'';
+  const units=unitsBySchool(ui.lastSchool); if(!ui.lastUnit || !byId(units,ui.lastUnit)) ui.lastUnit=units[0]?.id||'';
+  localStorage.setItem('bt_last_school',ui.lastSchool); localStorage.setItem('bt_last_unit',ui.lastUnit);
+}
+function schoolOptions(sel=''){return activeSchools().map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${escapeHtml(s.name)}</option>`).join('')}
+function unitOptions(sid,sel=''){return unitsBySchool(sid).map(u=>`<option value="${u.id}" ${u.id===sel?'selected':''}>${escapeHtml(u.name)}</option>`).join('')}
+function stageOptions(sel=''){return state.levelStages.filter(s=>s.active!==false).sort((a,b)=>num(a.order)-num(b.order)).map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${escapeHtml(s.name)}（${s.start}–${s.end}${s.unit}）</option>`).join('')}
+
+/* ---------- logic ---------- */
+function addPoints(studentId,points,reason,note=''){
+  const s=byId(state.students,studentId); if(!s)return;
+  points=num(points); s.points=num(s.points)+points; if(points>0)s.totalEarned=num(s.totalEarned)+points; if(points<0)s.totalSpent=num(s.totalSpent)+Math.abs(points);
+  state.pointLogs.unshift({id:uid('pl'),studentId,date:today(),points,reason,note}); save(); toast(`${s.name} ${points>0?'+':''}${points} 點`);
+}
+function markAttendance(studentId,status){
+  const s=byId(state.students,studentId); if(!s)return; const date=$('classDate')?.value||today();
+  const existing=state.attendance.find(a=>a.studentId===studentId&&a.date===date);
+  if(existing) existing.status=status; else state.attendance.unshift({id:uid('att'),studentId,date,status,schoolId:s.schoolId,unitId:s.unitId});
+  if(status==='present') addPoints(studentId,1,'準時出席','上課介面自動加點'); else save();
+  renderPage();
+}
+function upgradeStudent(studentId){
+  const s=byId(state.students,studentId); if(!s)return;
+  const current=stageOf(s); if(!current)return alert('請先設定分級階段');
+  const before=levelLabel(s); let changed=false;
+  if(num(s.level)<num(current.end)){ s.level=num(s.level)+1; changed=true; }
+  else if(current.next && byId(state.levelStages,current.next)){ const next=byId(state.levelStages,current.next); s.stageId=next.id; s.level=num(next.start); changed=true; }
+  else { alert('已經是最高階段的最高等級'); return; }
+  const after=levelLabel(s); const bonus=num(current.bonus)||0;
+  state.upgrades.unshift({id:uid('up'),studentId,date:today(),before,after,bonus,note:''});
+  if(bonus) addPoints(studentId,bonus,'升級獎勵',`${before} → ${after}`); else save();
+  toast(`🎉 ${s.name} 升級：${after}`); renderPage();
+}
+function redeem(studentId,rewardId){
+  const s=byId(state.students,studentId), r=byId(state.rewards,rewardId); if(!s||!r)return;
+  if(num(r.stock)<=0)return alert('此獎品目前無庫存'); if(num(s.points)<num(r.cost))return alert(`點數不足，還差 ${num(r.cost)-num(s.points)} 點`);
+  s.points-=num(r.cost); s.totalSpent=num(s.totalSpent)+num(r.cost); r.stock=num(r.stock)-1;
+  state.redemptions.unshift({id:uid('red'),studentId,rewardId,date:today(),cost:num(r.cost)});
+  state.pointLogs.unshift({id:uid('pl'),studentId,date:today(),points:-num(r.cost),reason:'兌換獎品',note:r.name}); save(); renderPage();
+}
+function toast(msg){ const el=document.createElement('div'); el.textContent=msg; el.style.cssText='position:fixed;right:24px;bottom:24px;z-index:99;background:#2f2a25;color:white;padding:13px 16px;border-radius:16px;font-weight:900;box-shadow:0 14px 30px #0002'; document.body.appendChild(el); setTimeout(()=>el.remove(),1300); }
+
+/* ---------- navigation ---------- */
+const NAV=[
+  {group:'日常操作',items:[['home','🏠 首頁'],['classroom','🎒 上課介面'],['students','👥 學生管理'],['lesson','📚 課程紀錄'],['scores','📊 成績輸入'],['calendar','📅 行事曆'],['rewards','🎁 獎品兌換']]},
+  {group:'查詢與統計',items:[['query','🔎 個人查詢'],['stats','📈 統計總覽']]},
+  {group:'系統',items:[['settings','⚙️ 設定中心']]}
+];
+function renderNav(){ $('nav').innerHTML=NAV.map(g=>`<div class="nav-title">${g.group}</div>`+g.items.map(([id,label])=>`<button class="${ui.page===id?'active':''}" onclick="setPage('${id}')">${label}</button>`).join('')).join(''); }
+function setPage(p){ ui.page=p; renderApp(); }
+function renderApp(){ ensureSelection(); $('brandName').textContent=state.settings.systemName||'🎵 教學管理系統'; $('brandSub').textContent=state.settings.subtitle||'v1.5 上課介面版'; renderNav(); renderPage(); }
+function renderPage(){ const titles={home:'首頁',classroom:'上課介面',students:'學生管理',lesson:'課程紀錄',scores:'成績輸入',calendar:'行事曆',rewards:'獎品兌換',query:'個人查詢',stats:'統計總覽',settings:'設定中心'}; $('pageTitle').textContent=titles[ui.page]||''; const p=$('page'); p.classList.remove('fade'); void p.offsetWidth; p.classList.add('fade'); const map={home, classroom, students, lesson, scores, calendar, rewards, query, stats, settings}; p.innerHTML=(map[ui.page]||home)(); if(ui.page==='scores') setTimeout(drawRadar,0); }
+
+/* ---------- pages ---------- */
+function home(){return `<div class="grid cols4"><div class="stat"><b>${state.schools.length}</b><span>學校</span></div><div class="stat"><b>${state.units.length}</b><span>課程單位</span></div><div class="stat"><b>${activeStudents().length}</b><span>學生</span></div><div class="stat"><b>${activeStudents().reduce((a,s)=>a+num(s.points),0)}</b><span>學生總點數</span></div></div><div class="card" style="margin-top:18px"><h2>⭐ v1.5 重點</h2><p class="notice">上課介面已成為主戰場：點名、加扣分、升級、學生資訊都集中在同一頁。分級階段可在設定中心自訂，例如初階 1–10 級、中階 11–25 級、高階 26–50 級、演奏家 1–15 級。</p></div>`}
+function classroom(){
+  const students=studentsByUnit(ui.lastSchool,ui.lastUnit);
+  return `<div class="card"><h2>🎒 上課介面</h2><div class="form-grid three"><div class="field"><label>學校</label><select id="classSchool" onchange="ui.lastSchool=this.value;ui.lastUnit='';renderPage()">${schoolOptions(ui.lastSchool)}</select></div><div class="field"><label>課程單位</label><select id="classUnit" onchange="ui.lastUnit=this.value;renderPage()">${unitOptions(ui.lastSchool,ui.lastUnit)}</select></div><div class="field"><label>日期</label><input id="classDate" type="date" value="${today()}"></div></div></div>
+  <div class="grid" style="margin-top:18px">${students.length?students.map(s=>studentRow(s)).join(''):'<div class="empty">這個課程單位還沒有學生</div>'}</div>`;
+}
+function studentRow(s){ return `<div class="student-card"><div><div class="student-name">${escapeHtml(s.name||'未命名')}</div><div class="student-meta">${escapeHtml(studentMeta(s))}</div></div><div class="student-actions"><button class="btn ok small" onclick="markAttendance('${s.id}','present')">出席 +1</button><button class="btn ghost small" onclick="markAttendance('${s.id}','leave')">請假</button><button class="btn ghost small" onclick="markAttendance('${s.id}','late')">遲到</button><button class="btn danger small" onclick="markAttendance('${s.id}','absent')">缺席</button><button class="btn warn small" onclick="addPoints('${s.id}',1,'課堂加分');renderPage()">+1</button><button class="btn warn small" onclick="addPoints('${s.id}',5,'課堂加分');renderPage()">+5</button><button class="btn ghost small" onclick="addPoints('${s.id}',-1,'課堂扣分');renderPage()">-1</button><button class="btn primary small" onclick="upgradeStudent('${s.id}')">升級</button></div></div>`; }
+function students(){
+  const rows=activeStudents().sort((a,b)=>schoolName(a.schoolId).localeCompare(schoolName(b.schoolId),'zh-Hant')||unitName(a.unitId).localeCompare(unitName(b.unitId),'zh-Hant')||num(a.seat)-num(b.seat)).map(s=>`<tr><td><b>${escapeHtml(s.name)}</b><div class="mini">${escapeHtml(studentMeta(s))}</div></td><td><span class="pill gold">${num(s.points)}點</span></td><td>${escapeHtml(s.queryCode)} / ${escapeHtml(s.queryPassword)}</td><td><button class="btn primary small" onclick="upgradeStudent('${s.id}')">升級</button> <button class="btn danger small" onclick="deleteStudent('${s.id}')">刪除</button></td></tr>`).join('');
+  return `<div class="card"><h2>新增學生</h2><div class="form-grid three"><div class="field"><label>姓名</label><input id="stName"></div><div class="field"><label>學校</label><select id="stSchool" onchange="renderStudentUnitOptions()">${schoolOptions(ui.lastSchool)}</select></div><div class="field"><label>課程單位</label><select id="stUnit">${unitOptions(ui.lastSchool,ui.lastUnit)}</select></div><div class="field"><label>座號</label><input id="stSeat"></div><div class="field"><label>階段</label><select id="stStage">${stageOptions(state.levelStages[0]?.id)}</select></div><div class="field"><label>等級</label><input id="stLevel" type="number" value="1"></div></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="addStudent()">新增學生</button></div></div><div class="card" style="margin-top:18px"><h2>學生列表</h2><table class="table"><thead><tr><th>學生</th><th>點數</th><th>查詢碼/密碼</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function renderStudentUnitOptions(){ const sid=$('stSchool').value; $('stUnit').innerHTML=unitOptions(sid, unitsBySchool(sid)[0]?.id||''); }
+function addStudent(){ const sid=$('stSchool').value, uidv=$('stUnit').value; const stage=byId(state.levelStages,$('stStage').value)||state.levelStages[0]; const st={id:uid('stu'),name:$('stName').value.trim()||'未命名',schoolId:sid,unitId:uidv,seat:$('stSeat').value.trim(),queryCode:'Q'+Math.random().toString(36).slice(2,7).toUpperCase(),queryPassword:String(Math.floor(1000+Math.random()*9000)),stageId:stage?.id||'',level:num($('stLevel').value)||num(stage?.start)||1,points:0,totalEarned:0,totalSpent:0,note:'',active:true}; state.students.push(st); save(); ui.lastSchool=sid;ui.lastUnit=uidv;renderPage(); }
+function deleteStudent(id){ if(confirm('確定刪除這位學生？')){ const s=byId(state.students,id); if(s)s.active=false; save(); renderPage(); }}
+function lesson(){return `<div class="card"><h2>📚 新增課程紀錄</h2><div class="form-grid"><div class="field"><label>日期</label><input id="lessonDate" type="date" value="${today()}"></div><div class="field"><label>學校</label><select id="lessonSchool">${schoolOptions(ui.lastSchool)}</select></div><div class="field"><label>課程單位</label><select id="lessonUnit">${unitOptions(ui.lastSchool,ui.lastUnit)}</select></div><div class="field"><label>上課內容</label><textarea id="lessonContent"></textarea></div><div class="field"><label>學生狀況</label><textarea id="lessonStatus"></textarea></div><div class="field"><label>下次提醒</label><textarea id="lessonNext"></textarea></div></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="addLesson()">儲存紀錄</button></div></div><div class="card" style="margin-top:18px"><h2>紀錄列表</h2>${state.lessonLogs.length?state.lessonLogs.map(l=>`<div class="student-card"><div><b>${l.date}｜${escapeHtml(schoolName(l.schoolId))} / ${escapeHtml(unitName(l.unitId))}</b><div class="mini">${escapeHtml(l.content||'')}</div></div></div>`).join(''):'<div class="empty">尚無課程紀錄</div>'}</div>`}
+function addLesson(){state.lessonLogs.unshift({id:uid('les'),date:$('lessonDate').value,schoolId:$('lessonSchool').value,unitId:$('lessonUnit').value,content:$('lessonContent').value,status:$('lessonStatus').value,next:$('lessonNext').value}); save(); renderPage();}
+function scores(){const ss=studentsByUnit(ui.lastSchool,ui.lastUnit); return `<div class="card"><h2>📊 成績輸入</h2><div class="form-grid three"><div class="field"><label>學校</label><select onchange="ui.lastSchool=this.value;ui.lastUnit='';renderPage()">${schoolOptions(ui.lastSchool)}</select></div><div class="field"><label>課程單位</label><select onchange="ui.lastUnit=this.value;renderPage()">${unitOptions(ui.lastSchool,ui.lastUnit)}</select></div><div class="field"><label>學生</label><select id="scoreStudent">${ss.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}</select></div></div><div class="form-grid three" style="margin-top:12px">${['音準','節奏','氣息','指法','視譜','音樂表現'].map((n,i)=>`<div class="field"><label>${n}</label><input id="score${i}" type="number" min="0" max="100" value="80"></div>`).join('')}</div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="addScore()">儲存成績</button></div></div><div class="card" style="margin-top:18px"><h2>六角能力圖</h2><canvas id="radar" width="520" height="360"></canvas></div>`}
+function addScore(){const sid=$('scoreStudent').value; if(!sid)return; const vals=[0,1,2,3,4,5].map(i=>num($('score'+i).value)); state.scores.unshift({id:uid('sc'),studentId:sid,date:today(),scores:vals,total:Math.round(vals.reduce((a,b)=>a+b,0)/6)}); save(); renderPage();}
+function drawRadar(){const c=$('radar'); if(!c)return; const ctx=c.getContext('2d'), W=c.width,H=c.height,cx=W/2,cy=H/2+8,R=125; ctx.clearRect(0,0,W,H); const labels=['音準','節奏','氣息','指法','視譜','表現']; const rec=state.scores[0]?.scores||[80,80,80,80,80,80]; ctx.strokeStyle='#eadfcf'; ctx.fillStyle='#7b7166'; ctx.font='14px sans-serif'; for(let ring=1;ring<=5;ring++){ctx.beginPath(); for(let i=0;i<6;i++){let a=-Math.PI/2+i*Math.PI*2/6,x=cx+Math.cos(a)*R*ring/5,y=cy+Math.sin(a)*R*ring/5; if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.closePath();ctx.stroke()} labels.forEach((lb,i)=>{let a=-Math.PI/2+i*Math.PI*2/6; ctx.fillText(lb,cx+Math.cos(a)*(R+25)-14,cy+Math.sin(a)*(R+25)+5)}); ctx.beginPath(); rec.forEach((v,i)=>{let a=-Math.PI/2+i*Math.PI*2/6,x=cx+Math.cos(a)*R*(v/100),y=cy+Math.sin(a)*R*(v/100); if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)}); ctx.closePath(); ctx.fillStyle='rgba(63,167,180,.28)'; ctx.strokeStyle='#3fa7b4'; ctx.lineWidth=3; ctx.fill(); ctx.stroke();}
+function calendar(){return `<div class="card"><h2>📅 新增事件</h2><div class="form-grid three"><div class="field"><label>日期</label><input id="evDate" type="date" value="${today()}"></div><div class="field"><label>事件名稱</label><input id="evName"></div><div class="field"><label>類型</label><select id="evType"><option>上課</option><option>考試</option><option>演出</option><option>停課</option><option>補課</option><option>兌換日</option></select></div></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="addEvent()">新增事件</button></div></div><div class="card" style="margin-top:18px"><h2>事件列表</h2>${state.events.length?state.events.sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<div class="student-card"><div><b>${e.date}｜${escapeHtml(e.name)}</b><div class="mini">${escapeHtml(e.type)}</div></div></div>`).join(''):'<div class="empty">尚無事件</div>'}</div>`}
+function addEvent(){state.events.push({id:uid('ev'),date:$('evDate').value,name:$('evName').value||'未命名事件',type:$('evType').value}); save(); renderPage();}
+function rewards(){const opts=activeStudents().map(s=>`<option value="${s.id}">${escapeHtml(s.name)}（${num(s.points)}點）</option>`).join(''); return `<div class="card"><h2>🎁 獎品兌換</h2><div class="field"><label>選擇學生</label><select id="redStudent">${opts}</select></div></div><div class="shop" style="margin-top:18px">${state.rewards.filter(r=>r.active!==false).map(r=>`<div class="reward"><div class="emoji">🎁</div><h3>${escapeHtml(r.name)}</h3><p><span class="pill gold">${num(r.cost)}點</span> <span class="pill">庫存 ${num(r.stock)}</span></p><button class="btn primary" onclick="redeem(document.getElementById('redStudent').value,'${r.id}')">兌換</button></div>`).join('')}</div>`}
+function query(){return `<div class="card"><h2>🔎 個人查詢</h2><div class="form-grid"><div class="field"><label>查詢碼</label><input id="qCode" value="A30518"></div><div class="field"><label>查詢密碼</label><input id="qPass" value="4721"></div></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="doQuery()">查詢</button></div></div><div id="queryResult" style="margin-top:18px"></div>`}
+function doQuery(){const s=state.students.find(x=>x.queryCode===$('qCode').value.trim()&&x.queryPassword===$('qPass').value.trim()); $('queryResult').innerHTML=s?`<div class="card"><h2>哈囉，${escapeHtml(s.name)}！</h2><div class="grid cols3"><div class="stat"><b>${num(s.points)}</b><span>目前點數</span></div><div class="stat"><b>${escapeHtml(levelLabel(s))}</b><span>目前等級</span></div><div class="stat"><b>${state.rewards.filter(r=>r.active!==false&&num(r.cost)<=num(s.points)).length}</b><span>可兌換獎品</span></div></div><p class="notice" style="margin-top:16px">${escapeHtml(studentMeta(s))}</p></div>`:'<div class="empty">查無資料，請確認查詢碼與密碼</div>';}
+function stats(){return `<div class="grid cols4"><div class="stat"><b>${activeStudents().length}</b><span>學生數</span></div><div class="stat"><b>${state.attendance.length}</b><span>點名紀錄</span></div><div class="stat"><b>${state.upgrades.length}</b><span>升級紀錄</span></div><div class="stat"><b>${state.redemptions.length}</b><span>兌換紀錄</span></div></div><div class="card" style="margin-top:18px"><h2>點數排行榜</h2>${activeStudents().sort((a,b)=>num(b.points)-num(a.points)).slice(0,10).map((s,i)=>`<div class="student-card"><div><b>${i+1}. ${escapeHtml(s.name)}</b><div class="mini">${escapeHtml(studentMeta(s))}</div></div><span class="pill gold">${num(s.points)}點</span></div>`).join('')}</div>`}
+function settings(){ const tabs=[['system','系統設定'],['schools','學校/課程'],['levels','分級制度'],['fields','評量項目'],['rewards','獎品設定'],['backup','備份匯入']]; return `<div class="tabs">${tabs.map(([id,n])=>`<button class="tab ${ui.settingTab===id?'active':''}" onclick="ui.settingTab='${id}';renderPage()">${n}</button>`).join('')}</div>${settingsContent()}`; }
+function settingsContent(){ if(ui.settingTab==='system')return `<div class="card"><h2>系統設定</h2><div class="form-grid"><div class="field"><label>系統名稱</label><input id="setName" value="${escapeHtml(state.settings.systemName)}"></div><div class="field"><label>副標題</label><input id="setSub" value="${escapeHtml(state.settings.subtitle)}"></div></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="state.settings.systemName=$('setName').value;state.settings.subtitle=$('setSub').value;save();renderApp()">儲存</button></div></div>`;
+ if(ui.settingTab==='schools')return schoolSettings(); if(ui.settingTab==='levels')return levelSettings(); if(ui.settingTab==='fields')return fieldSettings(); if(ui.settingTab==='rewards')return rewardSettings(); return backupSettings(); }
+function schoolSettings(){return `<div class="grid cols2"><div class="card"><h2>學校設定</h2><div class="row"><input id="newSchool" placeholder="新增學校"><button class="btn primary" onclick="addSchool()">新增</button></div><table class="table"><tbody>${state.schools.map(s=>`<tr><td>${escapeHtml(s.name)}</td><td><button class="btn danger small" onclick="removeSchool('${s.id}')">刪除</button></td></tr>`).join('')}</tbody></table></div><div class="card"><h2>課程單位設定</h2><div class="field"><label>學校</label><select id="unitSchool" onchange="ui.lastSchool=this.value;renderPage()">${schoolOptions(ui.lastSchool)}</select></div><div class="row" style="margin-top:10px"><input id="newUnit" placeholder="新增課程單位"><button class="btn primary" onclick="addUnit()">新增</button></div><table class="table"><tbody>${unitsBySchool(ui.lastSchool).map(u=>`<tr><td>${escapeHtml(u.name)}</td><td><button class="btn danger small" onclick="removeUnit('${u.id}')">刪除</button></td></tr>`).join('')}</tbody></table></div></div>`}
+function addSchool(){const name=$('newSchool').value.trim(); if(!name)return; const id=uid('sch'); state.schools.push({id,name,active:true,order:state.schools.length+1}); ui.lastSchool=id; save(); renderPage();}
+function removeSchool(id){if(confirm('確定刪除學校？相關課程與學生會保留資料但不建議正式資料這樣操作。')){state.schools=state.schools.filter(s=>s.id!==id); save(); renderPage();}}
+function addUnit(){const name=$('newUnit').value.trim(); if(!name)return; const sid=$('unitSchool').value; const id=uid('unit'); state.units.push({id,schoolId:sid,name,active:true,order:unitsBySchool(sid).length+1}); ui.lastSchool=sid;ui.lastUnit=id; save(); renderPage();}
+function removeUnit(id){if(confirm('確定刪除課程單位？')){state.units=state.units.filter(u=>u.id!==id); save(); renderPage();}}
+function levelSettings(){return `<div class="card"><h2>分級階段設定</h2><p class="mini">可自訂階段名稱與範圍，例如：初階 1–10級、中階 11–25級、高階 26–50級、演奏家 1–15級。升級會依排序與 next 接續。</p><table class="table"><thead><tr><th>階段</th><th>範圍</th><th>單位</th><th>獎勵</th><th>操作</th></tr></thead><tbody>${state.levelStages.sort((a,b)=>num(a.order)-num(b.order)).map(st=>`<tr><td><input id="stn_${st.id}" value="${escapeHtml(st.name)}"></td><td><input id="sts_${st.id}" type="number" value="${st.start}" style="width:80px"> - <input id="ste_${st.id}" type="number" value="${st.end}" style="width:80px"></td><td><input id="stu_${st.id}" value="${escapeHtml(st.unit)}" style="width:70px"></td><td><input id="stb_${st.id}" type="number" value="${num(st.bonus)}" style="width:80px"></td><td><button class="btn primary small" onclick="saveStage('${st.id}')">儲存</button> <button class="btn danger small" onclick="deleteStage('${st.id}')">刪除</button></td></tr>`).join('')}</tbody></table><div class="row"><button class="btn warn" onclick="addStage()">新增階段</button></div></div><div class="card" style="margin-top:18px"><h2>等級內容設定</h2>${levelContentEditor()}</div>`}
+function saveStage(id){const st=byId(state.levelStages,id); st.name=$('stn_'+id).value; st.start=num($('sts_'+id).value); st.end=num($('ste_'+id).value); st.unit=$('stu_'+id).value; st.bonus=num($('stb_'+id).value); save(); renderPage();}
+function addStage(){const id=uid('stage'); state.levelStages.push({id,name:'新階段',start:1,end:5,unit:'級',next:'',active:true,order:state.levelStages.length+1,bonus:5}); save(); renderPage();}
+function deleteStage(id){if(confirm('確定刪除階段？')){state.levelStages=state.levelStages.filter(s=>s.id!==id); save(); renderPage();}}
+function levelContentEditor(){ const st=state.levelStages[0]; if(!st)return '<div class="empty">請先新增階段</div>'; const key=st.id+'_'+st.start; const lv=state.levels[key]||(state.levels[key]={id:key,stageId:st.id,level:st.start,values:{}}); return `<div class="form-grid"><div class="field"><label>階段</label><select id="editStage" onchange="renderLevelPickers()">${stageOptions(st.id)}</select></div><div class="field"><label>等級</label><input id="editLevel" type="number" value="${st.start}" onchange="renderPage()"></div></div><div id="levelFieldsBox" class="grid" style="margin-top:14px">${state.levelFields.filter(f=>f.active!==false).sort((a,b)=>num(a.order)-num(b.order)).map(f=>`<div class="field"><label>${escapeHtml(f.name)}</label>${f.type==='textarea'?`<textarea id="lv_${f.id}">${escapeHtml(lv.values[f.id]||'')}</textarea>`:`<input id="lv_${f.id}" type="${f.type==='number'?'number':'text'}" value="${escapeHtml(lv.values[f.id]||'')}">`}</div>`).join('')}</div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="saveLevelContent()">儲存等級內容</button></div>`}
+function saveLevelContent(){const stid=$('editStage')?.value||state.levelStages[0]?.id; const lvnum=num($('editLevel')?.value)||1; const key=stid+'_'+lvnum; const obj=state.levels[key]||(state.levels[key]={id:key,stageId:stid,level:lvnum,values:{}}); state.levelFields.forEach(f=>{const el=$('lv_'+f.id); if(el)obj.values[f.id]=el.value}); save(); toast('等級內容已儲存'); renderPage();}
+function fieldSettings(){return `<div class="card"><h2>評量項目設定</h2><p class="mini">這些項目會出現在「等級內容設定」裡，例如能力指標、技巧重點、通過標準。</p><table class="table"><tbody>${state.levelFields.sort((a,b)=>num(a.order)-num(b.order)).map(f=>`<tr><td><input id="fn_${f.id}" value="${escapeHtml(f.name)}"></td><td><select id="ft_${f.id}"><option value="text" ${f.type==='text'?'selected':''}>短文字</option><option value="textarea" ${f.type==='textarea'?'selected':''}>多行文字</option><option value="number" ${f.type==='number'?'selected':''}>數字</option></select></td><td><button class="btn primary small" onclick="saveField('${f.id}')">儲存</button><button class="btn danger small" onclick="deleteField('${f.id}')">隱藏</button></td></tr>`).join('')}</tbody></table><div class="row"><button class="btn warn" onclick="addField()">新增評量項目</button></div></div>`}
+function saveField(id){const f=byId(state.levelFields,id); f.name=$('fn_'+id).value; f.type=$('ft_'+id).value; save(); renderPage();}
+function addField(){state.levelFields.push({id:uid('field'),name:'新項目',type:'textarea',active:true,order:state.levelFields.length+1}); save(); renderPage();}
+function deleteField(id){const f=byId(state.levelFields,id); if(f)f.active=false; save(); renderPage();}
+function rewardSettings(){return `<div class="card"><h2>獎品設定</h2><div class="form-grid three"><input id="rwName" placeholder="獎品名稱"><input id="rwCost" type="number" placeholder="需要點數"><input id="rwStock" type="number" placeholder="庫存"></div><div class="row" style="margin-top:14px"><button class="btn primary" onclick="addReward()">新增獎品</button></div><table class="table"><tbody>${state.rewards.map(r=>`<tr><td>${escapeHtml(r.name)}</td><td>${r.cost}點</td><td>庫存${r.stock}</td></tr>`).join('')}</tbody></table></div>`}
+function addReward(){state.rewards.push({id:uid('rew'),name:$('rwName').value||'新獎品',cost:num($('rwCost').value),stock:num($('rwStock').value),active:true,note:''}); save(); renderPage();}
+function backupSettings(){return `<div class="card"><h2>資料備份 / 匯入</h2><div class="row"><button class="btn primary" onclick="exportData()">匯出備份</button><label class="btn ghost">匯入 JSON<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label><button class="btn danger" onclick="resetData()">重置示範資料</button></div></div>`}
+function exportData(){const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'})); a.download='teaching-system-backup.json'; a.click();}
+function importData(e){const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{try{state=normalizeState(JSON.parse(r.result)); save(); renderApp();}catch(err){alert('匯入失敗')}}; r.readAsText(f);}
+function resetData(){if(confirm('確定重置？目前瀏覽器資料會被覆蓋。')){state=defaultState(); save(); renderApp();}}
+renderApp();
+</script>
+</body>
+</html>
