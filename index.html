@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v4.3.4 手機讀取穩定版</title>
+<title>教學管理系統 v4.3.5 強制JSONP讀取版</title>
 <style>
 :root{
   --bg-a:#fff6dc;
@@ -695,7 +695,7 @@ input[type="date"]{
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <div class="version">v4.3.4 手機讀取穩定版｜ImgBB 圖片</div>
+    <div class="version">v4.3.5 強制JSONP讀取版｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="exam">🎓 升級考試</button>
@@ -3063,45 +3063,45 @@ function gasJsonp(action){
     const url = gasUrl();
     if(!url) return reject(new Error("請先貼上 Google Apps Script Web App URL。"));
 
-    // iPhone Safari sometimes keeps old injected script tags/cached responses.
+    // 強制清除舊 JSONP script，避免 iPhone/iPad 快取或舊回呼卡住。
     document.querySelectorAll("script[data-gas-jsonp='1']").forEach(node=>{
       try{ node.remove(); }catch(e){}
     });
 
-    const callbackName = "gas_cb_" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    const callbackName = "jsonp_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2);
     const script = document.createElement("script");
+    script.id = callbackName;
     script.async = true;
-    script.defer = true;
     script.setAttribute("data-gas-jsonp","1");
 
     const timer = setTimeout(()=>{
       cleanup();
-      reject(new Error("讀取逾時：手機可能擋住 Google Script 回傳，或雲端尚無資料。"));
+      reject(new Error("JSONP 讀取逾時：請確認 Apps Script URL、部署權限，或手機網路是否阻擋 Google Script。"));
     }, 45000);
 
     function cleanup(){
       clearTimeout(timer);
       try{ delete window[callbackName]; }catch(e){ window[callbackName] = undefined; }
-      if(script.parentNode) script.parentNode.removeChild(script);
+      const el = document.getElementById(callbackName);
+      if(el) el.remove();
     }
 
-    window[callbackName] = (data) => {
+    window[callbackName] = function(response){
       cleanup();
-      resolve(data);
+      resolve(response);
     };
 
-    script.onerror = () => {
+    script.onerror = function(){
       cleanup();
-      reject(new Error("JSONP 讀取失敗：請確認 URL 是 /exec、Apps Script 權限為任何人，且手機網路沒有阻擋 Google Script。"));
+      reject(new Error("JSONP script 載入失敗：請確認 URL 是 /exec，且 Apps Script 部署權限為任何人。"));
     };
 
-    // Use multiple cache busters; iPhone Safari can cache script URLs aggressively.
+    // 重要：讀取一律走 GET + callback，不使用 fetch，避免 iPad/iPhone CORS/redirect 問題。
     script.src = gasUrlWithParams({
       action,
-      callback:callbackName,
-      t:Date.now(),
-      r:Math.random().toString(36).slice(2),
-      device:"mobile-safe"
+      callback: callbackName,
+      t: Date.now(),
+      r: Math.random().toString(36).slice(2)
     });
 
     document.body.appendChild(script);
@@ -3374,7 +3374,7 @@ function renderBackupSettings(){
 
     <section class="card">
       <h3>☁️ Google Sheet 手動雲端備份 v4.0</h3>
-      <div class="note">這是安全版同步：不會自動覆蓋資料。你可以手動「上傳到雲端」或「從雲端讀取」。第一次使用需要先部署 app.gs，並把 Web App URL 貼在這裡。手機若讀取失敗，請先按「測試完整讀取」或「測試分表讀取」確認是哪一種備份沒有資料。</div>
+      <div class="note">這是安全版同步：不會自動覆蓋資料。你可以手動「上傳到雲端」或「從雲端讀取」。第一次使用需要先部署 app.gs，並把 Web App URL 貼在這裡。手機 / iPad 讀取已強制改用 JSONP script 注入，不再使用 fetch。若仍讀取失敗，請先按「測試完整讀取」或「測試分表讀取」確認資料是否存在。</div>
       <label>Google Apps Script Web App URL</label>
       <input id="gasUrlInput" value="${escapeHtml(cloud.gasUrl || "")}" placeholder="https://script.google.com/macros/s/.../exec">
       <button class="btn ghost" onclick="saveGasUrl()">儲存 URL</button>
