@@ -1,11 +1,6 @@
 /**
- * Battle 教學管理系統 v4.2
+ * Battle 教學管理系統 v4.3.1
  * 分表雲端版：保留完整備份 / 基礎資料同步，新增分表儲存與讀取
- *
- * 部署設定：
- * - 類型：網頁應用程式
- * - 執行身分：我
- * - 存取權：任何人
  */
 
 const FULL_BACKUP_SHEET = 'CloudBackup';
@@ -21,66 +16,46 @@ const PARTITION_SHEETS = {
   redeemLogs: 'V42_RedeemLogs',
   activityLogs: 'V42_ActivityLogs',
   classDateLists: 'V42_ClassDateLists',
-  hiddenDateLists: 'V42_HiddenDateLists'
+  hiddenDateLists: 'V42_HiddenDateLists',
+  examChecklists: 'V43_ExamChecklists'
 };
 
 function doGet(e) {
   const action = e && e.parameter && e.parameter.action;
   let result;
-
   try {
-    if (action === 'load') {
-      result = loadLatest_(FULL_BACKUP_SHEET);
-    } else if (action === 'loadMaster') {
-      result = loadLatest_(MASTER_DATA_SHEET);
-    } else if (action === 'loadPartitioned') {
-      result = loadPartitioned_();
-    } else {
-      result = { ok: true, message: 'Battle 教學管理系統 Cloud API v4.2 is running.' };
-    }
+    if (action === 'load') result = loadLatest_(FULL_BACKUP_SHEET);
+    else if (action === 'loadMaster') result = loadLatest_(MASTER_DATA_SHEET);
+    else if (action === 'loadPartitioned') result = loadPartitioned_();
+    else result = { ok: true, message: 'Battle 教學管理系統 Cloud API v4.3.1 is running.' };
   } catch (err) {
     result = { ok: false, error: String(err) };
   }
-
   return output_(result, e);
 }
 
 function doPost(e) {
   let result;
-
   try {
-    const raw =
-      (e && e.parameter && e.parameter.payload) ||
-      (e && e.postData && e.postData.contents) ||
-      '{}';
-
+    const raw = (e && e.parameter && e.parameter.payload) || (e && e.postData && e.postData.contents) || '{}';
     const body = JSON.parse(raw);
-
-    if (body.action === 'save') {
-      result = saveBackup_(FULL_BACKUP_SHEET, body.data, body.savedAt, body.version);
-    } else if (body.action === 'saveMaster') {
-      result = saveBackup_(MASTER_DATA_SHEET, body.data, body.savedAt, body.version);
-    } else if (body.action === 'savePartitioned') {
-      result = savePartitioned_(body.data, body.savedAt, body.version);
-    } else {
-      result = { ok: false, error: 'Unknown action: ' + body.action };
-    }
+    if (body.action === 'save') result = saveBackup_(FULL_BACKUP_SHEET, body.data, body.savedAt, body.version);
+    else if (body.action === 'saveMaster') result = saveBackup_(MASTER_DATA_SHEET, body.data, body.savedAt, body.version);
+    else if (body.action === 'savePartitioned') result = savePartitioned_(body.data, body.savedAt, body.version);
+    else result = { ok: false, error: 'Unknown action: ' + body.action };
   } catch (err) {
     result = { ok: false, error: String(err) };
   }
-
   return output_(result, e);
 }
 
 function savePartitioned_(payload, savedAt, version) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
-
   try {
     const now = savedAt || new Date().toISOString();
     const data = payload || {};
     const runtime = data.runtime || {};
-
     saveReplaceJson_(PARTITION_SHEETS.master, data.master || {}, now, version);
     saveReplaceJson_(PARTITION_SHEETS.points, runtime.points || {}, now, version);
     saveReplaceJson_(PARTITION_SHEETS.attendance, runtime.attendance || [], now, version);
@@ -91,7 +66,7 @@ function savePartitioned_(payload, savedAt, version) {
     saveReplaceJson_(PARTITION_SHEETS.activityLogs, runtime.activityLogs || [], now, version);
     saveReplaceJson_(PARTITION_SHEETS.classDateLists, runtime.classDateLists || {}, now, version);
     saveReplaceJson_(PARTITION_SHEETS.hiddenDateLists, runtime.hiddenDateLists || {}, now, version);
-
+    saveReplaceJson_(PARTITION_SHEETS.examChecklists, runtime.examChecklists || {}, now, version);
     return { ok: true, savedAt: now, version: version || '', mode: 'partitioned' };
   } finally {
     lock.releaseLock();
@@ -101,7 +76,6 @@ function savePartitioned_(payload, savedAt, version) {
 function loadPartitioned_() {
   const master = loadReplaceJson_(PARTITION_SHEETS.master);
   if (!master) return { ok: true, data: null, message: 'No partitioned backup yet.' };
-
   return {
     ok: true,
     mode: 'partitioned',
@@ -116,7 +90,8 @@ function loadPartitioned_() {
         redeemLogs: loadReplaceJson_(PARTITION_SHEETS.redeemLogs) || [],
         activityLogs: loadReplaceJson_(PARTITION_SHEETS.activityLogs) || [],
         classDateLists: loadReplaceJson_(PARTITION_SHEETS.classDateLists) || {},
-        hiddenDateLists: loadReplaceJson_(PARTITION_SHEETS.hiddenDateLists) || {}
+        hiddenDateLists: loadReplaceJson_(PARTITION_SHEETS.hiddenDateLists) || {},
+        examChecklists: loadReplaceJson_(PARTITION_SHEETS.examChecklists) || {}
       }
     }
   };
@@ -141,7 +116,6 @@ function loadReplaceJson_(sheetName) {
 function saveBackup_(sheetName, data, savedAt, version) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
-
   try {
     const sheet = getSheet_(sheetName);
     const now = savedAt || new Date().toISOString();
@@ -156,42 +130,28 @@ function saveBackup_(sheetName, data, savedAt, version) {
 function loadLatest_(sheetName) {
   const sheet = getSheet_(sheetName);
   const lastRow = sheet.getLastRow();
-
   if (lastRow < 2) return { ok: true, data: null, message: 'No backup yet.' };
-
   const values = sheet.getRange(lastRow, 1, 1, 3).getValues()[0];
-  return {
-    ok: true,
-    sheet: sheetName,
-    savedAt: values[0],
-    version: values[1],
-    data: JSON.parse(values[2])
-  };
+  return { ok: true, sheet: sheetName, savedAt: values[0], version: values[1], data: JSON.parse(values[2]) };
 }
 
 function getSheet_(sheetName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(sheetName);
-
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
     sheet.appendRow(['savedAt', 'version', 'json']);
     sheet.setFrozenRows(1);
   }
-
   return sheet;
 }
 
 function output_(obj, e) {
   const callback = e && e.parameter && e.parameter.callback;
-
   if (callback) {
-    return ContentService
-      .createTextOutput(callback + '(' + JSON.stringify(obj) + ');')
+    return ContentService.createTextOutput(callback + '(' + JSON.stringify(obj) + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
-
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
+  return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }

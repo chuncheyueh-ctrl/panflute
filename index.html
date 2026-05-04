@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v4.3 檢定系統版</title>
+<title>教學管理系統 v4.3.1 檢定系統修正版</title>
 <style>
 :root{
   --bg-a:#fff6dc;
@@ -649,13 +649,53 @@ input[type="date"]{
   }
 }
 
+
+.exam-check-card{
+  margin-bottom:10px;
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px dashed var(--line);
+  background:rgba(255,240,168,.55);
+}
+.exam-check-card.checked{
+  background:rgba(127,200,169,.22);
+}
+.exam-check-label{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:10px;
+  align-items:flex-start;
+  width:100%;
+  cursor:pointer;
+}
+.exam-check-label input{
+  width:18px !important;
+  height:18px !important;
+  margin-top:3px;
+}
+.exam-check-content{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+  line-height:1.55;
+  word-break:break-word;
+}
+.exam-check-content span{
+  white-space:pre-wrap;
+}
+.btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <div class="version">v4.3 檢定系統版｜ImgBB 圖片</div>
+    <div class="version">v4.3.1 檢定系統修正版｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="exam">🎓 升級考試</button>
@@ -1007,8 +1047,8 @@ function examChecklistKey(studentId,stageId,level){
   return `${studentId}_${stageId}_${level}`;
 }
 function examChecklist(studentId,stageId,level){
-  const key = examChecklistKey(studentId,stageId,level);
   if(!state.examChecklists) state.examChecklists = {};
+  const key = examChecklistKey(studentId,stageId,level);
   if(!state.examChecklists[key]) state.examChecklists[key] = {};
   return state.examChecklists[key];
 }
@@ -1019,18 +1059,18 @@ function setExamChecklistItem(studentId,stageId,level,fieldId,checked){
   render();
 }
 function examChecklistSummary(studentId,stageId,level){
-  const activeFields = state.levelFields.filter(field => field.active !== false);
+  const fields = state.levelFields.filter(field => field.active !== false);
   const list = examChecklist(studentId,stageId,level);
-  const total = activeFields.length;
-  const checked = activeFields.filter(field => list[field.id]).length;
+  const total = fields.length;
+  const checked = fields.filter(field => list[field.id]).length;
   return {total, checked, pass: total > 0 && checked === total};
 }
-function displayLevel(student){
+function displayLevelPlain(student){
   if(!student) return "";
   const stage = findById(state.levelStages, student.stageId);
   const level = Number(student.level || 0);
-  if(level <= 0) return `${escapeHtml(stage?.name || "")} 尚未通過`;
-  return `${escapeHtml(stage?.name || "")}第${level}${escapeHtml(stage?.unit || "級")}`;
+  if(level <= 0) return `${stage?.name || ""}尚未通過`;
+  return `${stage?.name || ""}第${level}${stage?.unit || "級"}`;
 }
 function nextLevel(student){
   const stages = stageList();
@@ -1040,7 +1080,6 @@ function nextLevel(student){
 
   const currentLevel = Number(student.level || 0);
 
-  // 0級或低於本階段起始級：先考本階段第一級
   if(currentLevel < Number(stage.start)){
     return {stageId:stage.id, level:Number(stage.start)};
   }
@@ -1675,6 +1714,8 @@ function renderExam(){
 
   const students = studentsByClass(examContext.classId);
   const student = findById(state.students,examContext.studentId) || students[0];
+  if(student && examContext.studentId !== student.id) examContext.studentId = student.id;
+
   const next = student ? nextLevel(student) : null;
   const targetStage = next ? findById(state.levelStages,next.stageId) : null;
   const content = next ? levelContent(next.stageId,next.level) : {};
@@ -1684,7 +1725,7 @@ function renderExam(){
     <div class="grid">
       <section class="card col-6">
         <h3>🎓 升級考試</h3>
-        <div class="note">升級不放在上課介面。學生從 0 級開始，這裡會檢核「目標等級」能力；全部勾選後即可通過升級。</div>
+        <div class="note">學生從 0 級開始。這裡檢核「目標等級」能力內容；全部勾選後，才可通過升級。</div>
         <div class="row">
           <div class="f6">
             <label>學校</label>
@@ -1701,25 +1742,27 @@ function renderExam(){
           <div class="f12">
             <label>學生</label>
             <select onchange="examContext.studentId=this.value; render()">
-              ${optionList(students,examContext.studentId,s=>`${s.name}（${s.seat || "-"}號）`)}
+              ${students.map(s=>`<option value="${s.id}" ${student?.id===s.id?"selected":""}>${escapeHtml(s.name)}（${escapeHtml(s.seat || "")}號）</option>`).join("")}
             </select>
           </div>
         </div>
 
-        ${student ? `
-          <div class="note">
-            <b>${escapeHtml(student.name)}</b><br>
-            目前：${escapeHtml(levelLabel(student))}<br>
-            目標：${next ? escapeHtml(`${targetStage.name}第${next.level}${targetStage.unit || "級"}`) : "已達最高等級"}
-          </div>
-        ` : `<div class="note">目前沒有可考試的學生。</div>`}
+        ${student ? `<div class="note">
+          <b>${escapeHtml(student.name)}</b><br>
+          目前：${escapeHtml(displayLevelPlain(student))}<br>
+          本次檢核：${next ? `${escapeHtml(targetStage?.name || "")}第${next.level}${escapeHtml(targetStage?.unit || "級")}` : "已達最高等級"}<br>
+          勾選進度：${summary.checked} / ${summary.total}
+        </div>` : `<div class="note">這個課程目前沒有學生。</div>`}
 
-        <label>老師評語 / 考試紀錄</label>
+        <label>老師評註 / 考試紀錄</label>
         <textarea id="examComment" placeholder="例：節奏穩定，音準可再集中。"></textarea>
 
-        <button class="btn primary" onclick="passExam('${student?.id || ""}',document.getElementById('examComment').value)">通過升級</button>
-        <button class="btn ghost" onclick="failExam('${student?.id || ""}',document.getElementById('examComment').value)">未通過</button>
-        <button class="btn red" onclick="downgradeStudent('${student?.id || ""}',document.getElementById('examComment').value)">降級</button>
+        <div style="margin-top:12px">
+          <button class="btn primary" ${student && next && summary.pass ? "" : "disabled"} onclick="passExam('${student?.id || ""}',document.getElementById('examComment').value)">通過升級</button>
+          <button class="btn" onclick="failExam('${student?.id || ""}',document.getElementById('examComment').value)">未通過</button>
+          <button class="btn red" onclick="downgradeStudent('${student?.id || ""}',document.getElementById('examComment').value)">降級</button>
+        </div>
+        ${student && next && !summary.pass ? `<div class="small-muted" style="margin-top:8px">請先完成右側檢核項目，才能通過升級。</div>` : ""}
       </section>
 
       <section class="card col-6">
@@ -1758,12 +1801,12 @@ function renderLevelContentChecklist(studentId,stageId,level,content){
     .map(field => {
       const checked = !!list[field.id];
       return `
-        <div class="note" style="margin-bottom:10px; background:${checked ? "rgba(127,200,169,.22)" : "rgba(255,240,168,.55)"}">
-          <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer">
+        <div class="exam-check-card ${checked ? "checked" : ""}">
+          <label class="exam-check-label">
             <input type="checkbox" ${checked ? "checked" : ""} onchange="setExamChecklistItem('${studentId}','${stageId}',${level},'${field.id}',this.checked)">
-            <span>
-              <b>${escapeHtml(field.name)}</b><br>
-              ${escapeHtml(content[field.id] || "尚未設定")}
+            <span class="exam-check-content">
+              <b>${escapeHtml(field.name)}</b>
+              <span>${escapeHtml(content[field.id] || "尚未設定")}</span>
             </span>
           </label>
         </div>
