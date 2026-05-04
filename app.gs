@@ -1,5 +1,5 @@
 /**
- * Battle 教學管理系統 v4.3.3
+ * Battle 教學管理系統 v4.3.4
  * iPad 穩定版：支援 JSONP 讀取、FormData/no-cors 上傳、分表雲端、連線測試
  *
  * 部署設定：
@@ -71,7 +71,7 @@ function ping_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   return {
     ok: true,
-    message: 'Battle 教學管理系統 Cloud API v4.3.3 is running.',
+    message: 'Battle 教學管理系統 Cloud API v4.3.4 is running.',
     spreadsheetName: ss ? ss.getName() : '',
     serverTime: Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd HH:mm:ss')
   };
