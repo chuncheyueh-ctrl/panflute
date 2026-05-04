@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v4.3.2 檢核項目計數修正版</title>
+<title>教學管理系統 v4.3.3 iPad穩定版</title>
 <style>
 :root{
   --bg-a:#fff6dc;
@@ -695,7 +695,7 @@ input[type="date"]{
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <div class="version">v4.3.2 檢核項目計數修正版｜ImgBB 圖片</div>
+    <div class="version">v4.3.3 iPad穩定版｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="exam">🎓 升級考試</button>
@@ -729,6 +729,26 @@ function today(){
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
+}
+function localDateTimeString(){
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
+function localIsoLikeString(){
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}+08:00`;
 }
 
 function currentAcademicTermId(dateStr=today()){
@@ -3048,7 +3068,7 @@ function gasJsonp(action){
     const timer = setTimeout(()=>{
       cleanup();
       reject(new Error("讀取逾時，請確認 Apps Script 部署權限。"));
-    }, 20000);
+    }, 30000);
 
     function cleanup(){
       clearTimeout(timer);
@@ -3078,7 +3098,7 @@ async function gasPostNoCors(action,data,version="v4.1.2"){
   form.append("payload", JSON.stringify({
     action,
     data,
-    savedAt:new Date().toISOString(),
+    savedAt:localDateTimeString(),
     version
   }));
 
@@ -3134,7 +3154,7 @@ async function uploadPartitionedToCloud(){
     const payload = buildPartitionData();
     await gasPostNoCors("savePartitioned", payload, "v4.2");
     if(!state.backupMeta) state.backupMeta = {};
-    state.backupMeta.lastPartitionUploadAt = new Date().toISOString();
+    state.backupMeta.lastPartitionUploadAt = localIsoLikeString();
     recordActivity("cloud","已送出分表資料到 Google Sheet", {});
     saveState();
     alert("已送出分表資料到 Google Sheet。這會分開存基礎資料、出席、點數、紀錄等資料。");
@@ -3155,13 +3175,13 @@ async function downloadPartitionedFromCloud(){
     if(!result.data) return alert("雲端尚無分表資料。");
     applyPartitionData(result.data);
     if(!state.backupMeta) state.backupMeta = {};
-    state.backupMeta.lastPartitionDownloadAt = new Date().toISOString();
+    state.backupMeta.lastPartitionDownloadAt = localIsoLikeString();
     saveState();
     alert("已從 Google Sheet 分表讀取資料。");
     render();
   }catch(err){
     console.error(err);
-    alert("分表讀取失敗，請確認 app.gs 已更新到 v4.2、重新部署，或雲端已有分表資料。");
+    alert("分表讀取失敗。請確認 app.gs 已更新到 v4.3.3、重新部署，並且已經做過分表上傳。");
   }
 }
 
@@ -3208,7 +3228,7 @@ async function uploadMasterToCloud(){
   try{
     await gasPostNoCors("saveMaster", buildMasterDataSnapshot(), "v4.1.2");
     if(!state.backupMeta) state.backupMeta = {};
-    state.backupMeta.lastMasterUploadAt = new Date().toISOString();
+    state.backupMeta.lastMasterUploadAt = localIsoLikeString();
     recordActivity("cloud","已送出基礎資料到 Google Sheet", {});
     saveState();
     alert("已送出基礎資料到 Google Sheet。若資料較多，請等 2–3 秒後再讀取確認。");
@@ -3229,13 +3249,13 @@ async function downloadMasterFromCloud(){
     if(!result.data) return alert("雲端尚無基礎資料。");
     applyMasterDataSnapshot(result.data);
     if(!state.backupMeta) state.backupMeta = {};
-    state.backupMeta.lastMasterDownloadAt = new Date().toISOString();
+    state.backupMeta.lastMasterDownloadAt = localIsoLikeString();
     saveState();
     alert("已讀取雲端基礎資料。");
     render();
   }catch(err){
     console.error(err);
-    alert("讀取基礎資料失敗，請確認 Apps Script URL、部署權限，或 Sheet 內是否已有資料。");
+    alert("讀取基礎資料失敗。請先按「測試雲端連線」，並確認已上傳過基礎資料。");
   }
 }
 
@@ -3244,7 +3264,7 @@ async function uploadToCloud(){
   try{
     await gasPostNoCors("save", state, "v4.1.2");
     if(!state.backupMeta) state.backupMeta = {};
-    state.backupMeta.lastCloudUploadAt = new Date().toISOString();
+    state.backupMeta.lastCloudUploadAt = localIsoLikeString();
     recordActivity("cloud","已送出完整資料到 Google Sheet", {});
     saveState();
     alert("已送出完整資料到 Google Sheet。若資料很大，請等 2–3 秒後再讀取確認。");
@@ -3265,13 +3285,29 @@ async function downloadFromCloud(){
     if(!result.data) return alert("雲端尚無資料。");
     state = migrateState(result.data);
     if(!state.backupMeta) state.backupMeta = {};
-    state.backupMeta.lastCloudDownloadAt = new Date().toISOString();
+    state.backupMeta.lastCloudDownloadAt = localIsoLikeString();
     saveState();
     alert("已從 Google Sheet 讀取完整資料。");
     render();
   }catch(err){
     console.error(err);
-    alert("讀取失敗，請確認 Apps Script URL、部署權限，或 Sheet 內是否已有備份資料。");
+    alert("讀取失敗。請先按「測試雲端連線」，並確認：1. URL 是最新部署的 /exec；2. Apps Script 權限為任何人；3. 試算表內已有對應備份資料。");
+  }
+}
+
+
+async function testCloudConnection(){
+  if(!gasUrl()) return alert("請先貼上 Google Apps Script Web App URL。");
+  try{
+    const result = await gasJsonp("ping");
+    if(result.ok){
+      alert(`雲端連線正常。\nAPI：${result.message || "OK"}\n試算表：${result.spreadsheetName || "未回傳名稱"}\n伺服器時間：${result.serverTime || ""}`);
+    }else{
+      alert("雲端有回應，但回傳錯誤：" + (result.error || "未知錯誤"));
+    }
+  }catch(err){
+    console.error(err);
+    alert("雲端測試失敗。請確認 URL、部署權限、或是否貼到正確試算表的 Apps Script。");
   }
 }
 
@@ -3306,6 +3342,7 @@ function renderBackupSettings(){
       <label>Google Apps Script Web App URL</label>
       <input id="gasUrlInput" value="${escapeHtml(cloud.gasUrl || "")}" placeholder="https://script.google.com/macros/s/.../exec">
       <button class="btn ghost" onclick="saveGasUrl()">儲存 URL</button>
+      <button class="btn primary" onclick="testCloudConnection()">測試雲端連線</button>
       <hr>
       <div class="note">上次完整雲端上傳：${escapeHtml(lastUpload)}<br>上次完整雲端讀取：${escapeHtml(lastDownload)}</div>
       <button class="btn primary" onclick="uploadToCloud()">完整上傳到 Google Sheet</button>

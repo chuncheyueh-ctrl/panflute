@@ -1,6 +1,11 @@
 /**
- * Battle 教學管理系統 v4.3.1
- * 分表雲端版：保留完整備份 / 基礎資料同步，新增分表儲存與讀取
+ * Battle 教學管理系統 v4.3.3
+ * iPad 穩定版：支援 JSONP 讀取、FormData/no-cors 上傳、分表雲端、連線測試
+ *
+ * 部署設定：
+ * - 類型：網頁應用程式
+ * - 執行身分：我
+ * - 存取權：任何人
  */
 
 const FULL_BACKUP_SHEET = 'CloudBackup';
@@ -24,10 +29,17 @@ function doGet(e) {
   const action = e && e.parameter && e.parameter.action;
   let result;
   try {
-    if (action === 'load') result = loadLatest_(FULL_BACKUP_SHEET);
-    else if (action === 'loadMaster') result = loadLatest_(MASTER_DATA_SHEET);
-    else if (action === 'loadPartitioned') result = loadPartitioned_();
-    else result = { ok: true, message: 'Battle 教學管理系統 Cloud API v4.3.1 is running.' };
+    if (action === 'ping') {
+      result = ping_();
+    } else if (action === 'load') {
+      result = loadLatest_(FULL_BACKUP_SHEET);
+    } else if (action === 'loadMaster') {
+      result = loadLatest_(MASTER_DATA_SHEET);
+    } else if (action === 'loadPartitioned') {
+      result = loadPartitioned_();
+    } else {
+      result = ping_();
+    }
   } catch (err) {
     result = { ok: false, error: String(err) };
   }
@@ -39,21 +51,37 @@ function doPost(e) {
   try {
     const raw = (e && e.parameter && e.parameter.payload) || (e && e.postData && e.postData.contents) || '{}';
     const body = JSON.parse(raw);
-    if (body.action === 'save') result = saveBackup_(FULL_BACKUP_SHEET, body.data, body.savedAt, body.version);
-    else if (body.action === 'saveMaster') result = saveBackup_(MASTER_DATA_SHEET, body.data, body.savedAt, body.version);
-    else if (body.action === 'savePartitioned') result = savePartitioned_(body.data, body.savedAt, body.version);
-    else result = { ok: false, error: 'Unknown action: ' + body.action };
+
+    if (body.action === 'save') {
+      result = saveBackup_(FULL_BACKUP_SHEET, body.data, body.savedAt, body.version);
+    } else if (body.action === 'saveMaster') {
+      result = saveBackup_(MASTER_DATA_SHEET, body.data, body.savedAt, body.version);
+    } else if (body.action === 'savePartitioned') {
+      result = savePartitioned_(body.data, body.savedAt, body.version);
+    } else {
+      result = { ok: false, error: 'Unknown action: ' + body.action };
+    }
   } catch (err) {
     result = { ok: false, error: String(err) };
   }
   return output_(result, e);
 }
 
+function ping_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  return {
+    ok: true,
+    message: 'Battle 教學管理系統 Cloud API v4.3.3 is running.',
+    spreadsheetName: ss ? ss.getName() : '',
+    serverTime: Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd HH:mm:ss')
+  };
+}
+
 function savePartitioned_(payload, savedAt, version) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    const now = savedAt || new Date().toISOString();
+    const now = savedAt || taipeiNow_();
     const data = payload || {};
     const runtime = data.runtime || {};
     saveReplaceJson_(PARTITION_SHEETS.master, data.master || {}, now, version);
@@ -101,7 +129,7 @@ function saveReplaceJson_(sheetName, data, savedAt, version) {
   const sheet = getSheet_(sheetName);
   sheet.clearContents();
   sheet.appendRow(['savedAt', 'version', 'json']);
-  sheet.appendRow([savedAt || new Date().toISOString(), version || '', JSON.stringify(data || {})]);
+  sheet.appendRow([savedAt || taipeiNow_(), version || '', JSON.stringify(data || {})]);
   sheet.setFrozenRows(1);
 }
 
@@ -118,7 +146,7 @@ function saveBackup_(sheetName, data, savedAt, version) {
   lock.waitLock(20000);
   try {
     const sheet = getSheet_(sheetName);
-    const now = savedAt || new Date().toISOString();
+    const now = savedAt || taipeiNow_();
     const json = JSON.stringify(data || {});
     sheet.appendRow([now, version || '', json]);
     return { ok: true, sheet: sheetName, savedAt: now, bytes: json.length };
@@ -146,12 +174,18 @@ function getSheet_(sheetName) {
   return sheet;
 }
 
+function taipeiNow_() {
+  return Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd HH:mm:ss');
+}
+
 function output_(obj, e) {
   const callback = e && e.parameter && e.parameter.callback;
   if (callback) {
-    return ContentService.createTextOutput(callback + '(' + JSON.stringify(obj) + ');')
+    return ContentService
+      .createTextOutput(callback + '(' + JSON.stringify(obj) + ');')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
-  return ContentService.createTextOutput(JSON.stringify(obj))
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
