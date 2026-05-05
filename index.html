@@ -3183,23 +3183,41 @@ async function uploadPartitionedToCloud(){
   }
 }
 
-async function downloadPartitionedFromCloud(){
-  if(!confirm("從分表雲端讀取會覆蓋目前本機資料。系統會先自動匯出目前資料備份，確定繼續？")) return;
-  exportBackup();
-  try{
-    const result = await gasJsonp("loadPartitioned");
-    if(!result.ok) throw new Error(result.error || "讀取分表資料失敗");
-    if(!result.data) return alert("雲端尚無分表資料。");
-    applyPartitionData(result.data);
-    if(!state.backupMeta) state.backupMeta = {};
-    state.backupMeta.lastPartitionDownloadAt = localIsoLikeString();
-    saveState();
-    alert("已用 JSONP 從 Google Sheet 分表讀取資料。");
-    render();
-  }catch(err){
-    console.error(err);
-    alert("分表讀取失敗：" + (err.message || err));
-  }
+function downloadPartitionedFromCloud(){
+  const url = state.cloudConfig?.gasUrl;
+  if(!url) return alert("請先設定 GAS URL");
+
+  const callbackName = "jsonp_" + Date.now();
+
+  window[callbackName] = function(res){
+    try{
+      if(!res.ok) throw new Error(res.error || "讀取失敗");
+      if(!res.data) return alert("雲端沒有資料");
+
+      applyPartitionData(res.data);
+      saveState();
+
+      alert("讀取成功（行動裝置模式）");
+      render();
+
+    }catch(err){
+      alert("讀取失敗：" + err.message);
+    }
+
+    // 清理
+    document.getElementById(callbackName)?.remove();
+    delete window[callbackName];
+  };
+
+  const script = document.createElement("script");
+  script.id = callbackName;
+  script.src = `${url}?action=loadPartitioned&callback=${callbackName}&t=${Date.now()}`;
+
+  script.onerror = function(){
+    alert("JSONP 載入失敗（通常是 iPad 擋掉）");
+  };
+
+  document.body.appendChild(script);
 }
 
 function buildMasterDataSnapshot(){
