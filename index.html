@@ -3195,9 +3195,13 @@ function downloadPartitionedFromCloud(){
       if(!res.data) return alert("雲端沒有資料");
 
       applyPartitionData(res.data);
-      saveState();
 
-      alert("讀取成功（行動裝置模式）");
+if(!state.backupMeta) state.backupMeta = {};
+state.backupMeta.lastPartitionDownloadAt = localIsoLikeString();
+
+saveState();
+
+alert("讀取成功（行動裝置模式）");
       render();
 
     }catch(err){
