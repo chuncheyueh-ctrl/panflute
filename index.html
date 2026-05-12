@@ -9,6 +9,26 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
 <title>教學管理系統 v4.5 成長日誌升級版</title>
+  <!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA7jsfNZBaAvAp4ENS-gOX2CrAG6m832Ls",
+  authDomain: "battle-panflute-system.firebaseapp.com",
+  databaseURL: "https://battle-panflute-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "battle-panflute-system",
+  storageBucket: "battle-panflute-system.firebasestorage.app",
+  messagingSenderId: "1056217759582",
+  appId: "1:1056217759582:web:6907f5c42f164b071599cf",
+  measurementId: "G-5NJM5SRBL2"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const firebaseDb = firebase.database();
+</script>
 <style>
 :root{
   --bg-a:#fff6dc;
@@ -963,7 +983,45 @@ function loadState(){
 function saveState(){
   localStorage.setItem(STORE_KEY, JSON.stringify(state));
 }
+async function firebaseUploadAll() {
+  try {
+    await firebaseDb.ref("battleSystem/main").set({
+      updatedAt: Date.now(),
+      state: state
+    });
 
+    alert("🔥 Firebase 雲端同步成功");
+  } catch (err) {
+    console.error(err);
+    alert("Firebase 上傳失敗");
+  }
+}
+
+async function firebaseDownloadAll() {
+  try {
+    const snap = await firebaseDb.ref("battleSystem/main").once("value");
+
+    if (!snap.exists()) {
+      return alert("Firebase 沒有資料");
+    }
+
+    const data = snap.val();
+
+    if (!data.state) {
+      return alert("Firebase 資料格式錯誤");
+    }
+
+    Object.assign(state, data.state);
+
+    saveState();
+    render();
+
+    alert("🔥 Firebase 下載成功");
+  } catch (err) {
+    console.error(err);
+    alert("Firebase 下載失敗");
+  }
+}
 let state = loadState();
 
 /* =========================================================
