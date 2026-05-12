@@ -3827,7 +3827,13 @@ function renderBackupSettings(){
       <button class="btn primary" onclick="uploadToCloud()">完整上傳到 Google Sheet</button>
       <button class="btn gold" onclick="smartDownloadFromCloud()">智慧讀取（優先分表）</button>
       <button class="btn gold" onclick="downloadFromCloud()">完整從 Google Sheet 讀取</button>
+<button onclick="firebaseUploadAll()">
+🔥 上傳 Firebase
+</button>
 
+<button onclick="firebaseDownloadAll()">
+🔥 讀取 Firebase
+</button>
       <hr>
       <h3>🪶 輕量同步 v4.1</h3>
       <div class="note">只同步基礎資料：學校、課程、學生、課程歸屬、獎品、分級、學期設定。<br>不會同步會快速變大的資料：出席、點數紀錄、兌換紀錄、操作紀錄。</div>
