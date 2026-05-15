@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.7 課堂流程設定分離版</title>
+<title>教學管理系統 v9.3.7.1 課堂流程設定分離修正版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -3073,7 +3073,7 @@ body.dark-mode .start937-task-card{
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.7 課堂流程設定分離版</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.7.1 課堂流程設定分離修正版</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -11293,6 +11293,70 @@ if(typeof start936RenderRealChecklist === "function"){
   };
 }else{
   start935RenderTimeline = start937RenderTimelineClean;
+}
+
+
+
+/* =========================================================
+   V9.3.7.1 MISSING SYNC FUNCTION FIX
+   ========================================================= */
+if(typeof start936GetTodayTasks !== "function"){
+  function start936GetTodayTasks(){
+    let tasks = [];
+    try{
+      if(typeof weeklyMainTasks === "function"){
+        tasks = weeklyMainTasks().filter(Boolean);
+      }
+    }catch(e){}
+    if(!tasks.length){
+      try{
+        const main = typeof getWeeklyMainline === "function" ? getWeeklyMainline() : null;
+        if(main?.tasks && Array.isArray(main.tasks)) tasks = main.tasks.filter(Boolean);
+      }catch(e){}
+    }
+    return tasks.length ? tasks : ["暖身", "本週主線", "個別檢查", "收尾回饋"];
+  }
+}
+
+if(typeof start936SyncScheduleFromTodayTasks !== "function"){
+  function start936SyncScheduleFromTodayTasks(force=false){
+    if(typeof start935EnsureSchedule !== "function") return;
+    start935EnsureSchedule();
+
+    const todayTasks = start936GetTodayTasks();
+    const signature = todayTasks.join("|");
+    const savedSig = localStorage.getItem("battle_start_class_task_signature") || "";
+
+    if(force || savedSig !== signature){
+      const defaultMinutes = Math.max(1, Math.floor(40 / Math.max(todayTasks.length,1)));
+      window.start935Schedule.tasks = todayTasks.map((title,idx)=>({
+        title,
+        minutes: idx === todayTasks.length - 1
+          ? Math.max(1, 40 - defaultMinutes * (todayTasks.length - 1))
+          : defaultMinutes
+      }));
+      localStorage.setItem("battle_start_class_task_signature", signature);
+      if(typeof start935SaveSchedule === "function") start935SaveSchedule();
+    }
+  }
+}
+
+if(typeof start936RenderRealChecklist !== "function"){
+  function start936RenderRealChecklist(){
+    const tasks = start936GetTodayTasks();
+    return `
+      <div class="start936-checklist">
+        <div class="start936-checklist-title">✅ 今日課堂完成確認</div>
+        <div class="start936-hint">這裡是實際上課紀錄；時間軸只是提醒進度，最後仍以此勾選為準。</div>
+        ${tasks.map((task,idx)=>`
+          <label class="start936-real-task">
+            <input type="checkbox" ${startClassTasks[`task_${idx}`] ? "checked" : ""} onchange="startClassToggleTask(${idx},this.checked)">
+            <span>${escapeHtml(task)}</span>
+          </label>
+        `).join("")}
+      </div>
+    `;
+  }
 }
 
 </script>
