@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.2 卡片與點數切換版</title>
+<title>教學管理系統 v9.3.3 角色卡＋點數小額版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2432,29 +2432,228 @@ body.dark-mode .start931-textarea{
   }
 }
 
-</style>
 
-<style id="v932-style">
-.start932-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px 0}
-.start932-mode-switch button{border:none;border-radius:999px;padding:9px 15px;font-weight:950;background:rgba(0,0,0,.08)}
-.start932-mode-switch button.active{background:#ffe08a;color:#4e3c00}
-.start931-student-card{grid-template-columns:minmax(300px,42%) 1fr!important}
-.start931-profile{grid-template-columns:150px 1fr!important}
-.start931-photo{width:150px!important;height:150px!important;border-radius:34px!important;font-size:58px!important}
-.start932-point-note{padding:9px 12px;border-radius:14px;background:rgba(255,224,138,.22);border:1px solid rgba(212,160,23,.22);font-weight:850;margin-bottom:12px}
-@media(max-width:900px){
-.start931-student-card{grid-template-columns:1fr!important}
-.start931-profile{grid-template-columns:112px 1fr!important}
-.start931-photo{width:112px!important;height:112px!important;border-radius:28px!important}
+/* =========================================================
+   V9.3.3 START CLASS RPG CARD + SMALL POINT BUTTONS
+   ========================================================= */
+.start933-card{
+  display:grid !important;
+  grid-template-columns:minmax(310px, 38%) minmax(260px, 30%) minmax(300px, 32%) !important;
+  gap:18px !important;
+  align-items:center !important;
+  padding:20px !important;
+  margin:14px 0 !important;
+  border:1px solid var(--line) !important;
+  border-radius:26px !important;
+  background:rgba(255,255,255,.96) !important;
+  box-shadow:0 8px 24px rgba(0,0,0,.055) !important;
 }
-</style>
+.start933-profile{
+  display:grid;
+  grid-template-columns:145px 1fr;
+  gap:16px;
+  align-items:center;
+  min-width:0;
+}
+.start933-photo{
+  width:145px;
+  height:145px;
+  object-fit:cover;
+  border-radius:34px;
+  border:1px solid var(--line);
+  background:#f2ead6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:58px;
+}
+.start933-name{
+  font-size:30px;
+  font-weight:950;
+  line-height:1.1;
+}
+.start933-level{
+  display:inline-block;
+  margin-top:8px;
+  padding:5px 12px;
+  border-radius:999px;
+  background:rgba(127,200,169,.18);
+  color:#32765e;
+  font-weight:950;
+}
+.start933-xp{
+  font-size:18px;
+  font-weight:950;
+  margin-top:8px;
+}
+.start933-mini-bar{
+  height:12px;
+  background:rgba(0,0,0,.08);
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:8px;
+}
+.start933-mini-fill{
+  height:100%;
+  background:#39a873;
+  border-radius:999px;
+}
+.start933-attendance{
+  margin-top:10px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 11px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.85);
+  font-weight:950;
+}
+.start933-dot{
+  width:11px;
+  height:11px;
+  border-radius:999px;
+  display:inline-block;
+}
+.start933-select{
+  border:none;
+  background:transparent;
+  font-weight:950;
+  outline:none;
+}
+.start933-insight{
+  border-left:1px solid var(--line);
+  border-right:1px solid var(--line);
+  padding:0 18px;
+}
+.start933-insight-title{
+  font-weight:950;
+  margin-bottom:8px;
+}
+.start933-row{
+  display:grid;
+  grid-template-columns:70px 1fr 42px;
+  gap:8px;
+  align-items:center;
+  margin:6px 0;
+  font-size:13px;
+  font-weight:900;
+}
+.start933-rowbar{
+  height:9px;
+  background:rgba(0,0,0,.08);
+  border-radius:999px;
+  overflow:hidden;
+}
+.start933-rowfill{
+  height:100%;
+  border-radius:999px;
+}
+.start933-actions{
+  display:grid;
+  gap:10px;
+}
+.start933-action-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.start933-mode-switch{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.start933-mode-switch button{
+  border:none;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:950;
+  background:rgba(0,0,0,.08);
+}
+.start933-mode-switch button.active{
+  background:#ffe08a;
+  color:#4e3c00;
+}
+.start933-btns{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(88px, 1fr));
+  gap:9px;
+}
+.start933-chip{
+  border:none;
+  min-height:42px;
+  border-radius:14px;
+  color:white;
+  font-weight:950;
+  box-shadow:0 3px 8px rgba(0,0,0,.14);
+  text-shadow:0 1px 2px rgba(0,0,0,.22);
+}
+.start933-point-chip{
+  background:#d4a017;
+}
+.start933-point-chip.minus{
+  background:#d95f5f;
+}
+.start933-note{
+  width:100%;
+  min-height:58px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:10px;
+  box-sizing:border-box;
+  resize:vertical;
+  background:rgba(255,255,255,.78);
+}
+.start933-log-toggle{
+  width:100%;
+  border:none;
+  border-radius:16px;
+  padding:11px;
+  background:rgba(127,200,169,.16);
+  color:#36745e;
+  font-weight:950;
+}
+.start933-log{
+  border-radius:16px;
+  background:rgba(127,200,169,.10);
+  border-left:6px solid #7fc8a9;
+  padding:10px 12px;
+  margin-top:8px;
+}
+@media(max-width:1100px){
+  .start933-card{
+    grid-template-columns:1fr !important;
+  }
+  .start933-insight{
+    border-left:none;
+    border-right:none;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:14px 0;
+  }
+}
+@media(max-width:720px){
+  .start933-profile{
+    grid-template-columns:112px 1fr;
+  }
+  .start933-photo{
+    width:112px;
+    height:112px;
+    border-radius:28px;
+  }
+  .start933-btns{
+    grid-template-columns:repeat(2, minmax(90px, 1fr));
+  }
+}
 
+</style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.2 卡片與點數切換版｜ImgBB 圖片</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.3 角色卡＋點數小額版｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -10090,18 +10289,48 @@ function renderStartClassMode(){
   `;
 }
 
-</script>
 
-<script id="v932-script">
-let start932Mode = window.start932Mode || "xp";
 
-function start932SetMode(mode){
-  start932Mode = mode;
-  window.start932Mode = mode;
+/* =========================================================
+   V9.3.3 START CLASS RPG CARD + SMALL POINT BUTTONS
+   ========================================================= */
+let start933Mode = window.start933Mode || "xp";
+let start933Attendance = window.start933Attendance || {};
+
+function start933SetMode(mode){
+  start933Mode = mode;
+  window.start933Mode = mode;
   renderStartClassMode();
 }
 
-function start932StudentPoints(studentId){
+function start933GrowthTypes(){
+  if(typeof giEnsureSettings === "function") giEnsureSettings();
+  if(typeof growthTypes === "function") return growthTypes().filter(t=>Number(t.defaultXp||0) > 0);
+  return [
+    {id:"breath",name:"氣息",defaultXp:10,color:"#2fb37b"},
+    {id:"tone",name:"音色",defaultXp:10,color:"#4b8df8"},
+    {id:"rhythm",name:"節奏",defaultXp:10,color:"#f2a93b"},
+    {id:"reading",name:"視譜",defaultXp:10,color:"#8b6cf6"},
+    {id:"ensemble",name:"合奏",defaultXp:10,color:"#22a6b3"},
+    {id:"help",name:"幫助同學",defaultXp:15,color:"#d4a017"},
+    {id:"attitude",name:"學習態度",defaultXp:10,color:"#d95f5f"},
+    {id:"challenge",name:"挑戰精神",defaultXp:15,color:"#c84d4d"}
+  ];
+}
+
+function start933Color(typeId){
+  if(typeof giColor === "function") return giColor(typeId);
+  const t = start933GrowthTypes().find(x=>x.id===typeId || x.name===typeId);
+  return t?.color || "#7fc8a9";
+}
+
+function start933Name(typeId){
+  if(typeof giName === "function") return giName(typeId);
+  const t = start933GrowthTypes().find(x=>x.id===typeId || x.name===typeId);
+  return t?.name || typeId || "成長紀錄";
+}
+
+function start933StudentPoints(studentId){
   const earned = (state.pointLogs || [])
     .filter(l=>l.studentId===studentId)
     .reduce((sum,l)=>sum+(Number(l.points ?? l.amount ?? 0)||0),0);
@@ -10111,48 +10340,134 @@ function start932StudentPoints(studentId){
   return earned - spent;
 }
 
-function start932Add(studentId,typeId){
-  const types = start931GrowthTypes();
-  const t = types.find(x=>x.id===typeId || x.name===typeId) || types[0];
-  if(!t) return;
-  const value = Number(t.defaultXp || t.xp || 0);
-  const remark = document.getElementById(`start931Remark_${studentId}`)?.value?.trim() || "";
-
-  if(start932Mode === "points"){
-    if(!Array.isArray(state.pointLogs)) state.pointLogs = [];
-    state.pointLogs.push({
-      id:makeId(),
-      studentId,
-      points:value,
-      amount:value,
-      reason: remark || `開始上課點數加點：${t.name}`,
-      type:t.id || t.name,
-      date:localIsoLikeString()
-    });
-    markDirty?.(`開始上課點數：${t.name}`);
-  }else{
-    if(!Array.isArray(state.growthLogs)) state.growthLogs = [];
-    state.growthLogs.push({
-      id:makeId(),
-      studentId,
-      type:t.id || t.name,
-      color:start931Color(t.id || t.name),
-      xp:value,
-      feedback: remark || `開始上課快速記錄：${t.name}`,
-      date:localIsoLikeString()
-    });
-    markDirty?.(`開始上課XP：${t.name}`);
+function start933PhotoHtml(st){
+  const url = st?.photoUrl || st?.photo || st?.imageUrl || "";
+  if(url){
+    return `<img class="start933-photo" src="${escapeHtml(url)}" onerror="this.outerHTML='<div class=&quot;start933-photo&quot;>👤</div>'">`;
   }
+  return `<div class="start933-photo">👤</div>`;
+}
+
+function start933SetAttendance(studentId,value){
+  start933Attendance[studentId] = value;
+  window.start933Attendance = start933Attendance;
+  renderStartClassMode();
+}
+
+function start933AttendanceMeta(studentId){
+  const val = start933Attendance[studentId] || "arrived";
+  const map = {
+    arrived:{label:"已到",color:"#25b45b"},
+    none:{label:"未到",color:"#9a9a9a"},
+    leave:{label:"請假",color:"#e3b341"},
+    absent:{label:"缺席",color:"#d9534f"}
+  };
+  return map[val] || map.arrived;
+}
+
+function start933Logs(studentId,limit=3){
+  return (state.growthLogs || [])
+    .filter(l=>l.studentId===studentId)
+    .slice()
+    .sort((a,b)=>String(b.date || b.createdAt || "").localeCompare(String(a.date || a.createdAt || "")))
+    .slice(0,limit);
+}
+
+function start933Distribution(studentId){
+  const logs = (state.growthLogs || []).filter(l=>l.studentId===studentId);
+  const map = {};
+  let total = 0;
+  logs.forEach(l=>{
+    const xp = Math.max(0, Number(l.xp || l.points || 0) || 0);
+    if(!xp) return;
+    const key = l.type || l.title || "未分類";
+    map[key] = (map[key] || 0) + xp;
+    total += xp;
+  });
+  return {map,total};
+}
+
+function start933Insight(studentId){
+  const {map,total} = start933Distribution(studentId);
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){
+    return `<div class="start933-insight">
+      <div class="start933-insight-title">能力洞察 ⓘ</div>
+      <div class="small-muted">尚無成長資料</div>
+    </div>`;
+  }
+  return `<div class="start933-insight">
+    <div class="start933-insight-title">能力洞察 ⓘ</div>
+    ${entries.slice(0,6).map(([k,v])=>`
+      <div class="start933-row">
+        <div>${escapeHtml(start933Name(k))}</div>
+        <div class="start933-rowbar"><div class="start933-rowfill" style="width:${Math.max(5,v/total*100)}%;background:${escapeHtml(start933Color(k))}"></div></div>
+        <div>${Math.round(v/total*100)}%</div>
+      </div>
+    `).join("")}
+  </div>`;
+}
+
+function start933AddXp(studentId,typeId){
+  const t = start933GrowthTypes().find(x=>x.id===typeId || x.name===typeId) || start933GrowthTypes()[0];
+  if(!t) return;
+  const remark = document.getElementById(`start933Remark_${studentId}`)?.value?.trim() || "";
+  if(!Array.isArray(state.growthLogs)) state.growthLogs = [];
+  state.growthLogs.push({
+    id:makeId(),
+    studentId,
+    type:t.id || t.name,
+    color:start933Color(t.id || t.name),
+    xp:Number(t.defaultXp || t.xp || 0),
+    feedback: remark || `開始上課快速記錄：${t.name}`,
+    date:localIsoLikeString()
+  });
+  markDirty?.(`開始上課XP：${t.name}`);
   saveState();
   renderStartClassMode();
 }
 
-function start931Buttons(studentId){
-  return start931GrowthTypes().map(t=>`
-    <button class="start931-chip" style="background:${escapeHtml(start931Color(t.id || t.name))}"
-      onclick="start932Add('${studentId}','${escapeHtml(t.id || t.name)}')">
+function start933AddPoints(studentId,points){
+  const remark = document.getElementById(`start933Remark_${studentId}`)?.value?.trim() || "";
+  if(!Array.isArray(state.pointLogs)) state.pointLogs = [];
+  state.pointLogs.push({
+    id:makeId(),
+    studentId,
+    points:Number(points),
+    amount:Number(points),
+    reason: remark || `開始上課點數調整：${points > 0 ? "+" : ""}${points}`,
+    date:localIsoLikeString()
+  });
+  markDirty?.(`開始上課點數：${points > 0 ? "+" : ""}${points}`);
+  saveState();
+  renderStartClassMode();
+}
+
+function start933Buttons(studentId){
+  if(start933Mode === "points"){
+    const pts = [1,3,5,-1,-3];
+    return pts.map(p=>`
+      <button class="start933-chip start933-point-chip ${p<0?'minus':''}" onclick="start933AddPoints('${studentId}',${p})">
+        點數 ${p>0?'+':''}${p}
+      </button>
+    `).join("");
+  }
+  return start933GrowthTypes().map(t=>`
+    <button class="start933-chip" style="background:${escapeHtml(start933Color(t.id || t.name))}" onclick="start933AddXp('${studentId}','${escapeHtml(t.id || t.name)}')">
       ${escapeHtml(t.name)} +${Number(t.defaultXp || t.xp || 0)}
     </button>
+  `).join("");
+}
+
+function start933RecentLogs(studentId){
+  const logs = start933Logs(studentId,3);
+  if(!logs.length) return `<div class="small-muted">尚無成長日誌。</div>`;
+  return logs.map(l=>`
+    <div class="start933-log" style="border-left-color:${escapeHtml(l.color || start933Color(l.type))}">
+      <b>${escapeHtml(start933Name(l.type))} ${Number(l.xp||0)>=0?"+":""}${Number(l.xp||0)} XP</b>
+      <div>${escapeHtml(l.feedback || "")}</div>
+      <div class="small-muted">${escapeHtml(formatDateTime(l.date || l.createdAt || ""))}</div>
+    </div>
   `).join("");
 }
 
@@ -10209,46 +10524,56 @@ function renderStartClassMode(){
         <div class="start931-student-head">
           <div>
             <h2>🧑‍🎓 學生名單</h2>
-            <div class="small-muted">點學生卡片上的彩色按鈕進行加分。可切換 XP 或兌換點數。</div>
+            <div class="small-muted">左側為學生角色卡，中間顯示能力洞察，右側進行加點。</div>
           </div>
           <div class="badge">本堂學生：${students.length} 人</div>
         </div>
 
-        <div class="start932-mode-switch">
-          <button class="${start932Mode==='xp'?'active':''}" onclick="start932SetMode('xp')">🌱 XP 成長</button>
-          <button class="${start932Mode==='points'?'active':''}" onclick="start932SetMode('points')">🎁 點數加點</button>
-        </div>
-        <div class="start932-point-note">
-          目前模式：${start932Mode==='xp' ? 'XP 成長，會寫入成長日誌。' : '點數加點，只增加獎品兌換點數，不寫入成長日誌。'}
+        <div class="start933-mode-switch">
+          <button class="${start933Mode==='xp'?'active':''}" onclick="start933SetMode('xp')">🌱 XP 成長</button>
+          <button class="${start933Mode==='points'?'active':''}" onclick="start933SetMode('points')">🎁 點數加點</button>
         </div>
 
-        ${students.length ? students.map(st=>`
-          <article class="start931-student-card">
-            <div class="start931-profile">
-              ${start931PhotoHtml(st)}
+        ${students.length ? students.map(st=>{
+          const meta = start933AttendanceMeta(st.id);
+          return `
+          <article class="start933-card">
+            <div class="start933-profile">
+              ${start933PhotoHtml(st)}
               <div>
-                <div class="start931-name">${escapeHtml(st.name)}</div>
-                <div class="start931-xp">XP：${startClassStudentXp(st.id)}</div>
-                <div class="start931-xp">點數：${start932StudentPoints(st.id)}</div>
-                <span class="start931-status">${start932Mode==='xp'?'成長記錄模式':'點數加點模式'}</span>
+                <div class="start933-name">${escapeHtml(st.name)}</div>
+                <div class="start933-level">LV ${Math.max(1, Math.floor(startClassStudentXp(st.id)/100)+1)} 小演奏家</div>
+                <div class="start933-xp">XP：${startClassStudentXp(st.id)}</div>
+                <div class="start933-xp">點數：${start933StudentPoints(st.id)}</div>
+                <div class="start933-mini-bar"><div class="start933-mini-fill" style="width:${Math.min(100,startClassStudentXp(st.id)%100)}%"></div></div>
+                <div class="start933-attendance">
+                  <span class="start933-dot" style="background:${meta.color}"></span>
+                  <select class="start933-select" onchange="start933SetAttendance('${st.id}',this.value)">
+                    <option value="arrived" ${start933Attendance[st.id]==='arrived'||!start933Attendance[st.id]?'selected':''}>已到</option>
+                    <option value="none" ${start933Attendance[st.id]==='none'?'selected':''}>未到</option>
+                    <option value="leave" ${start933Attendance[st.id]==='leave'?'selected':''}>請假</option>
+                    <option value="absent" ${start933Attendance[st.id]==='absent'?'selected':''}>缺席</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div class="start931-actions">
-              <div>
-                <div class="start931-action-title">加分項目</div>
-                <div class="start931-btns">${start931Buttons(st.id)}</div>
+            ${start933Insight(st.id)}
+
+            <div class="start933-actions">
+              <div class="start933-action-head">
+                <b>${start933Mode==='xp'?'成長加分':'點數調整'}</b>
+                <span class="badge">${start933Mode==='xp'?'寫入成長日誌':'只調整兌換點數'}</span>
               </div>
-
-              <textarea id="start931Remark_${st.id}" class="start931-textarea" style="min-height:54px" placeholder="個別備註 / 成長亮點（選填）"></textarea>
-
+              <div class="start933-btns">${start933Buttons(st.id)}</div>
+              <textarea id="start933Remark_${st.id}" class="start933-note" placeholder="個別備註 / 成長亮點（選填）"></textarea>
               <details>
-                <summary class="start931-log-toggle">📖 成長日誌（最近 ${start931Logs(st.id,99).length} 筆）</summary>
-                ${start931RecentLogs(st.id)}
+                <summary class="start933-log-toggle">📖 成長日誌（最近 ${start933Logs(st.id,99).length} 筆）</summary>
+                ${start933RecentLogs(st.id)}
               </details>
             </div>
           </article>
-        `).join("") : `<div class="note">這個課程目前沒有學生。</div>`}
+        `}).join("") : `<div class="note">這個課程目前沒有學生。</div>`}
 
         <div class="start931-bottom">
           <button class="btn" onclick="guardedFirebaseUpload()">☁️ 先同步</button>
@@ -10259,7 +10584,7 @@ function renderStartClassMode(){
     </div>
   `;
 }
-</script>
 
+</script>
 </body>
 </html>
