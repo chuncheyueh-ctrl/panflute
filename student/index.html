@@ -1,0 +1,2624 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Battle 學生端</title>
+  <style>
+:root{
+  --bg-a:#fff6dc;
+  --bg-b:#eef8f3;
+  --card:#fffdf7;
+  --line:#eadfcb;
+  --text:#2f2a23;
+  --muted:#746c60;
+  --mint:#7fc8a9;
+  --mint-dark:#5fae91;
+  --blue:#7da6ff;
+  --gold:#f5c542;
+  --gold-light:#fff0a8;
+  --red:#ff8a8a;
+  --red-dark:#d95454;
+  --gray:#ece6db;
+  --shadow:0 8px 22px rgba(120,90,40,.08);
+  --radius:22px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 8% 4%, rgba(255,240,168,.72) 0%, transparent 38%),
+    radial-gradient(circle at 94% 8%, rgba(127,200,169,.28) 0%, transparent 32%),
+    linear-gradient(135deg,var(--bg-a),var(--bg-b));
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;
+}
+button,input,select,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:12px 13px;
+  background:white;
+  color:var(--text);
+  outline:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:260px;
+  min-width:260px;
+  min-height:100vh;
+  padding:26px 18px;
+  background:linear-gradient(180deg,#8ed4ba,#6fc3a5);
+  color:white;
+  position:sticky;
+  top:0;
+  box-shadow:0 14px 32px rgba(80,58,24,.10);
+}
+.logo{font-size:25px;font-weight:950;line-height:1.25;margin-bottom:6px}
+.version{font-size:13px;font-weight:800;opacity:.9;margin-bottom:24px}
+.nav button{
+  width:100%;
+  border:0;
+  margin:7px 0;
+  padding:14px 16px;
+  border-radius:18px;
+  background:rgba(255,255,255,.9);
+  color:#255145;
+  font-weight:950;
+  text-align:left;
+  box-shadow:0 4px 12px rgba(80,58,24,.06);
+}
+.nav button.active{
+  background:#fff2a7;
+  color:#654d00;
+  box-shadow:0 7px 18px rgba(75,55,0,.14);
+}
+.main{flex:1;padding:30px 36px;overflow:auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+h1{font-size:34px;margin:0;font-weight:950}
+.badge{
+  padding:10px 16px;
+  border-radius:999px;
+  background:#fff0a8;
+  color:#654d00;
+  font-weight:950;
+  white-space:nowrap;
+}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.card{
+  background:rgba(255,253,247,.96);
+  border:1px solid #eadfcb;
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+}
+.col-12{grid-column:span 12}
+.col-8{grid-column:span 8}
+.col-7{grid-column:span 7}
+.col-6{grid-column:span 6}
+.col-5{grid-column:span 5}
+.col-4{grid-column:span 4}
+.col-3{grid-column:span 3}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;align-items:end}
+.f12{grid-column:span 12}.f9{grid-column:span 9}.f8{grid-column:span 8}.f6{grid-column:span 6}.f4{grid-column:span 4}.f3{grid-column:span 3}.f2{grid-column:span 2}
+h2,h3{margin:0 0 14px}
+label{display:block;margin:0 0 6px;font-size:13px;font-weight:950;color:#51493e}
+input,select,textarea{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:12px 13px;
+  background:white;
+  color:var(--text);
+  outline:none;
+}
+textarea{min-height:95px;resize:vertical;line-height:1.6}
+.btn{
+  border:0;
+  border-radius:15px;
+  padding:11px 14px;
+  font-weight:950;
+  background:var(--gray);
+  color:var(--text);
+  box-shadow:0 4px 10px rgba(70,50,25,.05);
+}
+.btn.primary{background:var(--mint);color:white}
+.btn.gold{background:var(--gold);color:#4d3900}
+.btn.blue{background:var(--blue);color:white}
+.btn.red{background:var(--red);color:white}
+.btn.dark{background:#31584f;color:white}
+.btn.small{padding:7px 10px;border-radius:12px;font-size:13px}
+.btn.ghost{background:#fff;border:1px solid var(--line)}
+.note{
+  background:#fff8d9;
+  border:1px dashed #e7d184;
+  color:#675b37;
+  padding:12px 14px;
+  border-radius:15px;
+  line-height:1.6;
+  font-weight:700;
+}
+.tabs{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{
+  border:0;
+  border-radius:999px;
+  padding:10px 14px;
+  background:#f0eadc;
+  font-weight:950;
+}
+.tabs button.active{background:var(--mint-dark);color:white}
+.table{width:100%;border-collapse:separate;border-spacing:0 9px}
+.table th{text-align:left;color:#6b6256;font-size:13px;padding:0 10px}
+.table td{background:white;padding:10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:middle}
+.table td:first-child{border-left:1px solid var(--line);border-radius:15px 0 0 15px}
+.table td:last-child{border-right:1px solid var(--line);border-radius:0 15px 15px 0}
+.inactive-row td{background:#f2eee6;color:#999}
+.student-card{
+  display:grid;
+  grid-template-columns:minmax(220px,1.5fr) 118px minmax(330px,1.7fr);
+  align-items:center;
+  gap:14px;
+}
+.student-name{font-size:24px;font-weight:950;margin-bottom:4px}
+.student-meta{font-size:13px;color:var(--muted);font-weight:800;line-height:1.7}
+.point-box{
+  background:linear-gradient(180deg,#fff5b7,#f5c542);
+  border:2px solid #f1c94c;
+  color:#5a4300;
+  border-radius:19px;
+  text-align:center;
+  padding:10px;
+  box-shadow:0 7px 16px rgba(180,130,0,.12);
+}
+.point-box .star{font-size:26px;line-height:1}
+.point-box .num{font-size:34px;font-weight:950;line-height:1.05}
+.point-box .label{font-size:12px;font-weight:950}
+.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.status-pill{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:999px;
+  background:#eee6da;
+  font-size:12px;
+  font-weight:950;
+}
+.status-present{background:#dff3e9;color:#2f755e}
+.status-absent{background:#ffe1e1;color:#b13d3d}
+.status-late{background:#e6efff;color:#335aa8}
+.status-leave{background:#eee;color:#555}
+.check-list{display:flex;gap:8px;flex-wrap:wrap}
+.check-chip{background:white;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:14px;font-weight:900}
+.small-muted{color:var(--muted);font-size:12px;font-weight:800}
+.two-line{line-height:1.55}
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-item{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+
+.reward-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.reward-card{
+  background:#fffdf7;
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:14px;
+  box-shadow:0 8px 20px rgba(120,90,40,.08);
+}
+.reward-img{
+  width:100%;
+  aspect-ratio:4/3;
+  object-fit:cover;
+  border-radius:16px;
+  background:#f1eadf;
+  border:1px solid var(--line);
+}
+.reward-name{font-size:18px;font-weight:950;margin-top:10px}
+.reward-cost{font-size:22px;font-weight:950;color:#6b5000;margin:6px 0}
+.reward-meta{font-size:13px;color:var(--muted);font-weight:800;line-height:1.6}
+.preview-img{
+  width:180px;
+  max-width:100%;
+  aspect-ratio:4/3;
+  object-fit:cover;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:#f1eadf;
+  display:block;
+  margin-top:10px;
+}
+
+@media(max-width:1000px){
+  .app{display:block}
+  .sidebar{position:static;width:100%;min-width:0;min-height:auto}
+  .main{padding:22px}
+  .col-8,.col-7,.col-6,.col-5,.col-4,.col-3,.f9,.f8,.f6,.f4,.f3,.f2{grid-column:span 12}
+  .student-card{grid-template-columns:1fr}
+  .actions{justify-content:flex-start}
+}
+
+/* =========================================================
+   v3.4.3 精緻 UI：桌機按鈕縮小，小螢幕保留好按
+   ========================================================= */
+@media (min-width: 769px){
+  .btn{
+    padding:6px 10px !important;
+    font-size:12px !important;
+    border-radius:12px !important;
+    line-height:1.25 !important;
+  }
+
+  .btn.small{
+    padding:5px 8px !important;
+    font-size:11px !important;
+    border-radius:10px !important;
+  }
+
+  .actions{
+    gap:6px !important;
+  }
+
+  .actions .btn{
+    padding:5px 9px !important;
+    font-size:12px !important;
+    border-radius:999px !important;
+    min-height:0 !important;
+  }
+
+  .student-card{
+    grid-template-columns:minmax(220px,1.4fr) 106px minmax(300px,1.4fr) !important;
+    gap:12px !important;
+    padding:16px !important;
+  }
+
+  .student-name{
+    font-size:21px !important;
+  }
+
+  .student-meta{
+    font-size:12px !important;
+  }
+
+  .point-box{
+    padding:7px 8px !important;
+    border-radius:16px !important;
+  }
+
+  .point-box .star{
+    font-size:20px !important;
+  }
+
+  .point-box .num{
+    font-size:28px !important;
+  }
+
+  .point-box .label{
+    font-size:11px !important;
+  }
+
+  .card{
+    padding:18px !important;
+  }
+
+  .tabs button{
+    padding:8px 12px !important;
+    font-size:13px !important;
+  }
+
+  input,select,textarea{
+    padding:9px 11px !important;
+    border-radius:13px !important;
+    font-size:13px !important;
+  }
+
+  label{
+    font-size:12px !important;
+  }
+}
+
+@media (max-width: 768px){
+  .btn{
+    padding:10px 13px !important;
+    font-size:14px !important;
+    border-radius:14px !important;
+  }
+  .actions{
+    gap:7px !important;
+  }
+}
+
+
+/* =========================================================
+   v3.4.4 遊戲化 UI：按鈕依文字長度，不再整條撐滿
+   ========================================================= */
+
+/* 所有一般按鈕預設改成內容寬度 */
+.btn{
+  width:auto !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  white-space:nowrap !important;
+  padding:7px 12px !important;
+  font-size:12px !important;
+  line-height:1.2 !important;
+  border-radius:999px !important;
+  min-width:0 !important;
+}
+
+/* 學生上課按鈕區：改成緊湊膠囊排列 */
+.actions{
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:6px !important;
+}
+
+.actions .btn{
+  width:auto !important;
+  flex:0 0 auto !important;
+  padding:6px 10px !important;
+  font-size:12px !important;
+  border-radius:999px !important;
+  min-height:0 !important;
+}
+
+/* 防止表單區的按鈕被拉滿 */
+.card .btn,
+.reward-card .btn,
+.table .btn{
+  width:auto !important;
+  flex:0 0 auto !important;
+}
+
+/* 只有側邊選單維持滿寬 */
+.nav button{
+  width:100% !important;
+}
+
+/* 分頁按鈕也維持內容寬度 */
+.tabs button{
+  width:auto !important;
+  padding:8px 13px !important;
+  border-radius:999px !important;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.tabs button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 5px 12px rgba(70,50,25,.10);
+}
+
+/* 遊戲化：可兌換/不可兌換按鈕 */
+.redeem-available,
+.reward-card .btn.primary{
+  background:#e6f6ee !important;
+  color:#2e7d5b !important;
+  border:1px solid #bfe6d3 !important;
+}
+
+.redeem-disabled,
+.reward-card .btn.ghost[disabled]{
+  background:#fdeaea !important;
+  color:#b94a4a !important;
+  border:1px solid #f3c2c2 !important;
+  cursor:not-allowed !important;
+  opacity:1 !important;
+}
+
+/* 點數按鈕像金幣 */
+.actions .btn.gold{
+  background:linear-gradient(180deg,#fff0a8,#f5c542) !important;
+  color:#5a4300 !important;
+  border:1px solid #edc94d !important;
+  box-shadow:0 3px 8px rgba(180,130,0,.14) !important;
+}
+
+/* 出席像綠色徽章 */
+.actions .btn.primary{
+  background:linear-gradient(180deg,#86d2b4,#4e9f85) !important;
+  color:white !important;
+  border:1px solid #4e9f85 !important;
+}
+
+/* 遲到 / 缺席保持明確但柔和 */
+.actions .btn.blue{
+  background:#e6efff !important;
+  color:#335aa8 !important;
+  border:1px solid #bad0ff !important;
+}
+.actions .btn.red{
+  background:#fdeaea !important;
+  color:#b94a4a !important;
+  border:1px solid #f3c2c2 !important;
+}
+
+/* 學生卡片更緊湊 */
+.student-card{
+  align-items:center !important;
+  grid-template-columns:minmax(190px,1.2fr) 96px minmax(280px,1.8fr) !important;
+  gap:10px !important;
+  padding:14px 16px !important;
+}
+
+.point-box{
+  max-width:96px !important;
+  padding:7px 8px !important;
+}
+.point-box .num{
+  font-size:26px !important;
+}
+
+/* 小螢幕仍保持可點，但不撐滿整排 */
+@media(max-width:768px){
+  .actions{
+    justify-content:flex-start !important;
+  }
+  .actions .btn,
+  .btn{
+    width:auto !important;
+    padding:8px 11px !important;
+    font-size:13px !important;
+  }
+  .student-card{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* Hover 小回饋 */
+.btn:not(:disabled):hover{
+  transform:translateY(-1px);
+  filter:brightness(1.02);
+}
+
+
+/* v3.4.5 學生照片與課程清爽版 */
+.student-avatar{
+  width:54px;
+  height:54px;
+  border-radius:18px;
+  object-fit:cover;
+  border:2px solid #eadfcb;
+  background:#fff8df;
+  box-shadow:0 4px 10px rgba(120,90,40,.08);
+  flex:0 0 auto;
+}
+.student-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.student-photo-preview{
+  width:78px;
+  height:78px;
+  border-radius:20px;
+  object-fit:cover;
+  border:2px solid #eadfcb;
+  background:#fff8df;
+  display:block;
+}
+.course-clean-table td:first-child,
+.course-clean-table th:first-child{
+  display:none;
+}
+
+
+/* v3.4.6 上課分頁與出席表 */
+.attendance-summary{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.summary-chip{
+  background:#fff8df;
+  border:1px solid #eadfcb;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:950;
+  color:#5a4300;
+}
+.attendance-table .student-avatar{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+}
+.attendance-table td,
+.attendance-table th{
+  font-size:13px;
+}
+.attendance-table .actions{
+  justify-content:flex-start !important;
+}
+.attendance-table .btn{
+  padding:5px 9px !important;
+  font-size:12px !important;
+}
+.classroom-tabs{
+  margin:0 0 14px;
+}
+
+
+/* v3.4.7 學期選單與整學期出席表 */
+.attendance-grid th{
+  position:sticky;
+  top:0;
+  background:#fffdf7;
+  z-index:1;
+}
+.attendance-grid td:first-child,
+.attendance-grid th:first-child{
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:#fffdf7;
+}
+.attendance-cell{
+  width:38px !important;
+  min-width:38px !important;
+  height:30px !important;
+  padding:4px 6px !important;
+  border-radius:999px !important;
+  font-weight:950 !important;
+}
+.attendance-cell.status-present{
+  background:#dff3e9 !important;
+  color:#2f755e !important;
+  border:1px solid #bfe6d3 !important;
+}
+.attendance-cell.status-absent{
+  background:#fdeaea !important;
+  color:#b94a4a !important;
+  border:1px solid #f3c2c2 !important;
+}
+.attendance-cell.status-late{
+  background:#e6efff !important;
+  color:#335aa8 !important;
+  border:1px solid #bad0ff !important;
+}
+.attendance-cell.status-leave{
+  background:#eee6da !important;
+  color:#6b6256 !important;
+  border:1px solid #d9cdbb !important;
+}
+
+
+/* =========================================================
+   v3.5.0 iPad / Safari 介面修正
+   ========================================================= */
+*, *::before, *::after{
+  box-sizing:border-box !important;
+}
+
+input, select, textarea{
+  max-width:100% !important;
+  min-width:0 !important;
+}
+
+.row > *{
+  min-width:0 !important;
+}
+
+/* iPad Safari 對 date input 比較容易爆版，特別修正 */
+input[type="date"]{
+  -webkit-appearance:none !important;
+  appearance:none !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+}
+
+/* iPad 橫向時，篩選列不要把日期推出外框 */
+@supports (-webkit-touch-callout: none){
+  .row{
+    width:100% !important;
+  }
+  .card{
+    overflow:hidden !important;
+  }
+  select, input[type="date"]{
+    font-size:16px !important; /* 避免 iPad 自動放大 */
+  }
+}
+
+/* 平板寬度：上課介面的篩選欄位自動換行 */
+@media (min-width: 768px) and (max-width: 1180px){
+  .row .f3,
+  .row .f4{
+    flex:1 1 calc(50% - 12px) !important;
+    max-width:calc(50% - 12px) !important;
+  }
+  .row .f2{
+    flex:1 1 calc(33.333% - 12px) !important;
+    max-width:calc(33.333% - 12px) !important;
+  }
+}
+
+/* 更窄螢幕直接單欄 */
+@media (max-width: 767px){
+  .row .f2,.row .f3,.row .f4,.row .f5,.row .f6,.row .f8,.row .f12{
+    flex:1 1 100% !important;
+    max-width:100% !important;
+  }
+}
+
+
+.exam-check-card{
+  margin-bottom:10px;
+  padding:14px 16px;
+  border-radius:18px;
+  border:1px dashed var(--line);
+  background:rgba(255,240,168,.55);
+}
+.exam-check-card.checked{
+  background:rgba(127,200,169,.22);
+}
+.exam-check-label{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:10px;
+  align-items:flex-start;
+  width:100%;
+  cursor:pointer;
+}
+.exam-check-label input{
+  width:18px !important;
+  height:18px !important;
+  margin-top:3px;
+}
+.exam-check-content{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+  line-height:1.55;
+  word-break:break-word;
+}
+.exam-check-content span{
+  white-space:pre-wrap;
+}
+.btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+
+.growth-box{
+  margin-top:12px;
+  padding:12px;
+  border-radius:18px;
+  background:rgba(255,255,255,.72);
+  border:1px solid var(--line);
+}
+.growth-box summary{
+  cursor:pointer;
+  font-weight:800;
+  color:#5f6f65;
+}
+.growth-quick{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:10px 0;
+}
+.growth-log-item{
+  padding:8px 10px;
+  border-radius:14px;
+  background:rgba(127,200,169,.16);
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.45;
+}
+.growth-xp{
+  color:#c49a2c;
+  font-weight:900;
+}
+
+
+.growth-progress{height:10px;border-radius:999px;background:#eadfc9;overflow:hidden;margin-top:8px}
+.growth-progress > span{display:block;height:100%;background:linear-gradient(90deg,#7fc8a9,#d8b45f);border-radius:999px}
+.growth-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.growth-profile-card{padding:14px;border-radius:20px;background:rgba(255,255,255,.78);border:1px solid var(--line)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-panel{width:min(900px,96vw);max-height:90vh;overflow:auto;background:var(--card);border-radius:28px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.22);position:relative}
+.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:none;background:#f3d9d7;color:#8f3d39;font-size:22px}
+
+
+.magic-guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.magic-card{padding:16px;border-radius:22px;background:rgba(255,255,255,.78);border:1px solid var(--line)}
+.magic-card h3{margin-top:0}
+.log-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.btn.danger-soft{background:#f7d6d3;color:#8f3d39}
+.firebase-box{background:linear-gradient(135deg,rgba(255,241,173,.72),rgba(127,200,169,.22));}
+
+
+.adventure-board{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+  margin-top:14px;
+}
+.story-card{
+  border-radius:26px;
+  padding:18px;
+  background:rgba(255,255,255,.86);
+  border:1px solid var(--line);
+  box-shadow:0 8px 24px rgba(0,0,0,.05);
+}
+.story-card h3{
+  margin:0 0 12px 0;
+  font-size:20px;
+}
+.story-title{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+.story-progress{
+  display:inline-block;
+  padding:5px 11px;
+  border-radius:999px;
+  background:rgba(255,214,102,.28);
+  color:#705500;
+  font-weight:800;
+  margin-bottom:10px;
+}
+.story-task{
+  padding:8px 0;
+  border-bottom:1px dashed rgba(0,0,0,.08);
+  line-height:1.55;
+}
+.story-task:last-child{border-bottom:none}
+.story-growth-item{
+  padding:11px 12px;
+  border-radius:16px;
+  background:rgba(127,200,169,.14);
+  margin-bottom:10px;
+  line-height:1.5;
+}
+.story-growth-xp{
+  color:#b88b00;
+  font-weight:900;
+  margin-top:4px;
+}
+@media(max-width:900px){
+  .adventure-board{grid-template-columns:1fr}
+}
+
+
+.chapter-editor{
+  margin-top:14px;
+  padding:14px;
+  border-radius:18px;
+  background:#fff9e8;
+  border:1px dashed #e2c97b;
+}
+.chapter-editor input,
+.chapter-editor textarea{
+  width:100%;
+  margin-top:8px;
+  margin-bottom:10px;
+}
+.chapter-editor textarea{
+  min-height:90px;
+}
+
+
+.sync-status{position:fixed;right:18px;top:18px;z-index:9999;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.94);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.10);font-weight:900;font-size:13px;display:flex;gap:8px;align-items:center}
+.sync-status.clean{color:#2f7d4d}.sync-status.dirty{color:#9a6b00}.sync-status.syncing{color:#2d65b0}.sync-status.error{color:#b84c44}
+.sync-status button{width:auto;padding:5px 9px;border-radius:999px;font-size:12px}
+@media(max-width:720px){.sync-status{left:12px;right:12px;top:auto;bottom:12px;justify-content:center}}
+
+
+.preline{white-space:pre-wrap;line-height:1.55}
+.adventure-board.four{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:14px}
+@media(max-width:900px){.adventure-board.four{grid-template-columns:1fr}}
+.curriculum-readonly-note{font-size:12px;color:var(--muted);margin-top:10px}
+
+.main-progress-bar{height:10px;border-radius:999px;background:#eee2c3;overflow:hidden;margin:8px 0 12px}.main-progress-bar span{display:block;height:100%;background:#7fc8a9;border-radius:999px}
+
+.lesson-checklist{display:flex;flex-direction:column;gap:8px;margin:10px 0 14px}
+.lesson-check-item{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.72)}
+.lesson-check-item input{width:auto;margin-top:3px}
+.lesson-check-item span{line-height:1.5}
+.lesson-summary{background:#fff7d6;border:1px dashed #d6bd5d;border-radius:16px;padding:12px;margin:12px 0;white-space:pre-wrap}
+
+
+.adventure-board{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-auto-rows:minmax(430px,auto);
+  gap:16px !important;
+  align-items:stretch !important;
+}
+.story-card{
+  min-height:430px;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+.story-card textarea{
+  min-height:86px;
+}
+.story-card .note,
+.story-card .lesson-checklist,
+.story-card .chapter-editor{
+  flex-shrink:0;
+}
+.story-card .recent-scroll{
+  max-height:180px;
+  overflow:auto;
+}
+@media(max-width:900px){
+  .adventure-board{
+    grid-template-columns:1fr !important;
+    grid-auto-rows:auto;
+  }
+  .story-card{
+    min-height:auto;
+  }
+}
+
+
+.mode-pill-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.mode-pill{width:auto;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:white;font-weight:900}
+.mode-pill.active{background:var(--gold-light);border-color:var(--gold);color:#735a00}
+.week-report{white-space:pre-wrap;line-height:1.7;background:#fffdf0;border:1px dashed #d6bd5d;border-radius:16px;padding:14px;margin-top:12px}
+
+
+.template-card{border:1px solid var(--line);border-radius:18px;padding:14px;margin:12px 0;background:rgba(255,255,255,.72)}
+.week-report-toolbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px;flex-wrap:wrap}
+.week-report-toolbar button{width:auto;padding:7px 11px;border-radius:999px}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+body.dark-mode{
+  --bg-a:#1f241f;
+  --bg-b:#111814;
+  --card:#242820;
+  --line:#4a4335;
+  --text:#f3ead7;
+  --muted:#c8bfae;
+  --mint:#6fc3a5;
+  --mint-dark:#4d9f85;
+  --blue:#8eaaff;
+  --gold:#f1c04f;
+  --gold-light:#4b3f1f;
+  --red:#ff8a8a;
+  --red-dark:#d95454;
+  --gray:#3a372f;
+  background:linear-gradient(135deg,var(--bg-a),var(--bg-b)) !important;
+}
+body.dark-mode .main,
+body.dark-mode .content,
+body.dark-mode .card,
+body.dark-mode .story-card,
+body.dark-mode section,
+body.dark-mode .note,
+body.dark-mode .template-card{
+  background-color:var(--card) !important;
+  color:var(--text) !important;
+}
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select,
+body.dark-mode button{
+  background:#1a1d18 !important;
+  color:var(--text) !important;
+  border-color:var(--line) !important;
+}
+body.dark-mode .note,
+body.dark-mode .story-progress,
+body.dark-mode .lesson-summary,
+body.dark-mode .week-report{
+  background:#302b1b !important;
+  color:var(--text) !important;
+  border-color:#67562a !important;
+}
+body.dark-mode .sidebar{
+  background:linear-gradient(180deg,#224536,#153126) !important;
+}
+body.dark-mode .sidebar button,
+body.dark-mode .nav button{
+  background:#26372f !important;
+  color:#f6edda !important;
+}
+body.dark-mode .tabs button.active,
+body.dark-mode .mode-pill.active{
+  background:#5a471d !important;
+  color:#fff1bd !important;
+}
+body.dark-mode table,
+body.dark-mode th,
+body.dark-mode td{
+  color:var(--text) !important;
+  border-color:var(--line) !important;
+}
+.theme-toggle{
+  position:fixed;
+  right:18px;
+  top:64px;
+  z-index:9999;
+  width:auto;
+  padding:9px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.92);
+  border:1px solid var(--line);
+  box-shadow:0 8px 24px rgba(0,0,0,.10);
+  font-weight:900;
+  font-size:13px;
+}
+body.dark-mode .theme-toggle{
+  background:#1b211c !important;
+  color:#ffe7a3 !important;
+}
+@media(max-width:720px){
+  .theme-toggle{
+    right:12px;
+    top:12px;
+  }
+}
+
+
+.cloud-warning{
+  position:fixed;
+  left:50%;
+  top:84px;
+  transform:translateX(-50%);
+  z-index:10000;
+  max-width:min(92vw,680px);
+  background:#fff8db;
+  color:#453a20;
+  border:1px solid #e0c85f;
+  border-radius:20px;
+  box-shadow:0 12px 36px rgba(0,0,0,.18);
+  padding:14px 16px;
+  font-weight:900;
+}
+.cloud-warning .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+.cloud-warning button{width:auto;padding:7px 11px;border-radius:999px}
+body.dark-mode .cloud-warning{background:#372f18;color:#fff3bd;border-color:#7b6729}
+.sync-status .sync-actions{display:flex;gap:6px}
+.sync-status .sync-actions button{white-space:nowrap}
+@media(max-width:720px){
+  .cloud-warning{top:72px}
+  .sync-status{flex-wrap:wrap}
+}
+
+
+/* =========================================================
+   ADAPTIVE TEACHING UI
+   ========================================================= */
+body.touch-mode button,
+body.touch-mode .btn,
+body.touch-mode input,
+body.touch-mode select{
+  min-height:50px;
+  font-size:16px;
+}
+body.touch-mode textarea{
+  min-height:110px;
+  font-size:16px;
+}
+body.touch-mode .lesson-check-item{
+  padding:14px;
+  border-radius:18px;
+}
+body.touch-mode .lesson-check-item input[type="checkbox"]{
+  width:24px;
+  height:24px;
+}
+.touch-toolbar{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:9998;
+  display:none;
+  gap:10px;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.96);
+  border-top:1px solid var(--line);
+  backdrop-filter:blur(10px);
+}
+.touch-toolbar button{
+  flex:1;
+  min-height:54px;
+  border-radius:18px;
+  font-weight:900;
+}
+body.touch-mode .touch-toolbar{
+  display:flex;
+}
+body.touch-mode .main,
+body.touch-mode .content{
+  padding-bottom:96px;
+}
+.device-badge{
+  position:fixed;
+  left:14px;
+  bottom:86px;
+  z-index:9997;
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.92);
+  border:1px solid var(--line);
+  font-size:12px;
+  font-weight:900;
+}
+
+
+/* =========================================================
+   QUICK CLASS MODE
+   ========================================================= */
+.quick-class-shell{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:16px}
+.quick-class-card{border-radius:24px;padding:18px;background:rgba(255,255,255,.86);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.quick-student-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.quick-student-card{padding:12px;border-radius:18px;background:rgba(127,200,169,.12);border:1px solid var(--line)}
+.quick-student-card b{display:block;margin-bottom:6px}
+.quick-xp-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.quick-xp-row button{padding:8px 6px;border-radius:14px;font-size:13px}
+.quick-topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.quick-topbar button{width:auto}
+body.quick-mode .sidebar{display:none}
+body.quick-mode .main{width:100%;max-width:1200px;margin:0 auto}
+@media(max-width:900px){.quick-class-shell{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   UNFINISHED TASKS + DEMO GUIDE
+   ========================================================= */
+.unfinished-box{background:#fff3d1;border:1px dashed #d1a93d;border-radius:18px;padding:12px;margin:12px 0}
+body.dark-mode .unfinished-box{background:#352a16;border-color:#7a6220}
+.manual-section{margin:14px 0;padding:14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.72)}
+.manual-section h3{margin-top:0}
+.demo-card{border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;background:rgba(127,200,169,.10)}
+.demo-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.demo-step{border:1px dashed var(--line);border-radius:16px;padding:12px;background:rgba(255,255,255,.65)}
+
+
+/* =========================================================
+   PRODUCT MANUAL + DEMO MODE
+   ========================================================= */
+.manual-accordion{
+  margin:12px 0;
+  border:1px solid var(--line);
+  border-radius:18px;
+  overflow:hidden;
+  background:rgba(255,255,255,.78);
+}
+.manual-head{
+  padding:14px 16px;
+  font-weight:900;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.manual-body{
+  display:none;
+  padding:0 16px 16px;
+  line-height:1.75;
+}
+.manual-accordion.open .manual-body{
+  display:block;
+}
+.demo-banner{
+  padding:14px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#7fc8a9,#a0d8ef);
+  color:#102018;
+  font-weight:900;
+  margin-bottom:14px;
+}
+.demo-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
+}
+.demo-mini{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  background:rgba(255,255,255,.72);
+}
+.demo-flow-card{
+  border:1px dashed var(--line);
+  border-radius:18px;
+  padding:14px;
+  background:rgba(255,255,255,.68);
+}
+.floating-top-btn{
+  position:fixed;
+  right:18px;
+  bottom:120px;
+  z-index:9997;
+  border-radius:999px;
+  padding:12px 14px;
+  font-weight:900;
+  width:auto;
+}
+body.dark-mode .manual-accordion,
+body.dark-mode .demo-mini,
+body.dark-mode .demo-flow-card{
+  background:#242820 !important;
+}
+@media(max-width:720px){
+  .manual-head{font-size:16px}
+  .floating-top-btn{right:12px;bottom:96px}
+}
+
+
+/* PERFORMANCE CENTER V1 - STABLE */
+.performance-grid{display:grid;grid-template-columns:340px 1fr;gap:16px}
+.performance-list{display:flex;flex-direction:column;gap:10px}
+.performance-item{border:1px solid var(--line);border-radius:18px;padding:12px;cursor:pointer;background:rgba(255,255,255,.75)}
+.performance-item.active{border:2px solid #7fc8a9;background:rgba(127,200,169,.12)}
+.performance-song{border:1px solid var(--line);border-radius:14px;padding:10px;margin:8px 0}
+.performance-member-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.performance-member{border:1px solid var(--line);border-radius:12px;padding:8px;background:rgba(255,255,255,.7)}
+.progress-pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900}
+.progress-red{background:#ffd6d6;color:#842323}
+.progress-yellow{background:#fff0c2;color:#715300}
+.progress-green{background:#d9f7df;color:#1e5e2d}
+@media(max-width:900px){.performance-grid{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   V7 CLEAN CORE SAFETY UI
+   ========================================================= */
+.core-health-note{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:10px 12px;
+  background:rgba(127,200,169,.10);
+  margin:10px 0;
+  font-size:13px;
+  font-weight:800;
+}
+
+
+/* =========================================================
+   PERFORMANCE WORKBENCH V2
+   ========================================================= */
+.perf-dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:14px;
+  margin:14px 0;
+}
+.perf-stat{
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:16px;
+  background:rgba(255,255,255,.78);
+}
+.perf-stat .num{
+  font-size:28px;
+  font-weight:950;
+  margin-top:6px;
+}
+.perf-card-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:14px;
+}
+.perf-event-card{
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:16px;
+  background:rgba(255,255,255,.82);
+  box-shadow:0 8px 22px rgba(0,0,0,.04);
+}
+.perf-event-card.active{
+  border:2px solid #7fc8a9;
+  background:rgba(127,200,169,.12);
+}
+.perf-pill{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  margin:2px 4px 2px 0;
+}
+.perf-green{background:#d9f7df;color:#1e5e2d}
+.perf-yellow{background:#fff0c2;color:#715300}
+.perf-red{background:#ffd6d6;color:#842323}
+.perf-blue{background:#dce8ff;color:#244879}
+.perf-workbench{
+  display:grid;
+  grid-template-columns:320px 1fr;
+  gap:16px;
+}
+.perf-side{
+  position:sticky;
+  top:16px;
+  align-self:start;
+}
+.perf-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:12px 0;
+}
+.perf-tabs button{
+  width:auto;
+  border-radius:999px;
+  padding:8px 13px;
+}
+.song-card{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  margin:12px 0;
+  background:rgba(255,255,255,.72);
+}
+.assignment-card{
+  border:1px dashed var(--line);
+  border-radius:16px;
+  padding:12px;
+  margin:10px 0;
+  background:rgba(127,200,169,.08);
+}
+.student-check-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:8px;
+}
+.student-check{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:8px;
+  background:rgba(255,255,255,.7);
+}
+.student-check input{
+  width:auto;
+}
+.perf-task{
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+  border-bottom:1px solid var(--line);
+  padding:8px 0;
+}
+.perf-task input{
+  width:auto;
+  margin-top:4px;
+}
+body.dark-mode .perf-stat,
+body.dark-mode .perf-event-card,
+body.dark-mode .song-card,
+body.dark-mode .assignment-card,
+body.dark-mode .student-check{
+  background:#242820 !important;
+}
+@media(max-width:900px){
+  .perf-workbench{grid-template-columns:1fr}
+  .perf-side{position:static}
+}
+
+
+/* =========================================================
+   SYNC CONFLICT FIX UI
+   ========================================================= */
+.sync-conflict-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  margin-top:10px;
+}
+.sync-conflict-actions button{
+  width:auto;
+  border-radius:999px;
+}
+
+
+/* =========================================================
+   PERFORMANCE VISUAL CONFIG
+   ========================================================= */
+.perf-visual-tree{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  margin:12px 0;
+  background:rgba(127,200,169,.08);
+}
+.perf-school-block{
+  margin:12px 0;
+  padding:10px;
+  border-left:4px solid #7fc8a9;
+  background:rgba(255,255,255,.55);
+  border-radius:0 12px 12px 0;
+}
+.perf-class-block{
+  margin:10px 0 10px 18px;
+  padding:8px;
+  border-left:3px solid #a8c9ff;
+}
+.perf-student-line{
+  margin:6px 0 6px 24px;
+  padding:6px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.65);
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+}
+.perf-warning{
+  border:1px solid #ffd08a;
+  background:#fff6e6;
+  color:#8a5a00;
+  border-radius:14px;
+  padding:10px 12px;
+  margin:10px 0;
+  font-weight:800;
+}
+body.dark-mode .perf-visual-tree,
+body.dark-mode .perf-school-block,
+body.dark-mode .perf-student-line{
+  background:#23271f !important;
+}
+
+
+/* =========================================================
+   DEVICE SESSION LOCK UI
+   ========================================================= */
+.device-lock-warning{
+  position:fixed;
+  left:50%;
+  top:142px;
+  transform:translateX(-50%);
+  z-index:10001;
+  max-width:min(92vw,720px);
+  background:#fff4d8;
+  color:#453a20;
+  border:1px solid #e0b85f;
+  border-radius:20px;
+  box-shadow:0 12px 36px rgba(0,0,0,.18);
+  padding:14px 16px;
+  font-weight:900;
+}
+.device-lock-warning .actions{
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.device-lock-warning button{
+  width:auto;
+  border-radius:999px;
+}
+.device-lock-chip{
+  display:inline-block;
+  padding:4px 9px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  background:rgba(127,200,169,.16);
+  border:1px solid var(--line);
+}
+body.dark-mode .device-lock-warning{
+  background:#372f18;
+  color:#fff3bd;
+  border-color:#7b6729;
+}
+
+
+/* =========================================================
+   V7.2.2 PERFORMANCE UX + CHECKBOX TEXT
+   ========================================================= */
+label.student-check,
+.lesson-check-item,
+.student-check{
+  font-size:17px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.lesson-check-item span,
+.student-check span{
+  display:inline-block;
+  line-height:1.35;
+}
+.student-check input[type="checkbox"],
+.lesson-check-item input[type="checkbox"],
+input[type="checkbox"]{
+  width:22px;
+  height:22px;
+  flex:0 0 auto;
+}
+.perf-compact-summary{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:8px 0 10px;
+}
+.perf-class-summary{
+  border:1px solid var(--line);
+  border-radius:16px;
+  margin:10px 0;
+  background:rgba(255,255,255,.62);
+  overflow:hidden;
+}
+.perf-class-summary summary{
+  cursor:pointer;
+  padding:12px 14px;
+  font-weight:950;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+}
+.perf-class-summary .inner{
+  padding:0 14px 14px;
+}
+.perf-student-part-row{
+  display:grid;
+  grid-template-columns:minmax(150px,1fr) minmax(150px,1fr);
+  gap:8px;
+  align-items:center;
+  padding:8px 0;
+  border-top:1px solid var(--line);
+}
+.perf-student-part-row input{min-height:40px;}
+.perf-student-line{font-size:16px;font-weight:850;}
+body.dark-mode .perf-class-summary{background:#23271f !important;}
+@media(max-width:720px){
+  label.student-check,.lesson-check-item,.student-check{font-size:18px;}
+  .perf-student-part-row{grid-template-columns:1fr;}
+}
+
+
+/* =========================================================
+   V7.3 START CLASS FAST MODE
+   ========================================================= */
+body.start-class-mode .sidebar,
+body.start-class-mode .topbar{display:none !important;}
+body.start-class-mode .main{max-width:1180px;width:100%;margin:0 auto;padding:18px;}
+.start-class-header{
+  position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);
+  border:1px solid var(--line);border-radius:24px;padding:14px 16px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);margin-bottom:14px;
+}
+body.dark-mode .start-class-header{background:rgba(28,30,26,.94);}
+.start-class-title{font-size:26px;font-weight:950;}
+.start-class-sub{font-weight:800;opacity:.78;}
+.start-class-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(300px,.95fr);gap:16px;}
+.start-class-card{
+  border:1px solid var(--line);border-radius:26px;padding:18px;background:rgba(255,255,255,.84);
+  box-shadow:0 8px 24px rgba(0,0,0,.04);
+}
+body.dark-mode .start-class-card{background:#242820;}
+.start-task{
+  display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);
+  border-radius:18px;margin:9px 0;background:rgba(255,255,255,.7);font-size:18px;font-weight:900;
+}
+body.dark-mode .start-task{background:#1d211b;}
+.start-task input{width:26px;height:26px;flex:0 0 auto;}
+.start-att-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+.start-student{border:1px solid var(--line);border-radius:18px;padding:12px;background:rgba(127,200,169,.10);}
+.start-student-name{font-weight:950;font-size:17px;margin-bottom:8px;}
+.start-att-row{display:flex;gap:6px;flex-wrap:wrap;}
+.start-att-row button{flex:1;min-width:48px;padding:8px 6px;border-radius:999px;}
+.start-att-row button.active{background:#7fc8a9;color:#102018;}
+.start-note-area textarea{min-height:130px;font-size:17px;}
+.start-class-bottom{
+  position:sticky;bottom:0;z-index:50;background:rgba(255,255,255,.94);border:1px solid var(--line);
+  border-radius:24px;padding:12px;margin-top:14px;display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:10px;
+  box-shadow:0 -8px 24px rgba(0,0,0,.08);
+}
+body.dark-mode .start-class-bottom{background:rgba(28,30,26,.94);}
+.start-class-bottom button{min-height:58px;border-radius:20px;font-size:17px;font-weight:950;}
+@media(max-width:850px){
+  .start-class-grid{grid-template-columns:1fr;}
+  .start-class-bottom{grid-template-columns:1fr;}
+  .start-class-title{font-size:23px;}
+}
+
+
+/* =========================================================
+   V7.3.3 START CLASS UX FIX
+   ========================================================= */
+body.start-class-mode .sync-floating,
+body.start-class-mode #syncStatusBar,
+body.start-class-mode .sync-status,
+body.start-class-mode .floating-sync{
+  top:auto !important;
+  bottom:86px !important;
+  right:16px !important;
+  max-width:min(92vw,760px);
+}
+body.start-class-mode #startClassInlineBtn{
+  display:none !important;
+}
+.start-student{
+  display:grid;
+  grid-template-columns:58px 1fr;
+  gap:10px;
+  align-items:start;
+}
+.start-student-photo{
+  width:54px;
+  height:54px;
+  border-radius:18px;
+  object-fit:cover;
+  background:rgba(127,200,169,.18);
+  border:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  font-weight:900;
+}
+.start-student-main{
+  min-width:0;
+}
+.start-xp-line{
+  font-size:13px;
+  font-weight:850;
+  opacity:.78;
+  margin:2px 0 8px;
+}
+.start-xp-actions{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  margin-top:8px;
+}
+.start-xp-actions button{
+  padding:7px 5px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:900;
+}
+.start-student-remark{
+  margin-top:8px;
+  min-height:42px;
+  font-size:14px;
+}
+@media(max-width:720px){
+  .start-student{
+    grid-template-columns:48px 1fr;
+  }
+  .start-student-photo{
+    width:46px;
+    height:46px;
+    border-radius:15px;
+  }
+}
+
+
+/* =========================================================
+   V7.3.4 HORIZONTAL STUDENT CARDS
+   ========================================================= */
+.start-att-panel{
+  max-height:calc(100vh - 260px);
+  overflow-y:auto;
+  padding-right:6px;
+}
+.start-att-grid{
+  display:flex !important;
+  flex-direction:column;
+  gap:10px;
+}
+.start-student{
+  display:grid !important;
+  grid-template-columns:64px minmax(110px,180px) minmax(210px,1fr) minmax(160px,220px);
+  gap:12px;
+  align-items:center;
+  padding:12px !important;
+  min-height:96px;
+}
+.start-student-photo{
+  width:58px !important;
+  height:58px !important;
+  border-radius:18px !important;
+}
+.start-student-main{
+  min-width:0;
+}
+.start-student-name{
+  font-size:20px !important;
+  margin-bottom:4px !important;
+}
+.start-xp-line{
+  font-size:15px !important;
+  font-weight:900 !important;
+}
+.start-att-row{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px !important;
+}
+.start-att-row button{
+  min-height:42px;
+  font-size:15px;
+}
+.start-xp-actions{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px !important;
+  margin-top:0 !important;
+}
+.start-xp-actions button{
+  min-height:42px;
+  font-size:16px !important;
+}
+.start-student-remark{
+  margin-top:0 !important;
+  min-height:54px !important;
+  font-size:15px !important;
+  resize:vertical;
+}
+.start-student-controls{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.start-card-summary{
+  font-size:13px;
+  opacity:.72;
+  font-weight:850;
+}
+@media(max-width:900px){
+  .start-class-grid{
+    grid-template-columns:1fr !important;
+  }
+  .start-att-panel{
+    max-height:58vh;
+  }
+  .start-student{
+    grid-template-columns:56px 1fr !important;
+  }
+  .start-student-controls{
+    grid-column:1 / -1;
+  }
+  .start-att-row,
+  .start-xp-actions{
+    grid-column:1 / -1;
+  }
+  .start-student-remark{
+    grid-column:1 / -1;
+  }
+}
+
+
+/* =========================================================
+   V7.4 REWARD CATEGORY + EXPIRY DISCOUNT
+   ========================================================= */
+.reward-admin-grid{display:grid;grid-template-columns:320px 1fr;gap:16px;}
+.reward-category-card{border:1px solid var(--line);border-radius:18px;padding:12px;margin:8px 0;background:rgba(255,255,255,.72);}
+.reward-category-card.active{border:2px solid #7fc8a9;background:rgba(127,200,169,.14);}
+.reward-shop-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px;}
+.reward-shop-tabs button{width:auto;border-radius:999px;padding:8px 13px;}
+.reward-expiry-note{border:1px dashed #d0a53d;background:#fff5d8;border-radius:14px;padding:10px;margin:8px 0;font-weight:850;}
+.reward-price-original{text-decoration:line-through;opacity:.58;margin-right:6px;}
+.reward-price-sale{font-size:18px;font-weight:950;color:#b64b2a;}
+.reward-discount-badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:900;background:#ffe0be;color:#874000;margin-left:6px;}
+.reward-settings-row{display:grid;grid-template-columns:1fr 120px;gap:10px;align-items:center;margin:8px 0;}
+body.dark-mode .reward-category-card{background:#242820;}
+body.dark-mode .reward-expiry-note{background:#342917;}
+@media(max-width:900px){.reward-admin-grid{grid-template-columns:1fr;}}
+
+
+/* =========================================================
+   V7.4.1 REWARD CARD LAYOUT FIX
+   ========================================================= */
+.reward-admin-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.reward-admin-card{
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:16px;
+  background:rgba(255,255,255,.82);
+  display:grid;
+  grid-template-columns:160px 1fr auto;
+  gap:16px;
+  align-items:start;
+}
+.reward-admin-img{
+  width:150px;
+  height:150px;
+  border-radius:18px;
+  object-fit:cover;
+  background:rgba(127,200,169,.12);
+  border:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:42px;
+}
+.reward-admin-fields{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(180px,1fr));
+  gap:10px 14px;
+}
+.reward-admin-field label{
+  font-weight:900;
+  margin-bottom:4px;
+  display:block;
+}
+.reward-admin-actions{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:100px;
+}
+.reward-shop-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:14px;
+}
+.reward-shop-card{
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:14px;
+  background:rgba(255,255,255,.82);
+}
+.reward-shop-img{
+  width:100%;
+  height:150px;
+  object-fit:cover;
+  border-radius:16px;
+  background:rgba(127,200,169,.10);
+  border:1px solid var(--line);
+}
+body.dark-mode .reward-admin-card,
+body.dark-mode .reward-shop-card{
+  background:#242820;
+}
+@media(max-width:850px){
+  .reward-admin-card{
+    grid-template-columns:1fr;
+  }
+  .reward-admin-img{
+    width:100%;
+    height:180px;
+  }
+  .reward-admin-fields{
+    grid-template-columns:1fr;
+  }
+  .reward-admin-actions{
+    flex-direction:row;
+  }
+}
+
+
+/* =========================================================
+   V7.4.2 REWARD REDEEM FLOW FIX
+   ========================================================= */
+.reward-redeem-selector{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(160px,1fr));
+  gap:12px;
+  margin:10px 0 14px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(127,200,169,.08);
+}
+.reward-redeem-button{
+  width:100%;
+  margin-top:10px;
+  min-height:44px;
+  border-radius:999px;
+  font-weight:950;
+}
+.reward-redeem-button.can{
+  background:#7fc8a9 !important;
+  color:#102018 !important;
+}
+.reward-redeem-button.cannot{
+  background:#ff8b8b !important;
+  color:#4b1515 !important;
+}
+.reward-student-points{
+  display:inline-block;
+  padding:5px 11px;
+  border-radius:999px;
+  background:rgba(127,200,169,.15);
+  border:1px solid var(--line);
+  font-weight:950;
+  margin-left:8px;
+}
+@media(max-width:850px){
+  .reward-redeem-selector{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* =========================================================
+   V7.4.3 REWARD IMAGE UPLOAD FIX
+   ========================================================= */
+.reward-image-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.reward-image-actions label,
+.reward-image-actions button{
+  width:auto;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:900;
+}
+.reward-image-actions input[type=file]{
+  display:none;
+}
+.reward-upload-status{
+  font-size:12px;
+  font-weight:850;
+  opacity:.75;
+  margin-top:6px;
+}
+
+
+/* =========================================================
+   V7.4.4 REWARD LOG + UNIFORM CARD HEIGHT
+   ========================================================= */
+.reward-shop-card{
+  display:flex;
+  flex-direction:column;
+  min-height:430px;
+}
+.reward-shop-card h3{
+  min-height:48px;
+}
+.reward-shop-card .reward-card-body{
+  flex:1;
+}
+.reward-redeem-button{
+  margin-top:auto !important;
+  min-height:52px !important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.reward-log-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.reward-log-item{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:12px;
+  background:rgba(255,255,255,.78);
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+}
+.reward-log-meta{
+  font-weight:900;
+  line-height:1.55;
+}
+.reward-log-sub{
+  font-size:13px;
+  opacity:.75;
+  font-weight:800;
+}
+body.dark-mode .reward-log-item{
+  background:#242820;
+}
+@media(max-width:720px){
+  .reward-log-item{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* =========================================================
+   V7.5 REWARD CLEAN CORE
+   ========================================================= */
+.reward-clean-core-note{
+  border:1px solid var(--line);
+  background:rgba(127,200,169,.10);
+  border-radius:16px;
+  padding:10px 12px;
+  margin:8px 0;
+  font-size:13px;
+  font-weight:850;
+}
+
+
+/* =========================================================
+   V8.0 PERFORMANCE WORKSPACE CLEAN CORE
+   ========================================================= */
+.perf-v8-dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:14px 0;}
+.perf-v8-stat{border:1px solid var(--line);border-radius:22px;padding:16px;background:rgba(255,255,255,.82);}
+.perf-v8-stat .num{font-size:30px;font-weight:950;margin-top:4px;}
+.perf-v8-event-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
+.perf-v8-event-card{border:1px solid var(--line);border-radius:24px;padding:16px;background:rgba(255,255,255,.84);box-shadow:0 8px 24px rgba(0,0,0,.04);}
+.perf-v8-event-card h3{margin-top:0}
+.perf-v8-pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900;margin:3px 4px 3px 0;}
+.perf-v8-blue{background:#dce8ff;color:#244879}.perf-v8-green{background:#d9f7df;color:#1e5e2d}.perf-v8-yellow{background:#fff0c2;color:#715300}.perf-v8-red{background:#ffd6d6;color:#842323}
+.perf-v8-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.perf-v8-tabs button{width:auto;border-radius:999px;padding:8px 13px;}
+.perf-v8-layout{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr);gap:16px;}
+.perf-v8-card{border:1px solid var(--line);border-radius:22px;padding:16px;margin:12px 0;background:rgba(255,255,255,.82);}
+.perf-v8-song{border:1px solid var(--line);border-radius:22px;padding:14px;margin:12px 0;background:rgba(127,200,169,.08);}
+.perf-v8-part-card{border:1px dashed var(--line);border-radius:18px;padding:12px;background:rgba(255,255,255,.72);margin:10px 0;}
+.perf-v8-student-chip{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;padding:8px 10px;margin:6px 0;background:rgba(255,255,255,.76);font-weight:850;}
+.perf-v8-assignment{border:1px dashed var(--line);border-radius:18px;padding:12px;margin:10px 0;background:rgba(255,255,255,.72);}
+.perf-v8-check-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;}
+.perf-v8-check{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;padding:8px;background:rgba(255,255,255,.74);font-weight:900;}
+.perf-v8-check input{width:22px;height:22px;flex:0 0 auto}
+.perf-v8-task{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:10px 0;}
+.perf-v8-task input[type="checkbox"]{width:22px;height:22px}
+.perf-v8-flow-item{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:10px;margin:8px 0;background:rgba(255,255,255,.72);}
+.perf-v8-warning{border:1px solid #ffd08a;background:#fff6e6;color:#8a5a00;border-radius:16px;padding:10px 12px;margin:10px 0;font-weight:900;}
+body.dark-mode .perf-v8-stat,body.dark-mode .perf-v8-event-card,body.dark-mode .perf-v8-card,body.dark-mode .perf-v8-song,body.dark-mode .perf-v8-part-card,body.dark-mode .perf-v8-student-chip,body.dark-mode .perf-v8-assignment,body.dark-mode .perf-v8-check,body.dark-mode .perf-v8-flow-item{background:#242820 !important;}
+body.dark-mode .perf-v8-warning{background:#342917;color:#ffe09a}
+@media(max-width:900px){.perf-v8-layout{grid-template-columns:1fr}.perf-v8-flow-item{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   V8.2 PERFORMANCE COMPACT ASSIGNMENT + CSV EXPORT
+   ========================================================= */
+.perf-v82-assignment-compact{border:1px solid var(--line);border-radius:20px;margin:12px 0;background:rgba(255,255,255,.78);overflow:hidden}
+.perf-v82-assignment-compact summary{cursor:pointer;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}
+.perf-v82-assignment-body{border-top:1px solid var(--line);padding:14px}
+.perf-v82-summary-left{display:flex;flex-direction:column;gap:4px}.perf-v82-summary-meta{font-size:13px;opacity:.75;font-weight:850}
+.perf-v82-batch-panel{border:1px dashed var(--line);border-radius:18px;padding:12px;background:rgba(127,200,169,.08);margin:10px 0}
+.perf-v82-export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.perf-v82-export-card{border:1px solid var(--line);border-radius:20px;padding:14px;background:rgba(255,255,255,.8)}
+body.dark-mode .perf-v82-assignment-compact,body.dark-mode .perf-v82-export-card{background:#242820!important}
+body.dark-mode .perf-v82-batch-panel{background:#1f251f!important}
+@media(max-width:720px){.perf-v82-assignment-compact summary{align-items:flex-start;flex-direction:column}}
+
+
+/* =========================================================
+   V9.0 STUDENT PORTAL
+   ========================================================= */
+.student-portal-hero{
+  display:grid;
+  grid-template-columns:120px 1fr;
+  gap:18px;
+  align-items:center;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:28px;
+  background:linear-gradient(135deg, rgba(127,200,169,.22), rgba(255,240,168,.32));
+}
+.student-portal-photo{
+  width:112px;
+  height:112px;
+  border-radius:32px;
+  object-fit:cover;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.65);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+}
+.student-portal-name{
+  font-size:34px;
+  font-weight:950;
+  margin-bottom:6px;
+}
+.student-portal-level{
+  font-size:18px;
+  font-weight:900;
+}
+.student-portal-stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
+  margin:14px 0;
+}
+.student-stat-card{
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:14px;
+  background:rgba(255,255,255,.82);
+}
+.student-stat-card .num{
+  font-size:28px;
+  font-weight:950;
+  margin-top:4px;
+}
+.student-tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:14px 0;
+}
+.student-tabs button{
+  width:auto;
+  border-radius:999px;
+  padding:8px 13px;
+}
+.student-list-card{
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:14px;
+  margin:10px 0;
+  background:rgba(255,255,255,.78);
+}
+.student-reward-mini-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+}
+.student-reward-mini{
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:12px;
+  background:rgba(255,255,255,.8);
+}
+.student-reward-mini img{
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:16px;
+  border:1px solid var(--line);
+}
+.student-progress-bar{
+  height:16px;
+  border-radius:999px;
+  background:rgba(0,0,0,.08);
+  overflow:hidden;
+  margin:8px 0;
+}
+.student-progress-fill{
+  height:100%;
+  border-radius:999px;
+  background:#7fc8a9;
+}
+.student-badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  background:#dce8ff;
+  color:#244879;
+  margin:3px 4px 3px 0;
+}
+.student-badge.green{background:#d9f7df;color:#1e5e2d}
+.student-badge.yellow{background:#fff0c2;color:#715300}
+.student-empty{
+  border:1px dashed var(--line);
+  border-radius:18px;
+  padding:16px;
+  opacity:.8;
+  font-weight:850;
+}
+body.dark-mode .student-stat-card,
+body.dark-mode .student-list-card,
+body.dark-mode .student-reward-mini{
+  background:#242820 !important;
+}
+@media(max-width:720px){
+  .student-portal-hero{
+    grid-template-columns:1fr;
+    text-align:center;
+  }
+  .student-portal-photo{
+    margin:auto;
+  }
+}
+
+
+/* =========================================================
+   V9.1 STUDENT LOGIN PORTAL
+   ========================================================= */
+.student-login-card{
+  max-width:620px;
+  margin:0 auto;
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:22px;
+  background:rgba(255,255,255,.86);
+}
+.student-login-title{
+  font-size:34px;
+  font-weight:950;
+  margin-bottom:8px;
+}
+.student-login-sub{
+  opacity:.78;
+  font-weight:850;
+  margin-bottom:16px;
+}
+.student-login-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.student-login-danger{
+  color:#9b2d2d;
+  font-weight:900;
+  margin-top:10px;
+}
+.student-portal-lockbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.student-portal-readonly{
+  border:1px dashed var(--line);
+  border-radius:16px;
+  padding:10px 12px;
+  background:rgba(127,200,169,.1);
+  font-weight:850;
+}
+body.dark-mode .student-login-card{
+  background:#242820 !important;
+}
+
+
+/* =========================================================
+   V10 STUDENT INDEPENDENT SITE
+   ========================================================= */
+body.student-site{
+  min-height:100vh;
+}
+.student-shell{
+  max-width:980px;
+  margin:0 auto;
+  padding:18px;
+}
+.student-topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.student-brand{
+  font-size:24px;
+  font-weight:950;
+}
+.student-login-card{
+  max-width:620px;
+  margin:60px auto;
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:24px;
+  background:rgba(255,255,255,.86);
+  box-shadow:0 12px 38px rgba(0,0,0,.08);
+}
+.student-login-title{
+  font-size:34px;
+  font-weight:950;
+  margin-bottom:8px;
+}
+.student-login-sub{
+  opacity:.78;
+  font-weight:850;
+  margin-bottom:16px;
+}
+.student-login-danger{
+  color:#9b2d2d;
+  font-weight:900;
+  margin-top:10px;
+}
+.student-portal-hero{
+  display:grid;
+  grid-template-columns:120px 1fr;
+  gap:18px;
+  align-items:center;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:28px;
+  background:linear-gradient(135deg, rgba(127,200,169,.22), rgba(255,240,168,.32));
+}
+.student-portal-photo{
+  width:112px;
+  height:112px;
+  border-radius:32px;
+  object-fit:cover;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.65);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+}
+.student-portal-name{font-size:34px;font-weight:950;margin-bottom:6px}
+.student-portal-level{font-size:18px;font-weight:900}
+.student-portal-stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
+  margin:14px 0;
+}
+.student-stat-card{
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:14px;
+  background:rgba(255,255,255,.82);
+}
+.student-stat-card .num{font-size:28px;font-weight:950;margin-top:4px}
+.student-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.student-tabs button{width:auto;border-radius:999px;padding:8px 13px}
+.student-list-card{
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:14px;
+  margin:10px 0;
+  background:rgba(255,255,255,.78);
+}
+.student-reward-mini-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+}
+.student-reward-mini{
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:12px;
+  background:rgba(255,255,255,.8);
+}
+.student-reward-mini img{
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:16px;
+  border:1px solid var(--line);
+}
+.student-progress-bar{height:16px;border-radius:999px;background:rgba(0,0,0,.08);overflow:hidden;margin:8px 0}
+.student-progress-fill{height:100%;border-radius:999px;background:#7fc8a9}
+.student-badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  background:#dce8ff;
+  color:#244879;
+  margin:3px 4px 3px 0;
+}
+.student-badge.green{background:#d9f7df;color:#1e5e2d}
+.student-badge.yellow{background:#fff0c2;color:#715300}
+.student-empty{
+  border:1px dashed var(--line);
+  border-radius:18px;
+  padding:16px;
+  opacity:.8;
+  font-weight:850;
+}
+.student-readonly{
+  border:1px dashed var(--line);
+  border-radius:16px;
+  padding:10px 12px;
+  background:rgba(127,200,169,.1);
+  font-weight:850;
+}
+@media(max-width:720px){
+  .student-portal-hero{grid-template-columns:1fr;text-align:center}
+  .student-portal-photo{margin:auto}
+}
+</style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
+setTimeout(applyThemeMode,300);
+setTimeout(()=>{ try{ normalizeStateShape(); saveState(); }catch(e){ console.warn(e); } },100);
+setTimeout(()=>console.log('BattleModules health', systemHealthCheck()),800);
+setTimeout(()=>detectTouchMode(),400);
+
+function renderManual(){ document.getElementById('app').innerHTML = `<section class="card"><h2>📖 教學手冊</h2><button class="btn gold" onclick="renderStandaloneDemoMode()">🧪 打開示範模式</button></section>${productManualHtml()}`; renderFloatingTopButton(); }
+setTimeout(()=>console.log('V7 health', v7SystemHealth()),1000);
+
+/* =========================================================
+   V8.0.1 INITIAL LOAD SAFETY
+   ========================================================= */
+window.async = window.async || function(fn){ return fn; };
+
+
+/* v8.0.2: 已清除單獨殘留的 async 行，避免 Safari 初始載入時誤判為變數。 */
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body class="student-site">
+  <main class="student-shell" id="app">
+    <section class="student-login-card">
+      <div class="student-login-title">載入中...</div>
+      <div class="student-login-sub">正在讀取 Firebase 資料</div>
+    </section>
+  </main>
+  <script>
+/* =========================================================
+   V10 STUDENT INDEPENDENT SITE
+   Read-only portal connected to the same Firebase database.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyA7jsfNZBaAvAp4ENS-gOX2CrAG6m832Ls",
+  authDomain: "battle-panflute-system.firebaseapp.com",
+  databaseURL: "https://battle-panflute-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "battle-panflute-system",
+  storageBucket: "battle-panflute-system.firebasestorage.app",
+  messagingSenderId: "1056217759582",
+  appId: "1:1056217759582:web:6907f5c42f164b071599cf",
+  measurementId: "G-5NJM5SRBL2"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+let state = {};
+let studentTab = "home";
+let session = JSON.parse(localStorage.getItem("battleStudentSession_v10") || "null");
+
+function $(id){ return document.getElementById(id); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function escapeHtml(value){
+  return String(value ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+function safeFormatDateTime(value){
+  if(!value) return "";
+  try{
+    const d = new Date(value);
+    if(Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString("zh-TW", {hour12:false});
+  }catch(e){ return String(value); }
+}
+function findById(arr,id){ return (arr || []).find(x=>x.id===id) || null; }
+function arr(name){ return Array.isArray(state[name]) ? state[name] : []; }
+function activeSchools(){ return arr("schools").filter(x=>x.active !== false); }
+function activeClasses(){ return arr("classes").filter(x=>x.active !== false); }
+function studentsByClass(classId){
+  const ids = new Set(arr("enrollments").filter(e=>e.classId===classId).map(e=>e.studentId));
+  return arr("students").filter(st=>ids.has(st.id) && st.active !== false);
+}
+function studentClass(studentId){
+  const enroll = arr("enrollments").find(e=>e.studentId===studentId);
+  return findById(arr("classes"), enroll?.classId);
+}
+function studentSchool(studentId){
+  const cls = studentClass(studentId);
+  return findById(arr("schools"), cls?.schoolId);
+}
+function studentPhoto(st){
+  return st?.photoUrl || st?.photo || st?.imageUrl || "";
+}
+function studentXp(studentId){
+  return arr("growthLogs").filter(l=>l.studentId===studentId).reduce((sum,l)=>sum+(Number(l.xp || l.points || 0)||0),0);
+}
+function studentPoints(studentId){
+  const earned = arr("pointLogs").filter(l=>l.studentId===studentId).reduce((sum,l)=>sum+(Number(l.points ?? l.amount ?? 0)||0),0);
+  const spent = arr("redeemLogs").filter(l=>l.studentId===studentId).reduce((sum,l)=>sum+(Number(l.cost ?? l.points ?? 0)||0),0);
+  return earned - spent;
+}
+function levelFromXp(xp){
+  const level = Math.floor(Number(xp || 0) / 100) + 1;
+  const current = Number(xp || 0) % 100;
+  return {level, current, need:100, percent:Math.min(100,current)};
+}
+function growthLogs(studentId){
+  return [...arr("growthLogs")]
+    .filter(l=>l.studentId===studentId)
+    .sort((a,b)=>String(b.date || b.createdAt || "").localeCompare(String(a.date || a.createdAt || "")))
+    .slice(0,30);
+}
+function redeemLogs(studentId){
+  return [...arr("redeemLogs")]
+    .filter(l=>l.studentId===studentId)
+    .sort((a,b)=>String(b.date || "").localeCompare(String(a.date || "")))
+    .slice(0,30);
+}
+function studentPart(a,studentId){
+  if(!a.studentParts) a.studentParts = {};
+  return a.studentParts[studentId] || a.part || "未指定聲部";
+}
+function performances(studentId){
+  const rows = [];
+  arr("performances").forEach(p=>{
+    (p.songs || []).forEach(song=>{
+      (song.assignments || []).forEach(a=>{
+        if((a.studentIds || []).includes(studentId)){
+          rows.push({performance:p, song, part:studentPart(a, studentId)});
+        }
+      });
+    });
+  });
+  return rows.sort((a,b)=>String(b.performance.date || "").localeCompare(String(a.performance.date || "")));
+}
+function rewardImageUrl(r){
+  return r?.imageUrl || r?.imgUrl || r?.image || r?.photoUrl || r?.photo || "";
+}
+function daysUntilExpiry(reward){
+  if(!reward?.expiryDate) return null;
+  const now = new Date(today() + "T00:00:00");
+  const end = new Date(reward.expiryDate + "T00:00:00");
+  const diff = Math.ceil((end - now) / (1000*60*60*24));
+  return Number.isNaN(diff) ? null : diff;
+}
+function discountInfo(reward){
+  const s = state.rewardDiscountSettings || {twoWeeksDays:14,twoWeeksRate:0.75,oneWeekDays:7,oneWeekRate:0.5};
+  const days = daysUntilExpiry(reward);
+  const original = Number(reward?.cost ?? reward?.price ?? 0) || 0;
+  if(days === null || days < 0) return {price:original, original, rate:1, label:"", days};
+  if(days <= Number(s.oneWeekDays || 7)){
+    const rate = Number(s.oneWeekRate || 0.5);
+    return {price:Math.round(original * rate), original, rate, label:`${Math.round(rate*100)}折`, days};
+  }
+  if(days <= Number(s.twoWeeksDays || 14)){
+    const rate = Number(s.twoWeeksRate || 0.75);
+    return {price:Math.round(original * rate), original, rate, label:`${Math.round(rate*100)}折`, days};
+  }
+  return {price:original, original, rate:1, label:"", days};
+}
+function availableRewards(studentId){
+  const pts = studentPoints(studentId);
+  return arr("rewards").map(r=>{
+    const info = discountInfo(r);
+    return {reward:r, price:info.price, label:info.label, img:rewardImageUrl(r), can:pts >= info.price && Number(r.stock ?? 0) > 0};
+  }).sort((a,b)=>Number(b.can)-Number(a.can) || a.price-b.price);
+}
+
+async function loadData(){
+  try{
+    const snap = await firebaseDb.ref("battleSystem/state").once("value");
+    state = snap.val() || {};
+    normalizeState();
+    render();
+  }catch(err){
+    console.error(err);
+    $("app").innerHTML = `<section class="student-login-card"><h2>讀取失敗</h2><div class="student-login-danger">${escapeHtml(err.message || err)}</div></section>`;
+  }
+}
+function normalizeState(){
+  ["schools","classes","students","enrollments","growthLogs","pointLogs","redeemLogs","performances","rewards"].forEach(k=>{
+    if(!Array.isArray(state[k])) state[k] = [];
+  });
+}
+
+function schoolStudents(schoolId){
+  const classIds = activeClasses().filter(c=>c.schoolId===schoolId).map(c=>c.id);
+  const ids = new Set(arr("enrollments").filter(e=>classIds.includes(e.classId)).map(e=>e.studentId));
+  return arr("students").filter(st=>ids.has(st.id) && st.active !== false);
+}
+function login(){
+  const schoolId = $("loginSchool")?.value || "";
+  const name = ($("loginName")?.value || "").trim();
+  const code = ($("loginCode")?.value || "").trim();
+  const err = $("loginError");
+  if(err) err.textContent = "";
+
+  if(!schoolId || !name){
+    if(err) err.textContent = "請選擇學校並輸入姓名。";
+    return;
+  }
+
+  const st = schoolStudents(schoolId).find(s=>String(s.name || "").trim() === name);
+  if(!st){
+    if(err) err.textContent = "找不到這位學生，請確認姓名是否和老師系統裡一樣。";
+    return;
+  }
+
+  const storedCode = String(st.studentCode || st.loginCode || st.password || "").trim();
+  if(storedCode && storedCode !== code){
+    if(err) err.textContent = "登入代碼不正確。";
+    return;
+  }
+
+  session = {studentId:st.id, schoolId, loginAt:new Date().toISOString()};
+  localStorage.setItem("battleStudentSession_v10", JSON.stringify(session));
+  render();
+}
+function logout(){
+  session = null;
+  localStorage.removeItem("battleStudentSession_v10");
+  render();
+}
+
+function currentStudent(){
+  return session?.studentId ? findById(arr("students"), session.studentId) : null;
+}
+
+function render(){
+  const st = currentStudent();
+  if(!st) return renderLogin();
+  renderPortal(st);
+}
+function renderLogin(){
+  const schools = activeSchools();
+  $("app").innerHTML = `
+    <section class="student-login-card">
+      <div class="student-login-title">🐾 Battle 學生端</div>
+      <div class="student-login-sub">輸入自己的學校、姓名與登入代碼後，只會看到自己的學習頁面。</div>
+      <label>學校</label>
+      <select id="loginSchool">${schools.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}</select>
+      <label>姓名</label>
+      <input id="loginName" placeholder="請輸入姓名，例如：高海媚">
+      <label>登入代碼</label>
+      <input id="loginCode" placeholder="若老師尚未設定代碼，可先留空測試" autocomplete="off">
+      <div id="loginError" class="student-login-danger"></div>
+      <div class="student-login-actions"><button class="btn gold" onclick="login()">登入我的頁面</button></div>
+      <div class="note" style="margin-top:14px">本頁是只讀學生端，不提供資料編輯功能。</div>
+    </section>
+  `;
+}
+function renderPortal(st){
+  const cls = studentClass(st.id);
+  const school = studentSchool(st.id);
+  const xp = studentXp(st.id);
+  const points = studentPoints(st.id);
+  const lv = levelFromXp(xp);
+  const photo = studentPhoto(st);
+
+  $("app").innerHTML = `
+    <div class="student-topbar">
+      <div class="student-brand">🐾 Battle 學生端</div>
+      <button class="btn" onclick="logout()">登出</button>
+    </div>
+
+    <section class="card">
+      <div class="student-readonly">🔒 只讀模式：${escapeHtml(st.name || "學生")} 的學習頁面</div>
+      <br>
+      <div class="student-portal-hero">
+        ${photo ? `<img class="student-portal-photo" src="${escapeHtml(photo)}">` : `<div class="student-portal-photo">🐾</div>`}
+        <div>
+          <div class="student-portal-name">${escapeHtml(st.name || "未命名學生")}</div>
+          <div class="student-portal-level">Lv.${lv.level}｜${escapeHtml(school?.name || "未指定學校")}｜${escapeHtml(cls?.name || "未指定課程")}</div>
+          <div class="student-progress-bar"><div class="student-progress-fill" style="width:${lv.percent}%"></div></div>
+          <div class="small-muted">距離下一級還需要 ${lv.need - lv.current} XP</div>
+        </div>
+      </div>
+      <div class="student-portal-stats">
+        <div class="student-stat-card"><b>目前 XP</b><div class="num">${xp}</div></div>
+        <div class="student-stat-card"><b>可用點數</b><div class="num">${points}</div></div>
+        <div class="student-stat-card"><b>演出曲目</b><div class="num">${performances(st.id).length}</div></div>
+        <div class="student-stat-card"><b>成長紀錄</b><div class="num">${growthLogs(st.id).length}</div></div>
+      </div>
+      <div class="student-tabs">
+        ${[["home","首頁"],["growth","成長日誌"],["performances","我的演出"],["rewards","我的獎勵"]].map(([id,label])=>`<button class="${studentTab===id?'active':''}" onclick="studentTab='${id}'; render()">${label}</button>`).join("")}
+      </div>
+    </section>
+
+    ${studentTab === "home" ? renderHome(st) : ""}
+    ${studentTab === "growth" ? renderGrowth(st) : ""}
+    ${studentTab === "performances" ? renderPerformances(st) : ""}
+    ${studentTab === "rewards" ? renderRewards(st) : ""}
+  `;
+}
+function renderHome(st){
+  const growth = growthLogs(st.id).slice(0,5);
+  const perf = performances(st.id).slice(0,5);
+  return `<section class="card"><h3>🏠 我的學習首頁</h3><div class="grid">
+    <div class="card"><h3>🌱 最近成長</h3>${growth.length ? growth.map(l=>`<div class="student-list-card"><b>${escapeHtml(l.type || l.title || "成長紀錄")}</b><span class="student-badge green">+${Number(l.xp || l.points || 0)} XP</span><div class="small-muted">${escapeHtml(l.feedback || l.note || "")}</div><div class="small-muted">${escapeHtml(safeFormatDateTime(l.date || l.createdAt || ""))}</div></div>`).join("") : `<div class="student-empty">還沒有成長紀錄。</div>`}</div>
+    <div class="card"><h3>🎭 我的演出</h3>${perf.length ? perf.map(row=>`<div class="student-list-card"><b>${escapeHtml(row.performance.title || "未命名演出")}</b><div>${escapeHtml(row.song.title || "未命名曲目")}｜${escapeHtml(row.part)}</div><div class="small-muted">${escapeHtml(row.performance.date || "")}｜${escapeHtml(row.performance.location || "")}</div></div>`).join("") : `<div class="student-empty">目前沒有演出曲目。</div>`}</div>
+  </div></section>`;
+}
+function renderGrowth(st){
+  const logs = growthLogs(st.id);
+  return `<section class="card"><h3>🌱 成長日誌</h3>${logs.length ? logs.map(l=>`<div class="student-list-card"><b>${escapeHtml(l.type || l.title || "成長紀錄")}</b><span class="student-badge green">+${Number(l.xp || l.points || 0)} XP</span><div>${escapeHtml(l.feedback || l.note || "")}</div><div class="small-muted">${escapeHtml(safeFormatDateTime(l.date || l.createdAt || ""))}</div></div>`).join("") : `<div class="student-empty">還沒有成長紀錄。</div>`}</section>`;
+}
+function renderPerformances(st){
+  const rows = performances(st.id);
+  return `<section class="card"><h3>🎭 我的演出</h3>${rows.length ? rows.map(row=>`<div class="student-list-card"><b>${escapeHtml(row.performance.title || "未命名演出")}</b><span class="student-badge yellow">${escapeHtml(row.part)}</span><div>曲目：${escapeHtml(row.song.title || "未命名曲目")}</div><div class="small-muted">日期：${escapeHtml(row.performance.date || "未設定")}｜地點：${escapeHtml(row.performance.location || "未設定")}</div>${row.song.rehearsalFocus ? `<div class="note">排練重點：${escapeHtml(row.song.rehearsalFocus)}</div>` : ""}</div>`).join("") : `<div class="student-empty">目前沒有演出資料。</div>`}</section>`;
+}
+function renderRewards(st){
+  const rewards = availableRewards(st.id);
+  const logs = redeemLogs(st.id);
+  return `<section class="card"><h3>🎁 我的獎勵</h3><h4>可兌換獎品</h4><div class="student-reward-mini-grid">
+    ${rewards.length ? rewards.slice(0,12).map(item=>`<div class="student-reward-mini">${item.img ? `<img src="${escapeHtml(item.img)}">` : `<div class="student-portal-photo" style="width:100%;height:120px;border-radius:16px">🎁</div>`}<h4>${escapeHtml(item.reward.name || "未命名獎品")}</h4><div>需要：${item.price} 點 ${item.label ? `<span class="student-badge yellow">${escapeHtml(item.label)}</span>` : ""}</div><div>庫存：${Number(item.reward.stock ?? 0)}</div><span class="student-badge ${item.can ? 'green' : ''}">${item.can ? "可以兌換" : "點數不足 / 無庫存"}</span></div>`).join("") : `<div class="student-empty">目前沒有獎品。</div>`}
+  </div><h4>兌換紀錄</h4>${logs.length ? logs.map(log=>`<div class="student-list-card"><b>${escapeHtml(log.rewardName || "獎品")}</b><span class="student-badge">-${Number(log.cost || log.points || 0)} 點</span><div class="small-muted">${escapeHtml(safeFormatDateTime(log.date || ""))}</div></div>`).join("") : `<div class="student-empty">尚無兌換紀錄。</div>`}</section>`;
+}
+
+loadData();
+</script>
+</body>
+</html>
