@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.1 開始上課正式整合版</title>
+<title>教學管理系統 v9.3.2 卡片與點數切換版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2433,12 +2433,28 @@ body.dark-mode .start931-textarea{
 }
 
 </style>
+
+<style id="v932-style">
+.start932-mode-switch{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px 0}
+.start932-mode-switch button{border:none;border-radius:999px;padding:9px 15px;font-weight:950;background:rgba(0,0,0,.08)}
+.start932-mode-switch button.active{background:#ffe08a;color:#4e3c00}
+.start931-student-card{grid-template-columns:minmax(300px,42%) 1fr!important}
+.start931-profile{grid-template-columns:150px 1fr!important}
+.start931-photo{width:150px!important;height:150px!important;border-radius:34px!important;font-size:58px!important}
+.start932-point-note{padding:9px 12px;border-radius:14px;background:rgba(255,224,138,.22);border:1px solid rgba(212,160,23,.22);font-weight:850;margin-bottom:12px}
+@media(max-width:900px){
+.start931-student-card{grid-template-columns:1fr!important}
+.start931-profile{grid-template-columns:112px 1fr!important}
+.start931-photo{width:112px!important;height:112px!important;border-radius:28px!important}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.1 開始上課正式整合版｜ImgBB 圖片</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.2 卡片與點數切換版｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -10075,5 +10091,175 @@ function renderStartClassMode(){
 }
 
 </script>
+
+<script id="v932-script">
+let start932Mode = window.start932Mode || "xp";
+
+function start932SetMode(mode){
+  start932Mode = mode;
+  window.start932Mode = mode;
+  renderStartClassMode();
+}
+
+function start932StudentPoints(studentId){
+  const earned = (state.pointLogs || [])
+    .filter(l=>l.studentId===studentId)
+    .reduce((sum,l)=>sum+(Number(l.points ?? l.amount ?? 0)||0),0);
+  const spent = (state.redeemLogs || [])
+    .filter(l=>l.studentId===studentId)
+    .reduce((sum,l)=>sum+(Number(l.cost ?? l.points ?? 0)||0),0);
+  return earned - spent;
+}
+
+function start932Add(studentId,typeId){
+  const types = start931GrowthTypes();
+  const t = types.find(x=>x.id===typeId || x.name===typeId) || types[0];
+  if(!t) return;
+  const value = Number(t.defaultXp || t.xp || 0);
+  const remark = document.getElementById(`start931Remark_${studentId}`)?.value?.trim() || "";
+
+  if(start932Mode === "points"){
+    if(!Array.isArray(state.pointLogs)) state.pointLogs = [];
+    state.pointLogs.push({
+      id:makeId(),
+      studentId,
+      points:value,
+      amount:value,
+      reason: remark || `開始上課點數加點：${t.name}`,
+      type:t.id || t.name,
+      date:localIsoLikeString()
+    });
+    markDirty?.(`開始上課點數：${t.name}`);
+  }else{
+    if(!Array.isArray(state.growthLogs)) state.growthLogs = [];
+    state.growthLogs.push({
+      id:makeId(),
+      studentId,
+      type:t.id || t.name,
+      color:start931Color(t.id || t.name),
+      xp:value,
+      feedback: remark || `開始上課快速記錄：${t.name}`,
+      date:localIsoLikeString()
+    });
+    markDirty?.(`開始上課XP：${t.name}`);
+  }
+  saveState();
+  renderStartClassMode();
+}
+
+function start931Buttons(studentId){
+  return start931GrowthTypes().map(t=>`
+    <button class="start931-chip" style="background:${escapeHtml(start931Color(t.id || t.name))}"
+      onclick="start932Add('${studentId}','${escapeHtml(t.id || t.name)}')">
+      ${escapeHtml(t.name)} +${Number(t.defaultXp || t.xp || 0)}
+    </button>
+  `).join("");
+}
+
+function renderStartClassMode(){
+  document.body.classList.add("start-class-mode");
+  prepareStartClassData();
+
+  const cls = findById(state.classes, classContext.classId);
+  const school = findById(state.schools, classContext.schoolId || cls?.schoolId);
+  const students = studentsByClass(classContext.classId);
+  const main = typeof getWeeklyMainline === "function" ? getWeeklyMainline() : {title:"本週主線"};
+  const tasks = typeof weeklyMainTasks === "function" ? weeklyMainTasks() : [];
+
+  document.getElementById("app").innerHTML = `
+    <div class="start931-header">
+      <div>
+        <div class="start931-title">🎺 開始上課</div>
+        <div class="start931-sub">
+          ${escapeHtml(school?.name || "未指定學校")}｜${escapeHtml(cls?.name || "未指定課程")}｜${escapeHtml(classContext.date)}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="toggleThemeMode()">🌙 深色</button>
+        <button class="btn red" onclick="exitStartClassMode()">退出</button>
+      </div>
+    </div>
+
+    <div class="start931-grid">
+      <aside class="start931-left">
+        <section class="start931-panel">
+          <h2>📅 今日課堂</h2>
+          <div class="start931-date">${escapeHtml(classContext.date)}｜${escapeHtml(cls?.name || "未指定課程")}</div>
+
+          <h3>課程內容</h3>
+          <div class="note">本週主線：${escapeHtml(main.title || "尚未設定")}</div>
+
+          <h3>本堂目標</h3>
+          ${tasks.length ? tasks.map((task,idx)=>`
+            <label class="start931-task">
+              <input type="checkbox" ${startClassTasks[`task_${idx}`] ? "checked" : ""} onchange="startClassToggleTask(${idx},this.checked)">
+              <span>${escapeHtml(task)}</span>
+            </label>
+          `).join("") : `<div class="note">尚未設定本週主線任務，可先回上課介面設定。</div>`}
+
+          <h3>課堂備註</h3>
+          <textarea id="startClassMemo" class="start931-textarea" placeholder="例如：今天節奏反應很好，但合奏速度還不穩。"></textarea>
+
+          <h3>回家功課</h3>
+          <textarea id="startClassHomework" class="start931-textarea" placeholder="例如：長音4拍每天3次、練習第8-16小節。"></textarea>
+        </section>
+      </aside>
+
+      <section class="start931-student-panel">
+        <div class="start931-student-head">
+          <div>
+            <h2>🧑‍🎓 學生名單</h2>
+            <div class="small-muted">點學生卡片上的彩色按鈕進行加分。可切換 XP 或兌換點數。</div>
+          </div>
+          <div class="badge">本堂學生：${students.length} 人</div>
+        </div>
+
+        <div class="start932-mode-switch">
+          <button class="${start932Mode==='xp'?'active':''}" onclick="start932SetMode('xp')">🌱 XP 成長</button>
+          <button class="${start932Mode==='points'?'active':''}" onclick="start932SetMode('points')">🎁 點數加點</button>
+        </div>
+        <div class="start932-point-note">
+          目前模式：${start932Mode==='xp' ? 'XP 成長，會寫入成長日誌。' : '點數加點，只增加獎品兌換點數，不寫入成長日誌。'}
+        </div>
+
+        ${students.length ? students.map(st=>`
+          <article class="start931-student-card">
+            <div class="start931-profile">
+              ${start931PhotoHtml(st)}
+              <div>
+                <div class="start931-name">${escapeHtml(st.name)}</div>
+                <div class="start931-xp">XP：${startClassStudentXp(st.id)}</div>
+                <div class="start931-xp">點數：${start932StudentPoints(st.id)}</div>
+                <span class="start931-status">${start932Mode==='xp'?'成長記錄模式':'點數加點模式'}</span>
+              </div>
+            </div>
+
+            <div class="start931-actions">
+              <div>
+                <div class="start931-action-title">加分項目</div>
+                <div class="start931-btns">${start931Buttons(st.id)}</div>
+              </div>
+
+              <textarea id="start931Remark_${st.id}" class="start931-textarea" style="min-height:54px" placeholder="個別備註 / 成長亮點（選填）"></textarea>
+
+              <details>
+                <summary class="start931-log-toggle">📖 成長日誌（最近 ${start931Logs(st.id,99).length} 筆）</summary>
+                ${start931RecentLogs(st.id)}
+              </details>
+            </div>
+          </article>
+        `).join("") : `<div class="note">這個課程目前沒有學生。</div>`}
+
+        <div class="start931-bottom">
+          <button class="btn" onclick="guardedFirebaseUpload()">☁️ 先同步</button>
+          <button class="btn gold" onclick="exitStartClassMode()">稍後儲存</button>
+          <button class="btn primary" onclick="finishStartClass()">✅ 儲存並結束課堂</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+</script>
+
 </body>
 </html>
