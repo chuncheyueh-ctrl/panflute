@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.5 課堂流程時間軸版</title>
+<title>教學管理系統 v9.3.7 課堂流程設定分離版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2964,13 +2964,116 @@ body.dark-mode .start935-min{
   background:#242820 !important;
 }
 
+
+/* =========================================================
+   V9.3.6 TODAY TASK SYNC + REAL CHECKLIST
+   ========================================================= */
+.start936-checklist{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px dashed var(--line);
+}
+.start936-checklist-title{
+  font-weight:950;
+  margin:8px 0;
+}
+.start936-real-task{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  margin:8px 0;
+  background:rgba(127,200,169,.10);
+  border:1px solid rgba(127,200,169,.22);
+  font-weight:900;
+}
+.start936-real-task input{
+  width:22px;
+  height:22px;
+}
+.start936-hint{
+  font-size:12px;
+  opacity:.72;
+  font-weight:850;
+  margin-top:6px;
+}
+
+
+/* =========================================================
+   V9.3.7 CLEAN CLASS TIMELINE VIEW
+   開始上課只顯示流程，不在此處編輯任務內容
+   ========================================================= */
+.start937-task-card{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.72);
+  margin:8px 0;
+}
+.start937-task-card.active{
+  background:rgba(127,200,169,.22);
+  border-color:#7fc8a9;
+  box-shadow:0 0 0 3px rgba(127,200,169,.16);
+}
+.start937-task-card.done{
+  opacity:.58;
+  background:rgba(0,0,0,.04);
+}
+.start937-task-card.upcoming{
+  background:rgba(255,255,255,.72);
+}
+.start937-dot{
+  width:14px;
+  height:14px;
+  border-radius:999px;
+  background:#aaa;
+}
+.start937-task-card.active .start937-dot{background:#27b96c}
+.start937-task-card.done .start937-dot{background:#aaa}
+.start937-task-card.upcoming .start937-dot{background:#e3b341}
+.start937-title{
+  font-weight:950;
+  font-size:16px;
+}
+.start937-time{
+  font-size:13px;
+  opacity:.75;
+  font-weight:900;
+  margin-top:4px;
+}
+.start937-duration{
+  display:inline-block;
+  margin-left:8px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.06);
+  font-size:12px;
+}
+.start937-edit-hint{
+  margin:10px 0;
+  padding:10px 12px;
+  border-radius:14px;
+  background:rgba(255,224,138,.18);
+  border:1px dashed rgba(212,160,23,.35);
+  font-weight:850;
+  font-size:13px;
+}
+body.dark-mode .start937-task-card{
+  background:#242820 !important;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.5 課堂流程時間軸版</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.7 課堂流程設定分離版</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -11123,6 +11226,74 @@ renderStartClassMode = function(){
     }
   }, 30000);
 };
+
+
+
+/* =========================================================
+   V9.3.7 CLEAN CLASS TIMELINE VIEW
+   ========================================================= */
+function start937RenderTimelineClean(){
+  start936SyncScheduleFromTodayTasks(false);
+  start935EnsureSchedule();
+
+  const ranges = start935TaskRanges();
+  const now = start935NowMinutes();
+  const activeIdx = start935CurrentIndex();
+  const total = ranges.reduce((s,r)=>s+r.minutes,0);
+  const activeName = activeIdx >= 0 && activeIdx < ranges.length ? ranges[activeIdx].title : (activeIdx >= ranges.length ? "本堂課已完成" : "尚未開始");
+
+  return `
+    <h3>本堂流程</h3>
+    <div class="start935-timebox">
+      <div>
+        <label>上課開始時間</label>
+        <input type="time" value="${escapeHtml(window.start935Schedule.startTime || "10:30")}" onchange="start935SetStartTime(this.value)">
+      </div>
+      <div>
+        <label>總分鐘</label>
+        <input value="${total}" readonly>
+      </div>
+    </div>
+
+    <div class="start937-edit-hint">
+      任務內容請到「課程紀錄／本週主線」編輯；這裡只作為上課時的時間提醒。
+    </div>
+
+    <div class="start935-progress-wrap">
+      <div class="start935-progress-title">
+        <span>現在：${escapeHtml(activeName)}</span>
+        <span>${start935ProgressPercent()}%</span>
+      </div>
+      <div class="start935-progress"><div class="start935-progress-fill" style="width:${start935ProgressPercent()}%"></div></div>
+    </div>
+
+    <div class="start935-timeline">
+      ${ranges.map(r=>{
+        const cls = now >= r.end ? "done" : (now >= r.start && now < r.end ? "active" : "upcoming");
+        return `
+          <div class="start937-task-card ${cls}">
+            <span class="start937-dot"></span>
+            <div>
+              <div class="start937-title">
+                ${escapeHtml(r.title)}
+                <span class="start937-duration">${r.minutes} 分鐘</span>
+              </div>
+              <div class="start937-time">${start935MinutesToTime(r.start)} - ${start935MinutesToTime(r.end)}</div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+if(typeof start936RenderRealChecklist === "function"){
+  start935RenderTimeline = function(){
+    return start937RenderTimelineClean() + start936RenderRealChecklist();
+  };
+}else{
+  start935RenderTimeline = start937RenderTimelineClean;
+}
 
 </script>
 </body>
