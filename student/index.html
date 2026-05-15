@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Battle 學生端 v10.0.2</title>
+  <title>Battle 學生端 v10.1</title>
   <style>
 :root{
   --bg-a:#fff6dc;
@@ -2311,6 +2311,9 @@ body.student-site{
   .student-portal-hero{grid-template-columns:1fr;text-align:center}
   .student-portal-photo{margin:auto}
 }
+
+.growth-color-dot{width:12px;height:12px;border-radius:999px;display:inline-block;margin-right:6px;vertical-align:middle}
+
 </style>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2357,7 +2360,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-/* v10.0.2 Firebase DB robust alias */
+/* v10.1 Firebase DB robust alias */
 var firebaseDb = window.firebaseDb || window.db || window.database || null;
 try{
   if(!firebaseDb && typeof firebase !== "undefined" && firebase.database){
@@ -2556,7 +2559,7 @@ function renderLogin(){
   const schools = activeSchools();
   $("app").innerHTML = `
     <section class="student-login-card">
-      <div class="student-login-title">🐾 Battle 學生端 v10.0.2</div>
+      <div class="student-login-title">🐾 Battle 學生端 v10.1</div>
       <div class="student-login-sub">輸入自己的學校、姓名與登入代碼後，只會看到自己的學習頁面。</div>
       <label>學校</label>
       <select id="loginSchool">${schools.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}</select>
@@ -2580,7 +2583,7 @@ function renderPortal(st){
 
   $("app").innerHTML = `
     <div class="student-topbar">
-      <div class="student-brand">🐾 Battle 學生端 v10.0.2</div>
+      <div class="student-brand">🐾 Battle 學生端 v10.1</div>
       <button class="btn" onclick="logout()">登出</button>
     </div>
 
@@ -2617,13 +2620,13 @@ function renderHome(st){
   const growth = growthLogs(st.id).slice(0,5);
   const perf = performances(st.id).slice(0,5);
   return `<section class="card"><h3>🏠 我的學習首頁</h3><div class="grid">
-    <div class="card"><h3>🌱 最近成長</h3>${growth.length ? growth.map(l=>`<div class="student-list-card"><b>${escapeHtml(l.type || l.title || "成長紀錄")}</b><span class="student-badge green">+${Number(l.xp || l.points || 0)} XP</span><div class="small-muted">${escapeHtml(l.feedback || l.note || "")}</div><div class="small-muted">${escapeHtml(safeFormatDateTime(l.date || l.createdAt || ""))}</div></div>`).join("") : `<div class="student-empty">還沒有成長紀錄。</div>`}</div>
+    <div class="card"><h3>🌱 最近成長</h3>${growth.length ? growth.map(l=>`<div class="student-list-card"><b><span class="growth-color-dot" style="background:${escapeHtml(l.color || '#7fc8a9')}"></span>${escapeHtml(l.type || l.title || "成長紀錄")}</b><span class="student-badge green">+${Number(l.xp || l.points || 0)} XP</span><div class="small-muted">${escapeHtml(l.feedback || l.note || "")}</div><div class="small-muted">${escapeHtml(safeFormatDateTime(l.date || l.createdAt || ""))}</div></div>`).join("") : `<div class="student-empty">還沒有成長紀錄。</div>`}</div>
     <div class="card"><h3>🎭 我的演出</h3>${perf.length ? perf.map(row=>`<div class="student-list-card"><b>${escapeHtml(row.performance.title || "未命名演出")}</b><div>${escapeHtml(row.song.title || "未命名曲目")}｜${escapeHtml(row.part)}</div><div class="small-muted">${escapeHtml(row.performance.date || "")}｜${escapeHtml(row.performance.location || "")}</div></div>`).join("") : `<div class="student-empty">目前沒有演出曲目。</div>`}</div>
   </div></section>`;
 }
 function renderGrowth(st){
   const logs = growthLogs(st.id);
-  return `<section class="card"><h3>🌱 成長日誌</h3>${logs.length ? logs.map(l=>`<div class="student-list-card"><b>${escapeHtml(l.type || l.title || "成長紀錄")}</b><span class="student-badge green">+${Number(l.xp || l.points || 0)} XP</span><div>${escapeHtml(l.feedback || l.note || "")}</div><div class="small-muted">${escapeHtml(safeFormatDateTime(l.date || l.createdAt || ""))}</div></div>`).join("") : `<div class="student-empty">還沒有成長紀錄。</div>`}</section>`;
+  return `<section class="card"><h3>🌱 成長日誌</h3>${logs.length ? logs.map(l=>`<div class="student-list-card"><b><span class="growth-color-dot" style="background:${escapeHtml(l.color || '#7fc8a9')}"></span>${escapeHtml(l.type || l.title || "成長紀錄")}</b><span class="student-badge green">+${Number(l.xp || l.points || 0)} XP</span><div>${escapeHtml(l.feedback || l.note || "")}</div><div class="small-muted">${escapeHtml(safeFormatDateTime(l.date || l.createdAt || ""))}</div></div>`).join("") : `<div class="student-empty">還沒有成長紀錄。</div>`}</section>`;
 }
 function renderPerformances(st){
   const rows = performances(st.id);

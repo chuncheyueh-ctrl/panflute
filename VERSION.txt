@@ -1,2 +1,2 @@
-v10.0.2 學生端 Firebase 初始化修正版
-修正 firebaseDb is not defined
+v10.1 成長洞察版
+成長類型顏色、自訂類型、彩色比例條、強項分析

@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v10.0.2 雙入口版 Teacher</title>
+<title>教學管理系統 v10.1 成長洞察版 Teacher 雙入口版 Teacher</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2207,13 +2207,92 @@ body.dark-mode .student-login-card{
   background:#242820 !important;
 }
 
+
+/* =========================================================
+   V10.1 GROWTH INSIGHT
+   ========================================================= */
+.growth-type-chip{
+  border:none;
+  color:white;
+  font-weight:950;
+  text-shadow:0 1px 2px rgba(0,0,0,.22);
+}
+.growth-segment-bar{
+  display:flex;
+  height:22px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(0,0,0,.08);
+  border:1px solid var(--line);
+  margin:10px 0;
+}
+.growth-segment{
+  height:100%;
+  min-width:3px;
+}
+.growth-legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:8px 0 12px;
+}
+.growth-legend-item{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.72);
+  font-size:13px;
+  font-weight:900;
+}
+.growth-color-dot{
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  display:inline-block;
+}
+.growth-insight-card{
+  border:1px dashed var(--line);
+  border-radius:18px;
+  padding:12px;
+  background:rgba(127,200,169,.08);
+  margin:10px 0;
+}
+.growth-type-manager{
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:14px;
+  margin:12px 0;
+  background:rgba(255,255,255,.82);
+}
+.growth-type-row{
+  display:grid;
+  grid-template-columns:1.1fr 90px 1fr auto;
+  gap:8px;
+  align-items:center;
+  margin:8px 0;
+}
+.growth-type-row input[type="color"]{
+  min-height:44px;
+  padding:4px;
+}
+body.dark-mode .growth-legend-item,
+body.dark-mode .growth-type-manager{
+  background:#242820 !important;
+}
+@media(max-width:720px){
+  .growth-type-row{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v10.0.2 雙入口版 Teacher｜ImgBB 圖片</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v10.1 成長洞察版 Teacher 雙入口版 Teacher｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -5889,6 +5968,152 @@ function renderStudentPortalRewards(st){
         </div>
       `).join("") : `<div class="student-empty">尚無兌換紀錄。</div>`}
     </section>
+  `;
+}
+
+
+/* =========================================================
+   GROWTH INSIGHT V10.1
+   ========================================================= */
+const DEFAULT_GROWTH_TYPES = [
+  {id:"breath", name:"氣息", xp:10, color:"#2fb37b"},
+  {id:"tone", name:"音色", xp:10, color:"#4b8df8"},
+  {id:"rhythm", name:"節奏", xp:10, color:"#f2a93b"},
+  {id:"reading", name:"視譜", xp:10, color:"#8b6cf6"},
+  {id:"ensemble", name:"合奏", xp:10, color:"#22a6b3"},
+  {id:"help", name:"幫助同學", xp:15, color:"#d4a017"},
+  {id:"fix5", name:"修正 -5", xp:-5, color:"#e58080"},
+  {id:"fix10", name:"修正 -10", xp:-10, color:"#d95f5f"},
+  {id:"makeup", name:"補登", xp:5, color:"#6c757d"}
+];
+
+function ensureGrowthTypes(){
+  if(!Array.isArray(state.growthTypes) || !state.growthTypes.length){
+    state.growthTypes = DEFAULT_GROWTH_TYPES.map(x=>({...x}));
+  }
+  state.growthTypes.forEach((t,i)=>{
+    if(!t.id) t.id = makeId ? makeId() : ("gt_" + i + "_" + Date.now());
+    if(!t.name) t.name = "未命名";
+    if(t.xp === undefined) t.xp = 10;
+    if(!t.color) t.color = DEFAULT_GROWTH_TYPES[i % DEFAULT_GROWTH_TYPES.length]?.color || "#7fc8a9";
+  });
+}
+
+function growthTypeByName(name){
+  ensureGrowthTypes();
+  return state.growthTypes.find(t=>t.name===name || t.id===name) || state.growthTypes[0] || DEFAULT_GROWTH_TYPES[0];
+}
+
+function growthTypeColor(typeName){
+  return growthTypeByName(typeName).color || "#7fc8a9";
+}
+
+function growthTypeDefaultXp(typeName){
+  return Number(growthTypeByName(typeName).xp || 0);
+}
+
+function growthLogsForStudent(studentId){
+  return (state.growthLogs || []).filter(l=>l.studentId===studentId);
+}
+
+function growthDistribution(studentId){
+  ensureGrowthTypes();
+  const result = {};
+  let total = 0;
+  growthLogsForStudent(studentId).forEach(log=>{
+    const xp = Number(log.xp || log.points || 0) || 0;
+    if(xp <= 0) return;
+    const type = log.type || log.title || "未分類";
+    result[type] = (result[type] || 0) + xp;
+    total += xp;
+  });
+  return {result,total};
+}
+
+function renderGrowthInsightBar(studentId){
+  const {result,total} = growthDistribution(studentId);
+  if(!total){
+    return `<div class="growth-insight-card">尚無成長分布資料。新增日誌後，這裡會顯示彩色能力比例。</div>`;
+  }
+  const entries = Object.entries(result).sort((a,b)=>b[1]-a[1]);
+  const top = entries.slice(0,2).map(([name])=>name).join("、");
+  return `
+    <div class="growth-insight-card">
+      <b>能力洞察：</b>目前強項偏向 <b>${escapeHtml(top)}</b>
+      <div class="growth-segment-bar">
+        ${entries.map(([name,xp])=>`<div class="growth-segment" title="${escapeHtml(name)} ${xp}XP" style="width:${Math.max(2, xp/total*100)}%;background:${growthTypeColor(name)}"></div>`).join("")}
+      </div>
+      <div class="growth-legend">
+        ${entries.map(([name,xp])=>`
+          <span class="growth-legend-item">
+            <span class="growth-color-dot" style="background:${growthTypeColor(name)}"></span>
+            ${escapeHtml(name)} ${xp}XP (${Math.round(xp/total*100)}%)
+          </span>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function setGrowthQuickType(studentId,typeName){
+  const type = growthTypeByName(typeName);
+  const typeSelect = document.getElementById(`growthType_${studentId}`);
+  const xpInput = document.getElementById(`growthXp_${studentId}`);
+  if(typeSelect) typeSelect.value = type.name;
+  if(xpInput) xpInput.value = Number(type.xp || 0);
+}
+
+function renderGrowthTypeButtons(studentId){
+  ensureGrowthTypes();
+  return state.growthTypes.map(t=>`
+    <button class="growth-type-chip" style="background:${escapeHtml(t.color)}" onclick="setGrowthQuickType('${studentId}','${escapeHtml(t.name)}')">
+      ${escapeHtml(t.name)} ${Number(t.xp)>=0?'+':''}${Number(t.xp||0)}
+    </button>
+  `).join("");
+}
+
+function addGrowthType(){
+  ensureGrowthTypes();
+  state.growthTypes.push({id:makeId ? makeId() : ("gt_" + Date.now()), name:"新類型", xp:10, color:"#7fc8a9"});
+  saveState();
+  markDirty?.("新增成長類型");
+  render();
+}
+
+function updateGrowthType(id,field,value){
+  ensureGrowthTypes();
+  const t = state.growthTypes.find(x=>x.id===id);
+  if(!t) return;
+  t[field] = field === "xp" ? Number(value || 0) : value;
+  saveState();
+  markDirty?.("修改成長類型");
+}
+
+function deleteGrowthType(id){
+  ensureGrowthTypes();
+  if(state.growthTypes.length <= 1) return alert("至少要保留一個成長類型。");
+  state.growthTypes = state.growthTypes.filter(t=>t.id!==id);
+  saveState();
+  markDirty?.("刪除成長類型");
+  render();
+}
+
+function renderGrowthTypeManager(){
+  ensureGrowthTypes();
+  return `
+    <details class="growth-type-manager">
+      <summary><b>🎨 成長類型與顏色設定</b></summary>
+      <div class="note">可新增、編輯類型名稱、預設 XP 與顏色。新增成長日誌時會套用這些顏色做分析。</div>
+      ${state.growthTypes.map(t=>`
+        <div class="growth-type-row">
+          <input value="${escapeHtml(t.name)}" oninput="updateGrowthType('${t.id}','name',this.value)">
+          <input type="number" value="${Number(t.xp || 0)}" oninput="updateGrowthType('${t.id}','xp',this.value)">
+          <input type="color" value="${escapeHtml(t.color || '#7fc8a9')}" oninput="updateGrowthType('${t.id}','color',this.value)">
+          <button class="btn red" onclick="deleteGrowthType('${t.id}')">刪除</button>
+        </div>
+      `).join("")}
+      <button class="btn primary" onclick="addGrowthType()">＋ 新增成長類型</button>
+    </details>
   `;
 }
 
