@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.2.1 成長洞察穩定版</title>
+<title>教學管理系統 v9.3 開始上課介面重構版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2210,13 +2210,219 @@ body.dark-mode .student-login-card{
 
 /* V9.2.1 GROWTH INSIGHT STABLE */
 .gi-box{margin:12px 0;padding:14px;border-radius:18px;border:1px dashed var(--line);background:rgba(255,255,255,.78)}.gi-title{font-weight:950;margin-bottom:8px}.gi-bar{display:flex;width:100%;height:22px;overflow:hidden;border-radius:999px;background:rgba(0,0,0,.08);border:1px solid var(--line)}.gi-seg{height:100%;min-width:4px}.gi-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.gi-chip{display:inline-flex;align-items:center;color:white;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.25)}.gi-type-btn{border:none!important;color:white!important;border-radius:999px!important;padding:8px 14px!important;font-weight:950!important;margin:4px 5px 4px 0!important;width:auto!important;box-shadow:0 2px 7px rgba(0,0,0,.14);text-shadow:0 1px 2px rgba(0,0,0,.22)}.gi-manager{margin:12px 0;padding:14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.82)}.gi-row{display:grid;grid-template-columns:1fr 90px 120px;gap:8px;align-items:center;margin:8px 0}.gi-row input[type=color]{min-height:44px;padding:4px}body.dark-mode .gi-box,body.dark-mode .gi-manager{background:#242820!important}@media(max-width:720px){.gi-row{grid-template-columns:1fr}}
+
+/* =========================================================
+   V9.3 START CLASS WORKBENCH REDESIGN
+   ========================================================= */
+body.start-class-mode .main{
+  padding:22px;
+}
+.start-v93-shell{
+  display:grid;
+  grid-template-columns:minmax(260px, 30%) 1fr;
+  gap:18px;
+  align-items:start;
+}
+.start-v93-left{
+  position:sticky;
+  top:14px;
+}
+.start-v93-today{
+  border-radius:28px;
+  padding:18px;
+  background:rgba(255,255,255,.9);
+  border:1px solid var(--line);
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+}
+.start-v93-today h2,
+.start-v93-students h2{
+  margin-top:0;
+}
+.start-v93-date{
+  font-size:16px;
+  font-weight:950;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.75);
+}
+.start-v93-task{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px;
+  margin:8px 0;
+  border-radius:14px;
+  background:rgba(127,200,169,.12);
+  border:1px solid rgba(127,200,169,.25);
+  font-weight:850;
+}
+.start-v93-task input{
+  width:20px;
+  height:20px;
+}
+.start-v93-note{
+  width:100%;
+  min-height:80px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  padding:12px;
+  margin-top:10px;
+  resize:vertical;
+}
+.start-v93-quick-list{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+.start-v93-quick-list button{
+  width:100% !important;
+  justify-content:center;
+}
+.start-v93-students{
+  border-radius:28px;
+  padding:18px;
+  background:rgba(255,255,255,.9);
+  border:1px solid var(--line);
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+}
+.start-v93-header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.start-v93-student-card{
+  display:grid;
+  grid-template-columns:210px 1fr;
+  gap:18px;
+  align-items:center;
+  padding:18px;
+  border-radius:24px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.92);
+  margin:14px 0;
+  box-shadow:0 6px 20px rgba(0,0,0,.045);
+}
+.start-v93-profile{
+  display:grid;
+  grid-template-columns:72px 1fr;
+  gap:14px;
+  align-items:center;
+  border-right:1px solid var(--line);
+  padding-right:16px;
+}
+.start-v93-photo{
+  width:72px;
+  height:72px;
+  object-fit:cover;
+  border-radius:22px;
+  border:1px solid var(--line);
+  background:#f3ead8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:36px;
+}
+.start-v93-name{
+  font-size:24px;
+  font-weight:950;
+}
+.start-v93-xp{
+  margin-top:6px;
+  font-size:15px;
+  font-weight:900;
+}
+.start-v93-badge{
+  display:inline-block;
+  margin-top:8px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:rgba(127,200,169,.18);
+  color:#2d7257;
+  font-weight:900;
+  font-size:13px;
+}
+.start-v93-action-area{
+  display:grid;
+  gap:12px;
+}
+.start-v93-action-title{
+  font-weight:950;
+  opacity:.8;
+}
+.start-v93-actions{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
+  gap:8px;
+}
+.start-v93-actions .gi-type-btn{
+  width:100% !important;
+  margin:0 !important;
+  min-height:44px;
+}
+.start-v93-growth-link{
+  width:100%;
+  border:none;
+  border-radius:16px;
+  padding:12px 14px;
+  background:rgba(127,200,169,.16);
+  color:#37745e;
+  font-weight:950;
+}
+.start-v93-log-list{
+  margin-top:10px;
+  display:grid;
+  gap:8px;
+}
+.start-v93-log{
+  border-radius:16px;
+  background:rgba(127,200,169,.10);
+  border-left:6px solid var(--accent);
+  padding:10px 12px;
+}
+.start-v93-bottom{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
+}
+.start-v93-bottom button{
+  flex:1;
+  min-height:48px;
+}
+body.dark-mode .start-v93-today,
+body.dark-mode .start-v93-students,
+body.dark-mode .start-v93-student-card,
+body.dark-mode .start-v93-date{
+  background:#242820 !important;
+}
+@media(max-width:900px){
+  .start-v93-shell{
+    grid-template-columns:1fr;
+  }
+  .start-v93-left{
+    position:static;
+  }
+  .start-v93-student-card{
+    grid-template-columns:1fr;
+  }
+  .start-v93-profile{
+    border-right:none;
+    border-bottom:1px solid var(--line);
+    padding-right:0;
+    padding-bottom:14px;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.2.1 成長洞察穩定版｜ImgBB 圖片</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3 開始上課介面重構版｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -9667,6 +9873,180 @@ document.addEventListener("click", function(e){
 });
 
 render();
+
+
+/* =========================================================
+   START CLASS WORKBENCH V9.3 OVERRIDE
+   ========================================================= */
+function startV93GrowthLogs(studentId, limit=3){
+  return (state.growthLogs || [])
+    .filter(l=>l.studentId===studentId)
+    .slice()
+    .sort((a,b)=>String(b.date || "").localeCompare(String(a.date || "")))
+    .slice(0,limit);
+}
+
+function startV93PhotoHtml(st){
+  const url = st?.photoUrl || st?.photo || st?.imageUrl || "";
+  return url
+    ? `<img class="start-v93-photo" src="${escapeHtml(url)}">`
+    : `<div class="start-v93-photo">🧒</div>`;
+}
+
+function startV93AddGrowth(studentId,typeName){
+  if(typeof giType === "function") giEnsureTypes?.();
+  const type = typeof giType === "function" ? giType(typeName) : {name:typeName,xp:10,color:"#7fc8a9"};
+  if(!Array.isArray(state.growthLogs)) state.growthLogs = [];
+  state.growthLogs.push({
+    id:makeId(),
+    studentId,
+    type:type.name,
+    color:type.color || (typeof giColor === "function" ? giColor(type.name) : "#7fc8a9"),
+    xp:Number(type.xp || 0),
+    feedback:`開始上課快速記錄：${type.name}`,
+    date:localIsoLikeString()
+  });
+  markDirty?.(`開始上課加分：${type.name}`);
+  saveState();
+  renderStartClassMode();
+}
+
+function startV93RenderButtons(studentId){
+  if(typeof giEnsureTypes === "function") giEnsureTypes();
+  const types = Array.isArray(state.growthTypes) && state.growthTypes.length ? state.growthTypes : [
+    {name:"氣息",xp:10,color:"#2fb37b"},
+    {name:"音色",xp:10,color:"#4b8df8"},
+    {name:"節奏",xp:10,color:"#f2a93b"},
+    {name:"視譜",xp:10,color:"#8b6cf6"},
+    {name:"合奏",xp:10,color:"#22a6b3"},
+    {name:"幫助同學",xp:15,color:"#d4a017"}
+  ];
+  return types
+    .filter(t=>Number(t.xp || 0) > 0)
+    .map(t=>`
+      <button class="gi-type-btn" style="background:${escapeHtml(t.color || "#7fc8a9")}" onclick="startV93AddGrowth('${studentId}','${escapeHtml(t.name)}')">
+        ${escapeHtml(t.name)} +${Number(t.xp || 0)}
+      </button>
+    `).join("");
+}
+
+function startV93RenderLogs(studentId){
+  const logs = startV93GrowthLogs(studentId,3);
+  if(!logs.length) return `<div class="small-muted">尚無成長日誌。</div>`;
+  return `<div class="start-v93-log-list">
+    ${logs.map(l=>`
+      <div class="start-v93-log" style="border-left-color:${escapeHtml(l.color || (typeof giColor==="function" ? giColor(l.type) : "#7fc8a9"))}">
+        <b>${escapeHtml(l.type || "成長紀錄")} ${Number(l.xp || 0)>=0?"+":""}${Number(l.xp || 0)} XP</b>
+        <div>${escapeHtml(l.feedback || "")}</div>
+        <div class="small-muted">${escapeHtml(formatDateTime(l.date || ""))}</div>
+      </div>
+    `).join("")}
+  </div>`;
+}
+
+function renderStartClassMode(){
+  document.body.classList.add("start-class-mode");
+  prepareStartClassData();
+
+  const cls = findById(state.classes, classContext.classId);
+  const school = findById(state.schools, classContext.schoolId || cls?.schoolId);
+  const students = studentsByClass(classContext.classId);
+  const main = typeof getWeeklyMainline === "function" ? getWeeklyMainline() : {title:"本週主線"};
+  const tasks = typeof weeklyMainTasks === "function" ? weeklyMainTasks() : [];
+
+  document.getElementById("app").innerHTML = `
+    <div class="start-class-header">
+      <div>
+        <div class="start-class-title">🎺 開始上課</div>
+        <div class="start-class-sub">
+          ${escapeHtml(school?.name || "未指定學校")}｜${escapeHtml(cls?.name || "未指定課程")}｜${escapeHtml(classContext.date)}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="toggleThemeMode()">🌙 深色</button>
+        <button class="btn red" onclick="exitStartClassMode()">退出</button>
+      </div>
+    </div>
+
+    <div class="start-v93-shell">
+      <aside class="start-v93-left">
+        <section class="start-v93-today">
+          <h2>📅 今日課堂</h2>
+          <div class="start-v93-date">${escapeHtml(classContext.date)}｜${escapeHtml(cls?.name || "未指定課程")}</div>
+
+          <h3>課程內容</h3>
+          <div class="note">本週主線：${escapeHtml(main.title || "尚未設定")}</div>
+
+          <h3>本堂目標</h3>
+          ${tasks.length ? tasks.map((task,idx)=>`
+            <label class="start-v93-task">
+              <input type="checkbox" ${startClassTasks[`task_${idx}`] ? "checked" : ""} onchange="startClassToggleTask(${idx},this.checked)">
+              <span>${escapeHtml(task)}</span>
+            </label>
+          `).join("") : `<div class="note">尚未設定本週主線任務，可先回上課介面設定。</div>`}
+
+          <h3>課堂備註</h3>
+          <textarea id="startClassMemo" class="start-v93-note" placeholder="例如：今天節奏反應很好，但合奏速度還不穩。"></textarea>
+
+          <h3>回家功課</h3>
+          <textarea id="startClassHomework" class="start-v93-note" placeholder="例如：長音4拍每天3次、練習第8-16小節。"></textarea>
+
+          <h3>快速加分</h3>
+          <div class="start-v93-quick-list">
+            ${state.growthTypes ? state.growthTypes.filter(t=>Number(t.xp||0)>0).slice(0,8).map(t=>`
+              <button class="gi-type-btn" style="background:${escapeHtml(t.color || "#7fc8a9")}" onclick="alert('請在右側學生卡片點選加分，才會記到指定學生。')">
+                ${escapeHtml(t.name)} +${Number(t.xp||0)}
+              </button>
+            `).join("") : ""}
+          </div>
+        </section>
+      </aside>
+
+      <section class="start-v93-students">
+        <div class="start-v93-header-row">
+          <div>
+            <h2>🧑‍🎓 學生名單</h2>
+            <div class="small-muted">點學生卡片上的彩色按鈕進行加分與成長紀錄。</div>
+          </div>
+          <div class="badge">本堂學生：${students.length} 人</div>
+        </div>
+
+        ${students.length ? students.map(st=>`
+          <article class="start-v93-student-card">
+            <div class="start-v93-profile">
+              ${startV93PhotoHtml(st)}
+              <div>
+                <div class="start-v93-name">${escapeHtml(st.name)}</div>
+                <div class="start-v93-xp">XP：${startClassStudentXp(st.id)}</div>
+                <span class="start-v93-badge">出席紀錄移至正式點名頁</span>
+              </div>
+            </div>
+
+            <div class="start-v93-action-area">
+              <div>
+                <div class="start-v93-action-title">加分項目</div>
+                <div class="start-v93-actions">
+                  ${startV93RenderButtons(st.id)}
+                </div>
+              </div>
+
+              <details>
+                <summary class="start-v93-growth-link">📖 成長日誌（最近 ${startV93GrowthLogs(st.id,99).length} 筆）</summary>
+                ${startV93RenderLogs(st.id)}
+              </details>
+            </div>
+          </article>
+        `).join("") : `<div class="note">這個課程目前沒有學生。</div>`}
+
+        <div class="start-v93-bottom">
+          <button class="btn gold" onclick="exitStartClassMode()">稍後儲存</button>
+          <button class="btn primary" onclick="finishStartClass()">✅ 儲存並結束課堂</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
 </script>
 </body>
 </html>
