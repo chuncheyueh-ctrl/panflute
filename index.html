@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.2 成長洞察版</title>
+<title>教學管理系統 v9.2.1 成長洞察穩定版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2208,29 +2208,15 @@ body.dark-mode .student-login-card{
 }
 
 
-/* =========================================================
-   V9.2 GROWTH INSIGHT
-   ========================================================= */
-.gi-box{margin:12px 0;padding:14px;border-radius:18px;border:1px dashed var(--line);background:rgba(255,255,255,.78)}
-.gi-title{font-weight:950;margin-bottom:8px}
-.gi-bar{display:flex;width:100%;height:22px;overflow:hidden;border-radius:999px;background:rgba(0,0,0,.08);border:1px solid var(--line)}
-.gi-seg{height:100%;min-width:4px}
-.gi-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.gi-legend-chip{display:inline-flex;align-items:center;gap:6px;color:white;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.25)}
-.gi-type-btn{border:none!important;color:white!important;border-radius:999px!important;padding:8px 14px!important;font-weight:950!important;margin:4px 5px 4px 0!important;width:auto!important;box-shadow:0 2px 7px rgba(0,0,0,.14);text-shadow:0 1px 2px rgba(0,0,0,.22)}
-.gi-type-manager{margin:12px 0;padding:14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.82)}
-.gi-type-row{display:grid;grid-template-columns:1fr 90px 120px auto;gap:8px;align-items:center;margin:8px 0}
-.gi-type-row input[type="color"]{min-height:44px;padding:4px}
-body.dark-mode .gi-box,body.dark-mode .gi-type-manager{background:#242820!important}
-@media(max-width:720px){.gi-type-row{grid-template-columns:1fr}}
-
+/* V9.2.1 GROWTH INSIGHT STABLE */
+.gi-box{margin:12px 0;padding:14px;border-radius:18px;border:1px dashed var(--line);background:rgba(255,255,255,.78)}.gi-title{font-weight:950;margin-bottom:8px}.gi-bar{display:flex;width:100%;height:22px;overflow:hidden;border-radius:999px;background:rgba(0,0,0,.08);border:1px solid var(--line)}.gi-seg{height:100%;min-width:4px}.gi-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.gi-chip{display:inline-flex;align-items:center;color:white;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:900;text-shadow:0 1px 2px rgba(0,0,0,.25)}.gi-type-btn{border:none!important;color:white!important;border-radius:999px!important;padding:8px 14px!important;font-weight:950!important;margin:4px 5px 4px 0!important;width:auto!important;box-shadow:0 2px 7px rgba(0,0,0,.14);text-shadow:0 1px 2px rgba(0,0,0,.22)}.gi-manager{margin:12px 0;padding:14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.82)}.gi-row{display:grid;grid-template-columns:1fr 90px 120px;gap:8px;align-items:center;margin:8px 0}.gi-row input[type=color]{min-height:44px;padding:4px}body.dark-mode .gi-box,body.dark-mode .gi-manager{background:#242820!important}@media(max-width:720px){.gi-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.2 成長洞察版｜ImgBB 圖片</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.2.1 成長洞察穩定版｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -5910,125 +5896,32 @@ function renderStudentPortalRewards(st){
 }
 
 
-/* =========================================================
-   GROWTH INSIGHT V9.2
-   ========================================================= */
-const GI_DEFAULT_TYPES = [
-  {id:"breath", name:"氣息", xp:10, color:"#2fb37b"},
-  {id:"tone", name:"音色", xp:10, color:"#4b8df8"},
-  {id:"rhythm", name:"節奏", xp:10, color:"#f2a93b"},
-  {id:"reading", name:"視譜", xp:10, color:"#8b6cf6"},
-  {id:"ensemble", name:"合奏", xp:10, color:"#22a6b3"},
-  {id:"help", name:"幫助同學", xp:15, color:"#d4a017"},
-  {id:"fix5", name:"修正 -5", xp:-5, color:"#e58080"},
-  {id:"fix10", name:"修正 -10", xp:-10, color:"#d95f5f"},
-  {id:"makeup", name:"補登", xp:5, color:"#6c757d"}
-];
-
-function giEnsureTypes(){
-  if(!Array.isArray(state.growthTypes) || !state.growthTypes.length){
-    state.growthTypes = GI_DEFAULT_TYPES.map(x=>({...x}));
+/* GROWTH INSIGHT V9.2.1 STABLE */
+const GI_PALETTE = ["#2fb37b","#4b8df8","#f2a93b","#8b6cf6","#22a6b3","#d4a017","#e58080","#d95f5f","#6c757d"];
+function giEnsureSettings(){
+  if(!state.growthSettings) state.growthSettings = {};
+  if(!Array.isArray(state.growthSettings.growthTypes) || !state.growthSettings.growthTypes.length){
+    state.growthSettings.growthTypes = [
+      {id:"breath",name:"氣息",defaultXp:10,color:"#2fb37b",active:true,order:1},
+      {id:"tone",name:"音色",defaultXp:10,color:"#4b8df8",active:true,order:2},
+      {id:"rhythm",name:"節奏",defaultXp:10,color:"#f2a93b",active:true,order:3},
+      {id:"reading",name:"視譜",defaultXp:10,color:"#8b6cf6",active:true,order:4},
+      {id:"ensemble",name:"合奏",defaultXp:10,color:"#22a6b3",active:true,order:5},
+      {id:"help",name:"幫助同學",defaultXp:15,color:"#d4a017",active:true,order:6}
+    ];
   }
-  state.growthTypes.forEach((t,i)=>{
-    if(!t.id) t.id = "gt_" + i + "_" + Date.now();
-    if(!t.name) t.name = "未命名";
-    if(t.xp === undefined) t.xp = 10;
-    if(!t.color) t.color = GI_DEFAULT_TYPES[i % GI_DEFAULT_TYPES.length]?.color || "#7fc8a9";
-  });
+  state.growthSettings.growthTypes.forEach((t,i)=>{ if(!t.id) t.id="gt_"+i+"_"+Date.now(); if(!t.name) t.name="未命名"; if(t.defaultXp===undefined) t.defaultXp=10; if(!t.color) t.color=GI_PALETTE[i%GI_PALETTE.length]; if(t.active===undefined) t.active=true; if(t.order===undefined) t.order=i+1; });
 }
-
-function giType(typeName){
-  giEnsureTypes();
-  return state.growthTypes.find(t=>t.name===typeName || t.id===typeName) || state.growthTypes[0] || GI_DEFAULT_TYPES[0];
-}
-
-function giColor(typeName){ return giType(typeName)?.color || "#7fc8a9"; }
-function giXp(typeName){ return Number(giType(typeName)?.xp || 0); }
-
-function giSetQuick(studentId,typeName){
-  const t = giType(typeName);
-  const typeEl = document.getElementById(`growthType_${studentId}`);
-  const xpEl = document.getElementById(`growthXp_${studentId}`);
-  if(typeEl) typeEl.value = t.name;
-  if(xpEl) xpEl.value = Number(t.xp || 0);
-}
-
-function giRenderButtons(studentId){
-  giEnsureTypes();
-  return state.growthTypes.map(t=>`
-    <button class="gi-type-btn" style="background:${escapeHtml(t.color)}" onclick="giSetQuick('${studentId}','${escapeHtml(t.name)}')">
-      ${escapeHtml(t.name)} ${Number(t.xp)>=0?'+':''}${Number(t.xp||0)}
-    </button>
-  `).join("");
-}
-
-function giDistribution(studentId){
-  const logs = (state.growthLogs || []).filter(g=>g.studentId===studentId);
-  const map = {};
-  let total = 0;
-  logs.forEach(g=>{
-    const xp = Math.max(0, Number(g.xp || g.points || 0) || 0);
-    if(!xp) return;
-    const type = g.type || g.title || "未分類";
-    map[type] = (map[type] || 0) + xp;
-    total += xp;
-  });
-  return {map,total};
-}
-
-function giRenderInsight(studentId){
-  const {map,total} = giDistribution(studentId);
-  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-  if(!total){
-    return `<div class="gi-box"><div class="gi-title">📊 能力洞察分析</div><div class="small-muted">尚無足夠資料。新增成長日誌後，這裡會自動顯示彩色能力比例。</div></div>`;
-  }
-  const top = entries.slice(0,2).map(([k])=>k).join("、");
-  return `
-    <div class="gi-box">
-      <div class="gi-title">📊 能力洞察分析：目前強項偏向 ${escapeHtml(top)}</div>
-      <div class="gi-bar">
-        ${entries.map(([k,v])=>`<div class="gi-seg" title="${escapeHtml(k)} ${v}XP" style="width:${Math.max(3,v/total*100)}%;background:${giColor(k)}"></div>`).join("")}
-      </div>
-      <div class="gi-legend">
-        ${entries.map(([k,v])=>`<span class="gi-legend-chip" style="background:${giColor(k)}">${escapeHtml(k)} ${v}XP｜${Math.round(v/total*100)}%</span>`).join("")}
-      </div>
-    </div>`;
-}
-
-function giAddType(){
-  giEnsureTypes();
-  state.growthTypes.push({id:"gt_"+Date.now(), name:"新類型", xp:10, color:"#7fc8a9"});
-  saveState(); markDirty?.("新增成長類型"); render();
-}
-function giUpdateType(id,field,value){
-  giEnsureTypes();
-  const t = state.growthTypes.find(x=>x.id===id);
-  if(!t) return;
-  t[field] = field === "xp" ? Number(value || 0) : value;
-  saveState(); markDirty?.("修改成長類型");
-}
-function giDeleteType(id){
-  giEnsureTypes();
-  if(state.growthTypes.length <= 1) return alert("至少要保留一個成長類型。");
-  state.growthTypes = state.growthTypes.filter(t=>t.id!==id);
-  saveState(); markDirty?.("刪除成長類型"); render();
-}
-function giRenderTypeManager(){
-  giEnsureTypes();
-  return `
-    <details class="gi-type-manager">
-      <summary><b>🎨 成長類型與顏色設定</b></summary>
-      <div class="note">可新增、編輯類型名稱、預設 XP 與顏色。彩色比例條會依照這裡的顏色顯示。</div>
-      ${state.growthTypes.map(t=>`
-        <div class="gi-type-row">
-          <input value="${escapeHtml(t.name)}" oninput="giUpdateType('${t.id}','name',this.value)">
-          <input type="number" value="${Number(t.xp||0)}" oninput="giUpdateType('${t.id}','xp',this.value)">
-          <input type="color" value="${escapeHtml(t.color || '#7fc8a9')}" oninput="giUpdateType('${t.id}','color',this.value)">
-          <button class="btn red" onclick="giDeleteType('${t.id}')">刪除</button>
-        </div>`).join("")}
-      <button class="btn primary" onclick="giAddType()">＋ 新增成長類型</button>
-    </details>`;
-}
+function giType(id){ giEnsureSettings(); return (state.growthSettings.growthTypes||[]).find(t=>t.id===id || t.name===id) || growthTypeById(id); }
+function giColor(id){ return giType(id)?.color || "#7fc8a9"; }
+function giName(id){ return giType(id)?.name || growthTypeName(id); }
+function giSetQuick(studentId,typeId){ const t=giType(typeId); const typeEl=document.getElementById(`growthType_${studentId}`); const xpEl=document.getElementById(`growthXp_${studentId}`); if(typeEl) typeEl.value=t.id; if(xpEl) xpEl.value=Number(t.defaultXp||0); }
+function giRenderButtons(studentId){ giEnsureSettings(); return growthTypes().map(t=>`<button class="gi-type-btn" style="background:${giColor(t.id)}" onclick="giSetQuick('${studentId}','${t.id}')">${escapeHtml(t.name)} ${Number(t.defaultXp)>=0?'+':''}${Number(t.defaultXp||0)}</button>`).join(""); }
+function giDistribution(studentId){ const map=new Map(); let total=0; (state.growthLogs||[]).filter(log=>log.studentId===studentId).forEach(log=>{ const xp=Math.max(0,Number(log.xp)||0); if(!xp) return; const id=log.type||"unknown"; const item=map.get(id)||{id,name:giName(id),color:giColor(id),xp:0}; item.xp+=xp; total+=xp; map.set(id,item); }); return {items:[...map.values()].sort((a,b)=>b.xp-a.xp),total}; }
+function giRenderInsight(studentId){ const {items,total}=giDistribution(studentId); if(!total) return `<div class="gi-box"><div class="gi-title">📊 能力洞察分析</div><div class="small-muted">尚無足夠資料。新增成長日誌後會自動顯示彩色能力比例。</div></div>`; const top=items.slice(0,2).map(x=>x.name).join("、"); return `<div class="gi-box"><div class="gi-title">📊 能力洞察分析：目前強項偏向 ${escapeHtml(top)}</div><div class="gi-bar">${items.map(x=>`<div class="gi-seg" style="width:${Math.max(3,x.xp/total*100)}%;background:${x.color}" title="${escapeHtml(x.name)} ${x.xp}XP"></div>`).join("")}</div><div class="gi-legend">${items.map(x=>`<span class="gi-chip" style="background:${x.color}">${escapeHtml(x.name)} ${x.xp}XP｜${Math.round(x.xp/total*100)}%</span>`).join("")}</div></div>`; }
+function giUpdateType(id,field,value){ giEnsureSettings(); const t=(state.growthSettings.growthTypes||[]).find(x=>x.id===id); if(!t) return; t[field]= field==="defaultXp"||field==="order" ? Number(value||0) : value; saveState(); markDirty?.("修改成長類型"); }
+function giAddType(){ giEnsureSettings(); state.growthSettings.growthTypes.push({id:"gt_"+Date.now(),name:"新類型",defaultXp:10,color:"#7fc8a9",active:true,order:state.growthSettings.growthTypes.length+1}); saveState(); markDirty?.("新增成長類型"); render(); }
+function giRenderTypeManager(){ giEnsureSettings(); return `<details class="gi-manager"><summary><b>🎨 成長類型與顏色設定</b></summary><div class="note">可編輯類型、預設 XP、顏色，彩色比例條會依照這裡顯示。</div>${allGrowthTypes().map(t=>`<div class="gi-row"><input value="${escapeHtml(t.name)}" oninput="giUpdateType('${t.id}','name',this.value)"><input type="number" value="${Number(t.defaultXp||0)}" oninput="giUpdateType('${t.id}','defaultXp',this.value)"><input type="color" value="${escapeHtml(t.color||giColor(t.id))}" oninput="giUpdateType('${t.id}','color',this.value)"></div>`).join("")}<button class="btn primary" onclick="giAddType()">＋ 新增成長類型</button></details>`; }
 
 function render(){
   if(typeof startClassMode !== 'undefined' && startClassMode){ renderStartClassMode(); setTimeout(renderSyncStatus,0); return; }
@@ -6232,12 +6125,11 @@ function renderClassroomRollcall(students){
               <div class="note">
                 冒險等級：LV${growthLevelInfo(growthXpTotal(student.id)).current.level}　
                 ${growthLevelInfo(growthXpTotal(student.id)).next ? `距離 LV${growthLevelInfo(growthXpTotal(student.id)).next.level} 還需要 ${Number(growthLevelInfo(growthXpTotal(student.id)).next.xp)-growthXpTotal(student.id)} XP` : "已達目前最高冒險等級"}
-                <div class="growth-progress"><span style="width:${growthLevelInfo(growthXpTotal(student.id)).progress}%"></span></div>
               </div>
+              ${giRenderInsight(student.id)}
+              <div class="growth-progress"><span style="width:${growthLevelInfo(growthXpTotal(student.id)).progress}%"></span></div>
               <div class="growth-quick">
-                ${growthTypes().slice(0,6).map(t=>`
-                  <button class="btn small ${Number(t.defaultXp)>=15 ? "gold" : "primary"}" onclick="quickGrowthLog('${student.id}','${t.id}',${Number(t.defaultXp)||10})">${escapeHtml(t.name)} +${Number(t.defaultXp)||10}</button>
-                `).join("")}
+                ${giRenderButtons(student.id)}
               </div>
               <div class="growth-quick">
                 <button class="btn small danger-soft" onclick="correctGrowthXp('${student.id}',-5,'誤按修正 -5 XP')">修正 -5</button>
@@ -6246,9 +6138,7 @@ function renderClassroomRollcall(students){
               </div>
               <div class="row">
                 <div class="f4">
-                  ${giRenderInsight(st.id)}
-              <div>${giRenderButtons(st.id)}</div>
-              <label>類型</label>
+                  <label>類型</label>
                   <select id="growthType_${student.id}">
                     ${growthTypes().map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join("")}
                   </select>
@@ -6268,7 +6158,7 @@ function renderClassroomRollcall(students){
               <div><button class="btn ghost small" onclick="showGrowthProfile(\'${student.id}\')">查看完整成長檔案</button></div>
               <div>
                 ${growthLogsForStudent(student.id,3).map(log=>`
-                  <div class="growth-log-item">
+                  <div class="growth-log-item" style="border-left:8px solid ${giColor(log.type)}">
                     <b>${escapeHtml(growthTypeName(log.type))}</b>
                     <span class="growth-xp">${Number(log.xp)||0 ? `+${Number(log.xp)||0} XP` : ""}</span><br>
                     ${escapeHtml(log.feedback || "")}<br>
