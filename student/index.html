@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Battle 學生端 v10.1</title>
+  <title>Battle 學生端 v10.1.2.2</title>
   <style>
 :root{
   --bg-a:#fff6dc;
@@ -2360,7 +2360,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-/* v10.1 Firebase DB robust alias */
+/* v10.1.2.2 Firebase DB robust alias */
 var firebaseDb = window.firebaseDb || window.db || window.database || null;
 try{
   if(!firebaseDb && typeof firebase !== "undefined" && firebase.database){
@@ -2559,7 +2559,7 @@ function renderLogin(){
   const schools = activeSchools();
   $("app").innerHTML = `
     <section class="student-login-card">
-      <div class="student-login-title">🐾 Battle 學生端 v10.1</div>
+      <div class="student-login-title">🐾 Battle 學生端 v10.1.2.2</div>
       <div class="student-login-sub">輸入自己的學校、姓名與登入代碼後，只會看到自己的學習頁面。</div>
       <label>學校</label>
       <select id="loginSchool">${schools.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}</select>
@@ -2583,7 +2583,7 @@ function renderPortal(st){
 
   $("app").innerHTML = `
     <div class="student-topbar">
-      <div class="student-brand">🐾 Battle 學生端 v10.1</div>
+      <div class="student-brand">🐾 Battle 學生端 v10.1.2.2</div>
       <button class="btn" onclick="logout()">登出</button>
     </div>
 
