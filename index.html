@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.0 Student Portal v1</title>
+<title>教學管理系統 v9.1 Student Login Portal</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2155,13 +2155,65 @@ body.dark-mode .student-reward-mini{
   }
 }
 
+
+/* =========================================================
+   V9.1 STUDENT LOGIN PORTAL
+   ========================================================= */
+.student-login-card{
+  max-width:620px;
+  margin:0 auto;
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:22px;
+  background:rgba(255,255,255,.86);
+}
+.student-login-title{
+  font-size:34px;
+  font-weight:950;
+  margin-bottom:8px;
+}
+.student-login-sub{
+  opacity:.78;
+  font-weight:850;
+  margin-bottom:16px;
+}
+.student-login-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.student-login-danger{
+  color:#9b2d2d;
+  font-weight:900;
+  margin-top:10px;
+}
+.student-portal-lockbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.student-portal-readonly{
+  border:1px dashed var(--line);
+  border-radius:16px;
+  padding:10px 12px;
+  background:rgba(127,200,169,.1);
+  font-weight:850;
+}
+body.dark-mode .student-login-card{
+  background:#242820 !important;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.0 Student Portal v1｜ImgBB 圖片</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.1 Student Login Portal｜ImgBB 圖片</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -5487,53 +5539,104 @@ function renderPerformanceExportV8(p){
 }
 
 
+
 /* =========================================================
-   STUDENT PORTAL V9.0
+   STUDENT LOGIN PORTAL V9.1
+   ---------------------------------------------------------
+   真正學生端：
+   - 學生需登入
+   - 不顯示其他學生下拉選單
+   - 不顯示老師管理功能
+   - 目前採本機登入狀態，不改同步核心
+   登入方式：
+   1. 學校
+   2. 姓名
+   3. 登入代碼
+   代碼規則：
+   - 若學生資料有 studentCode / loginCode / password，優先使用
+   - 若沒有代碼，預設使用姓名登入，方便先測試
    ========================================================= */
 let studentPortalTab = "home";
-var studentPortalContext = window.studentPortalContext || {schoolId:"", classId:"", studentId:""};
-window.studentPortalContext = studentPortalContext;
+var studentPortalSession = window.studentPortalSession || JSON.parse(localStorage.getItem("studentPortalSession_v91") || "null") || null;
+window.studentPortalSession = studentPortalSession;
 
 const StudentPortal = {
-  ensure(){
-    if(!studentPortalContext.schoolId){
-      studentPortalContext.schoolId = classContext?.schoolId || activeSchools()[0]?.id || "";
-    }
-    if(!studentPortalContext.classId){
-      studentPortalContext.classId = classContext?.classId || activeClasses().find(c=>c.schoolId===studentPortalContext.schoolId)?.id || activeClasses()[0]?.id || "";
-    }
-    if(!studentPortalContext.studentId){
-      studentPortalContext.studentId = studentsByClass(studentPortalContext.classId)[0]?.id || "";
-    }
+  ensureCodes(){
+    if(!Array.isArray(state.students)) state.students = [];
+    state.students.forEach(st=>{
+      if(st.studentCode === undefined && st.loginCode !== undefined) st.studentCode = st.loginCode;
+      if(st.studentCode === undefined && st.password !== undefined) st.studentCode = st.password;
+    });
   },
 
-  selectedSchool(){
-    this.ensure();
-    return findById(state.schools || [], studentPortalContext.schoolId) || activeSchools()[0] || null;
+  schools(){
+    return activeSchools();
   },
 
-  selectedClass(){
-    this.ensure();
-    return findById(state.classes || [], studentPortalContext.classId) || activeClasses()[0] || null;
+  schoolStudents(schoolId){
+    const classIds = activeClasses().filter(c=>c.schoolId===schoolId).map(c=>c.id);
+    const studentIds = new Set((state.enrollments || []).filter(e=>classIds.includes(e.classId)).map(e=>e.studentId));
+    return (state.students || []).filter(st=>studentIds.has(st.id));
   },
 
-  selectedStudent(){
-    this.ensure();
-    return findById(state.students || [], studentPortalContext.studentId) || studentsByClass(studentPortalContext.classId)[0] || null;
+  studentClass(studentId){
+    const enroll = (state.enrollments || []).find(e=>e.studentId===studentId);
+    return findById(state.classes || [], enroll?.classId) || null;
   },
 
-  set(field,value){
-    studentPortalContext[field] = value;
-    if(field === "schoolId"){
-      const cls = activeClasses().find(c=>c.schoolId===value);
-      studentPortalContext.classId = cls?.id || "";
-      studentPortalContext.studentId = studentsByClass(studentPortalContext.classId)[0]?.id || "";
+  studentSchool(studentId){
+    const cls = this.studentClass(studentId);
+    return findById(state.schools || [], cls?.schoolId) || null;
+  },
+
+  login(){
+    this.ensureCodes();
+    const schoolId = document.getElementById("studentLoginSchool")?.value || "";
+    const name = (document.getElementById("studentLoginName")?.value || "").trim();
+    const code = (document.getElementById("studentLoginCode")?.value || "").trim();
+
+    if(!schoolId || !name){
+      return this.loginError("請選擇學校並輸入姓名。");
     }
-    if(field === "classId"){
-      studentPortalContext.studentId = studentsByClass(value)[0]?.id || "";
+
+    const candidates = this.schoolStudents(schoolId);
+    const st = candidates.find(s=>String(s.name || "").trim() === name);
+    if(!st){
+      return this.loginError("找不到這位學生，請確認姓名是否和老師系統裡一樣。");
     }
-    window.studentPortalContext = studentPortalContext;
+
+    const storedCode = String(st.studentCode || st.loginCode || st.password || "").trim();
+
+    // 若老師尚未設定代碼，先允許「姓名登入」方便測試。
+    if(storedCode && storedCode !== code){
+      return this.loginError("登入代碼不正確。");
+    }
+
+    studentPortalSession = {
+      studentId: st.id,
+      schoolId,
+      loginAt: localIsoLikeString()
+    };
+    localStorage.setItem("studentPortalSession_v91", JSON.stringify(studentPortalSession));
+    window.studentPortalSession = studentPortalSession;
     renderStudentPortal();
+  },
+
+  loginError(msg){
+    const el = document.getElementById("studentLoginError");
+    if(el) el.textContent = msg;
+  },
+
+  logout(){
+    studentPortalSession = null;
+    window.studentPortalSession = null;
+    localStorage.removeItem("studentPortalSession_v91");
+    renderStudentPortal();
+  },
+
+  currentStudent(){
+    if(!studentPortalSession?.studentId) return null;
+    return findById(state.students || [], studentPortalSession.studentId) || null;
   },
 
   photo(st){
@@ -5602,63 +5705,60 @@ const StudentPortal = {
   }
 };
 
-function renderStudentSelectors(){
-  StudentPortal.ensure();
-  const schools = activeSchools();
-  const classes = activeClasses().filter(c=>!studentPortalContext.schoolId || c.schoolId===studentPortalContext.schoolId);
-  const students = studentsByClass(studentPortalContext.classId);
+function renderStudentLogin(){
+  StudentPortal.ensureCodes();
+  const schools = StudentPortal.schools();
 
   return `
-    <section class="card">
-      <h2>🐾 學生端選擇</h2>
-      <div class="note">目前是老師示範用學生端：先選學校、課程、學生，就能看到該學生的學習首頁。</div>
-      <div class="row">
-        <div class="f4">
-          <label>學校</label>
-          <select onchange="StudentPortal.set('schoolId',this.value)">
-            ${schools.map(s=>`<option value="${s.id}" ${studentPortalContext.schoolId===s.id?'selected':''}>${escapeHtml(s.name)}</option>`).join("")}
-          </select>
-        </div>
-        <div class="f4">
-          <label>課程／班級</label>
-          <select onchange="StudentPortal.set('classId',this.value)">
-            ${classes.map(c=>`<option value="${c.id}" ${studentPortalContext.classId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join("")}
-          </select>
-        </div>
-        <div class="f4">
-          <label>學生</label>
-          <select onchange="StudentPortal.set('studentId',this.value)">
-            ${students.map(st=>`<option value="${st.id}" ${studentPortalContext.studentId===st.id?'selected':''}>${escapeHtml(st.name)}</option>`).join("")}
-          </select>
-        </div>
+    <section class="student-login-card">
+      <div class="student-login-title">🐾 學生登入</div>
+      <div class="student-login-sub">請輸入自己的學校、姓名與登入代碼。登入後只會看到自己的學習頁面。</div>
+
+      <label>學校</label>
+      <select id="studentLoginSchool">
+        ${schools.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
+      </select>
+
+      <label>姓名</label>
+      <input id="studentLoginName" placeholder="請輸入姓名，例如：高海媚">
+
+      <label>登入代碼</label>
+      <input id="studentLoginCode" placeholder="若老師尚未設定代碼，可先留空測試" autocomplete="off">
+
+      <div id="studentLoginError" class="student-login-danger"></div>
+
+      <div class="student-login-actions">
+        <button class="btn gold" onclick="StudentPortal.login()">登入我的頁面</button>
+      </div>
+
+      <div class="note" style="margin-top:14px">
+        老師備註：之後可在學生資料加入 studentCode / loginCode / password 作為正式登入代碼。
       </div>
     </section>
   `;
 }
 
 function renderStudentPortal(){
-  StudentPortal.ensure();
-  const st = StudentPortal.selectedStudent();
-  const cls = StudentPortal.selectedClass();
-  const school = StudentPortal.selectedSchool();
-
+  const st = StudentPortal.currentStudent();
   if(!st){
-    document.getElementById("app").innerHTML = `
-      ${renderStudentSelectors()}
-      <section class="card"><div class="student-empty">目前沒有可顯示的學生。</div></section>
-    `;
+    document.getElementById("app").innerHTML = renderStudentLogin();
     return;
   }
 
+  const cls = StudentPortal.studentClass(st.id);
+  const school = StudentPortal.studentSchool(st.id);
   const xp = StudentPortal.xp(st.id);
   const points = StudentPortal.points(st.id);
   const lv = StudentPortal.levelFromXp(xp);
   const photo = StudentPortal.photo(st);
 
   document.getElementById("app").innerHTML = `
-    ${renderStudentSelectors()}
-
     <section class="card">
+      <div class="student-portal-lockbar">
+        <div class="student-portal-readonly">🔒 學生端模式：目前登入 ${escapeHtml(st.name || "學生")}</div>
+        <button class="btn" onclick="StudentPortal.logout()">登出</button>
+      </div>
+
       <div class="student-portal-hero">
         ${photo ? `<img class="student-portal-photo" src="${escapeHtml(photo)}">` : `<div class="student-portal-photo">🐾</div>`}
         <div>
