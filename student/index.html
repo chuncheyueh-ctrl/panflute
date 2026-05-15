@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Battle 學生端</title>
+  <title>Battle 學生端 v10.0.1</title>
   <style>
 :root{
   --bg-a:#fff6dc;
@@ -2169,7 +2169,7 @@ body.dark-mode .student-login-card{
 
 
 /* =========================================================
-   V10 STUDENT INDEPENDENT SITE
+   V10.0.1 STUDENT FIREBASE READ FIX
    ========================================================= */
 body.student-site{
   min-height:100vh;
@@ -2336,12 +2336,12 @@ window.async = window.async || function(fn){ return fn; };
   <main class="student-shell" id="app">
     <section class="student-login-card">
       <div class="student-login-title">載入中...</div>
-      <div class="student-login-sub">正在讀取 Firebase 資料</div>
+      <div class="student-login-sub">正在讀取 Firebase 資料（battleSystem/main）</div>
     </section>
   </main>
   <script>
 /* =========================================================
-   V10 STUDENT INDEPENDENT SITE
+   V10.0.1 STUDENT FIREBASE READ FIX
    Read-only portal connected to the same Firebase database.
    ========================================================= */
 const firebaseConfig = {
@@ -2470,8 +2470,12 @@ function availableRewards(studentId){
 
 async function loadData(){
   try{
-    const snap = await firebaseDb.ref("battleSystem/state").once("value");
+    const snap = await firebaseDb.ref("battleSystem/main").once("value");
     state = snap.val() || {};
+    if(typeof state === "string"){
+      try{ state = JSON.parse(state); }catch(e){ console.warn("state string parse failed", e); }
+    }
+    if(state && state.state && typeof state.state === "object") state = state.state;
     normalizeState();
     render();
   }catch(err){
@@ -2537,7 +2541,7 @@ function renderLogin(){
   const schools = activeSchools();
   $("app").innerHTML = `
     <section class="student-login-card">
-      <div class="student-login-title">🐾 Battle 學生端</div>
+      <div class="student-login-title">🐾 Battle 學生端 v10.0.1</div>
       <div class="student-login-sub">輸入自己的學校、姓名與登入代碼後，只會看到自己的學習頁面。</div>
       <label>學校</label>
       <select id="loginSchool">${schools.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}</select>
@@ -2561,7 +2565,7 @@ function renderPortal(st){
 
   $("app").innerHTML = `
     <div class="student-topbar">
-      <div class="student-brand">🐾 Battle 學生端</div>
+      <div class="student-brand">🐾 Battle 學生端 v10.0.1</div>
       <button class="btn" onclick="logout()">登出</button>
     </div>
 
