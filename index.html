@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.3 角色卡＋點數小額版</title>
+<title>教學管理系統 v9.3.4 開始上課RWD穩定版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
@@ -2647,13 +2647,194 @@ body.dark-mode .start931-textarea{
   }
 }
 
+
+/* =========================================================
+   V9.3.4 START CLASS RWD STABLE LAYOUT
+   修正角色卡右側被切掉，支援 iPad / MacBook / 大螢幕
+   ========================================================= */
+
+body.start-class-mode{
+  overflow-x:hidden;
+}
+
+body.start-class-mode #app{
+  max-width: min(1500px, calc(100vw - 28px)) !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+.start931-grid{
+  grid-template-columns: minmax(230px, 280px) minmax(0, 1fr) !important;
+  gap: 16px !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+
+.start931-left{
+  min-width:0 !important;
+}
+
+.start931-student-panel{
+  min-width:0 !important;
+  overflow:hidden !important;
+}
+
+.start933-card{
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  grid-template-columns:
+    minmax(260px, 34%)
+    minmax(220px, 30%)
+    minmax(260px, 36%) !important;
+  gap:14px !important;
+  overflow:hidden !important;
+}
+
+.start933-profile,
+.start933-insight,
+.start933-actions{
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+
+.start933-profile{
+  grid-template-columns:120px minmax(0, 1fr) !important;
+  gap:14px !important;
+}
+
+.start933-photo{
+  width:120px !important;
+  height:120px !important;
+  border-radius:28px !important;
+}
+
+.start933-name{
+  font-size:clamp(22px, 2vw, 30px) !important;
+  word-break:keep-all;
+}
+
+.start933-insight{
+  padding:0 14px !important;
+}
+
+.start933-row{
+  grid-template-columns:58px minmax(70px, 1fr) 36px !important;
+  gap:6px !important;
+  font-size:12px !important;
+}
+
+.start933-action-head{
+  flex-wrap:wrap !important;
+}
+
+.start933-btns{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fit, minmax(78px, 1fr)) !important;
+  gap:8px !important;
+}
+
+.start933-chip{
+  width:100% !important;
+  min-width:0 !important;
+  min-height:40px !important;
+  padding:8px 8px !important;
+  font-size:14px !important;
+  box-sizing:border-box !important;
+  white-space:normal !important;
+}
+
+.start933-note{
+  min-width:0 !important;
+}
+
+/* iPad 橫向 / 小筆電：卡片改為 2 欄，避免右側切掉 */
+@media (max-width: 1180px){
+  body.start-class-mode #app{
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  .start931-grid{
+    grid-template-columns: 240px minmax(0,1fr) !important;
+  }
+
+  .start933-card{
+    grid-template-columns:minmax(260px, 42%) minmax(0, 1fr) !important;
+  }
+
+  .start933-insight{
+    grid-column:1 / -1;
+    border-left:none !important;
+    border-right:none !important;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:14px 0 !important;
+  }
+
+  .start933-btns{
+    grid-template-columns:repeat(3, minmax(78px, 1fr)) !important;
+  }
+}
+
+/* iPad 直向：今日課堂上方，學生卡片下方 */
+@media (max-width: 900px){
+  .start931-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .start931-left{
+    position:static !important;
+  }
+
+  .start933-card{
+    grid-template-columns:1fr !important;
+  }
+
+  .start933-profile{
+    grid-template-columns:110px minmax(0, 1fr) !important;
+  }
+
+  .start933-photo{
+    width:110px !important;
+    height:110px !important;
+  }
+
+  .start933-insight{
+    grid-column:auto;
+  }
+
+  .start933-btns{
+    grid-template-columns:repeat(3, minmax(72px, 1fr)) !important;
+  }
+}
+
+/* 手機：按鈕兩欄 */
+@media (max-width: 560px){
+  body.start-class-mode #app{
+    max-width: calc(100vw - 12px) !important;
+  }
+
+  .start933-profile{
+    grid-template-columns:96px minmax(0,1fr) !important;
+  }
+
+  .start933-photo{
+    width:96px !important;
+    height:96px !important;
+  }
+
+  .start933-btns{
+    grid-template-columns:repeat(2, minmax(78px, 1fr)) !important;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.3 角色卡＋點數小額版｜ImgBB 圖片</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.4 開始上課RWD穩定版</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -10583,6 +10764,25 @@ function renderStartClassMode(){
       </section>
     </div>
   `;
+}
+
+
+
+/* =========================================================
+   V9.3.4 POINT MODE SMALL BUTTON SAFETY PATCH
+   ========================================================= */
+if(typeof start933Buttons === "function"){
+  const __start933ButtonsOriginal = start933Buttons;
+  start933Buttons = function(studentId){
+    if(typeof start933Mode !== "undefined" && start933Mode === "points"){
+      return [1,3,5,-1,-3].map(p=>`
+        <button class="start933-chip start933-point-chip ${p<0?'minus':''}" onclick="start933AddPoints('${studentId}',${p})">
+          點數 ${p>0?'+':''}${p}
+        </button>
+      `).join("");
+    }
+    return __start933ButtonsOriginal(studentId);
+  }
 }
 
 </script>
