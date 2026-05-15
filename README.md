@@ -1,4 +1,4 @@
-# v10.0.1 雙入口版
+# v10.0.2 雙入口版
 
 ## 結構
 
@@ -27,6 +27,11 @@
 如果老師尚未幫學生設定 `studentCode` / `loginCode` / `password`，可先用姓名登入測試。
 
 
-## v10.0.1
+## v10.0.2
 
 修正學生端 Firebase 讀取路徑，改為讀取 `battleSystem/main`，與老師端同步資料一致。
+
+
+## v10.0.2
+
+修正學生端 `firebaseDb is not defined`：改為 robust Firebase Database alias 初始化。
