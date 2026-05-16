@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.8.2 課堂流程安全修正版</title>
+<title>教學管理系統 v9.3.8.3 課堂任務時間補齊版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
 
@@ -3220,13 +3220,106 @@ body.dark-mode .start937-task-card{
   margin-bottom:8px;
 }
 
+
+/* =========================================================
+   V9.3.8.3 TASK MINUTES EDITOR + START CHECKLIST FORCE
+   ========================================================= */
+.v9383-task-editor{
+  display:grid;
+  gap:8px;
+  margin:10px 0;
+}
+.v9383-task-row{
+  display:grid;
+  grid-template-columns:1fr 90px 42px;
+  gap:8px;
+  align-items:center;
+}
+.v9383-task-row input{
+  min-height:40px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:8px 10px;
+  box-sizing:border-box;
+  font-weight:850;
+  background:rgba(255,255,255,.86);
+}
+.v9383-task-row .v9383-min{
+  text-align:center;
+}
+.v9383-del{
+  border:none;
+  border-radius:14px;
+  min-height:40px;
+  background:#ff8c8c;
+  color:white;
+  font-weight:950;
+}
+.v9383-add{
+  width:100%;
+  border:none;
+  border-radius:16px;
+  padding:11px;
+  background:rgba(127,200,169,.20);
+  color:#31725a;
+  font-weight:950;
+}
+.v9383-total{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:14px;
+  background:rgba(255,224,138,.22);
+  border:1px dashed rgba(212,160,23,.35);
+  font-weight:900;
+  margin:8px 0;
+}
+.v9383-time-preview{
+  font-size:12px;
+  opacity:.72;
+  font-weight:850;
+  margin-top:3px;
+}
+.v9383-real-checklist{
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px dashed var(--line);
+}
+.v9383-real-checklist-title{
+  font-size:18px;
+  font-weight:950;
+  margin-bottom:8px;
+}
+.v9383-real-task{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  margin:8px 0;
+  background:rgba(127,200,169,.10);
+  border:1px solid rgba(127,200,169,.22);
+  font-weight:900;
+}
+.v9383-real-task input{
+  width:22px;
+  height:22px;
+}
+.v9383-hint{
+  font-size:12px;
+  opacity:.72;
+  font-weight:850;
+  margin-bottom:8px;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.8.2 課堂流程安全修正版</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.8.3 課堂任務時間補齊版</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
