@@ -8,9 +8,82 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.8 課堂流程完整閉環版</title>
+<title>教學管理系統 v9.3.8.1 課堂流程修正版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+
+/* =========================================================
+   V9.3.8.1 EARLY WEEKLY TASK EDITOR FIX
+   ========================================================= */
+function v938WeeklyTaskItemsFromMain(main){
+  main = main || (typeof getWeeklyMainline === "function" ? getWeeklyMainline() : {});
+  const rawTasks = main.tasks || "";
+  const titles = Array.isArray(rawTasks)
+    ? rawTasks.map(s=>String(s).trim()).filter(Boolean)
+    : String(rawTasks).split(/\n/).map(s=>s.trim()).filter(Boolean);
+  const mins = Array.isArray(main.taskMinutes) ? main.taskMinutes : [];
+  const fallback = titles.length ? Math.max(1, Math.floor(40 / titles.length)) : 10;
+  return titles.map((title,idx)=>({
+    title,
+    minutes:Number(mins[idx] || fallback || 10)
+  }));
+}
+
+function v938RenderWeeklyTaskEditor(main){
+  const items = v938WeeklyTaskItemsFromMain(main);
+  const safeItems = items.length ? items : [
+    {title:"暖身", minutes:5},
+    {title:"本週主線", minutes:15},
+    {title:"個別檢查", minutes:15},
+    {title:"收尾回饋", minutes:5}
+  ];
+  const total = safeItems.reduce((s,x)=>s+(Number(x.minutes)||0),0);
+  return `
+    <div class="v938-total">
+      <span>課堂任務與分鐘數</span>
+      <span>總計 ${total} 分鐘</span>
+    </div>
+    <div id="v938WeeklyTaskEditor" class="v938-task-editor">
+      ${safeItems.map((item,idx)=>`
+        <div class="v938-task-row">
+          <input class="v938-task-title" value="${escapeHtml(item.title)}" placeholder="任務名稱，例如：呼吸健身房">
+          <input class="v938-task-minute v938-min" type="number" min="1" value="${Number(item.minutes)||5}" placeholder="分鐘">
+          <button type="button" class="v938-del" onclick="v938DeleteWeeklyTaskRow(this)">×</button>
+        </div>
+      `).join("")}
+    </div>
+    <button type="button" class="v938-add" onclick="v938AddWeeklyTaskRow()">＋ 新增任務</button>
+    <textarea id="weeklyMainTasksInput" style="display:none">${escapeHtml((main && main.tasks) || "")}</textarea>
+  `;
+}
+
+function v938AddWeeklyTaskRow(){
+  const wrap = document.getElementById("v938WeeklyTaskEditor");
+  if(!wrap) return;
+  const div = document.createElement("div");
+  div.className = "v938-task-row";
+  div.innerHTML = `
+    <input class="v938-task-title" value="新任務" placeholder="任務名稱，例如：呼吸健身房">
+    <input class="v938-task-minute v938-min" type="number" min="1" value="5" placeholder="分鐘">
+    <button type="button" class="v938-del" onclick="v938DeleteWeeklyTaskRow(this)">×</button>
+  `;
+  wrap.appendChild(div);
+}
+
+function v938DeleteWeeklyTaskRow(btn){
+  const row = btn.closest(".v938-task-row");
+  if(row) row.remove();
+}
+
+function v938CollectWeeklyTaskRows(){
+  const rows = [...document.querySelectorAll("#v938WeeklyTaskEditor .v938-task-row")];
+  return rows.map(row=>({
+    title: row.querySelector(".v938-task-title")?.value?.trim() || "",
+    minutes: Math.max(1, Number(row.querySelector(".v938-task-minute")?.value || 1))
+  })).filter(x=>x.title);
+}
+
+
 
 /* =========================================================
    V9.3.7.2 EARLY SAFE DEFINITIONS
@@ -3283,13 +3356,23 @@ body.dark-mode .start937-task-card{
   background:#242820 !important;
 }
 
+
+/* V9.3.8.1 weekly task editor fallback */
+.v938-task-editor{display:grid;gap:8px;margin:10px 0}
+.v938-task-row{display:grid;grid-template-columns:1fr 88px 42px;gap:8px;align-items:center}
+.v938-task-row input{min-height:40px;border:1px solid var(--line);border-radius:14px;padding:8px 10px;box-sizing:border-box;font-weight:850;background:rgba(255,255,255,.82)}
+.v938-task-row .v938-min{text-align:center}
+.v938-del{border:none;border-radius:14px;min-height:40px;background:#ff8c8c;color:white;font-weight:950}
+.v938-add{width:100%;border:none;border-radius:16px;padding:11px;background:rgba(127,200,169,.20);color:#31725a;font-weight:950}
+.v938-total{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:14px;background:rgba(255,224,138,.22);border:1px dashed rgba(212,160,23,.35);font-weight:900;margin:8px 0}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.8 課堂流程完整閉環版</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.8.1 課堂流程修正版</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
