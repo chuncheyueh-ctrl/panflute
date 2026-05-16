@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.7.2 課堂流程修正版</title>
+<title>教學管理系統 v9.3.8 課堂流程完整閉環版</title>
 <!-- Firebase Backup Layer -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
 
@@ -3133,13 +3133,163 @@ body.dark-mode .start937-task-card{
 .start936-real-task input{width:22px;height:22px}
 .start936-hint{font-size:12px;opacity:.72;font-weight:850;margin-top:6px}
 
+
+/* =========================================================
+   V9.3.8 WEEKLY TASK MINUTES + CLEAN START FLOW
+   ========================================================= */
+.v938-task-editor{
+  display:grid;
+  gap:8px;
+  margin:10px 0;
+}
+.v938-task-row{
+  display:grid;
+  grid-template-columns:1fr 88px 42px;
+  gap:8px;
+  align-items:center;
+}
+.v938-task-row input{
+  min-height:40px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:8px 10px;
+  box-sizing:border-box;
+  font-weight:850;
+  background:rgba(255,255,255,.82);
+}
+.v938-task-row .v938-min{
+  text-align:center;
+}
+.v938-del{
+  border:none;
+  border-radius:14px;
+  min-height:40px;
+  background:#ff8c8c;
+  color:white;
+  font-weight:950;
+}
+.v938-add{
+  width:100%;
+  border:none;
+  border-radius:16px;
+  padding:11px;
+  background:rgba(127,200,169,.20);
+  color:#31725a;
+  font-weight:950;
+}
+.v938-total{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:14px;
+  background:rgba(255,224,138,.22);
+  border:1px dashed rgba(212,160,23,.35);
+  font-weight:900;
+  margin:8px 0;
+}
+.v938-task-badge{
+  display:inline-block;
+  margin-left:8px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.07);
+  font-size:12px;
+  font-weight:900;
+}
+.v938-real-checklist{
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px dashed var(--line);
+}
+.v938-real-checklist-title{
+  font-size:18px;
+  font-weight:950;
+  margin-bottom:8px;
+}
+.v938-real-task{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  margin:8px 0;
+  background:rgba(127,200,169,.10);
+  border:1px solid rgba(127,200,169,.22);
+  font-weight:900;
+}
+.v938-real-task input{
+  width:22px;
+  height:22px;
+}
+.v938-hint{
+  font-size:12px;
+  opacity:.72;
+  font-weight:850;
+  margin-bottom:8px;
+}
+.start937-task-card{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.72);
+  margin:8px 0;
+}
+.start937-task-card.active{
+  background:rgba(127,200,169,.22);
+  border-color:#7fc8a9;
+  box-shadow:0 0 0 3px rgba(127,200,169,.16);
+}
+.start937-task-card.done{
+  opacity:.58;
+  background:rgba(0,0,0,.04);
+}
+.start937-task-card.upcoming{
+  background:rgba(255,255,255,.72);
+}
+.start937-dot{
+  width:14px;
+  height:14px;
+  border-radius:999px;
+  background:#aaa;
+}
+.start937-task-card.active .start937-dot{background:#27b96c}
+.start937-task-card.done .start937-dot{background:#aaa}
+.start937-task-card.upcoming .start937-dot{background:#e3b341}
+.start937-title{
+  font-weight:950;
+  font-size:16px;
+}
+.start937-time{
+  font-size:13px;
+  opacity:.75;
+  font-weight:900;
+  margin-top:4px;
+}
+.start937-duration{
+  display:inline-block;
+  margin-left:8px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.06);
+  font-size:12px;
+}
+body.dark-mode .v938-task-row input,
+body.dark-mode .start937-task-card{
+  background:#242820 !important;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.7.2 課堂流程修正版</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.8 課堂流程完整閉環版</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -7864,7 +8014,7 @@ function renderClassroomNotes(note, previousNotes){
           <input id="weeklyMainTitleInput" placeholder="例如：節奏森林第二層 / 音樂會特訓週" value="${escapeHtml(main.title || "")}">
           <textarea id="weeklyMainGoalInput" placeholder="本週目標">${escapeHtml(main.goal || "")}</textarea>
           <textarea id="weeklyMainSideQuestInput" placeholder="支線 / 臨時任務：例如本週因音樂會改練《天空之城》。">${escapeHtml(main.sideQuest || "")}</textarea>
-          <textarea id="weeklyMainTasksInput" placeholder="一行一個任務，會同步到今天課堂勾選">${escapeHtml(main.tasks || "")}</textarea>
+          ${v938RenderWeeklyTaskEditor(main)}
           <button class="btn primary" onclick="saveWeeklyMainline()">儲存本週主線</button>
         </div>
       </section>
