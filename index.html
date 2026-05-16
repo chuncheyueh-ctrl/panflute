@@ -8,67 +8,9 @@
 <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7fc8a9">
-<title>教學管理系統 v9.3.8.3 課堂任務時間補齊版</title>
+<title>教學管理系統 v9.3.9 開始上課 Clean Core 版</title>
 <!-- Firebase Backup Layer -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
-
-/* =========================================================
-   V9.3.7.2 EARLY SAFE DEFINITIONS
-   ========================================================= */
-function start936GetTodayTasks(){
-  let tasks = [];
-  try{
-    if(typeof weeklyMainTasks === "function"){
-      tasks = weeklyMainTasks().filter(Boolean);
-    }
-  }catch(e){}
-  if(!tasks.length){
-    try{
-      const main = typeof getWeeklyMainline === "function" ? getWeeklyMainline() : null;
-      if(main && Array.isArray(main.tasks)) tasks = main.tasks.filter(Boolean);
-    }catch(e){}
-  }
-  return tasks.length ? tasks : ["暖身", "本週主線", "個別檢查", "收尾回饋"];
-}
-
-function start936SyncScheduleFromTodayTasks(force=false){
-  if(typeof start935EnsureSchedule !== "function") return;
-  start935EnsureSchedule();
-
-  const todayTasks = start936GetTodayTasks();
-  const signature = todayTasks.join("|");
-  const savedSig = localStorage.getItem("battle_start_class_task_signature") || "";
-
-  if(force || savedSig !== signature){
-    const defaultMinutes = Math.max(1, Math.floor(40 / Math.max(todayTasks.length,1)));
-    window.start935Schedule.tasks = todayTasks.map((title,idx)=>({
-      title,
-      minutes: idx === todayTasks.length - 1
-        ? Math.max(1, 40 - defaultMinutes * (todayTasks.length - 1))
-        : defaultMinutes
-    }));
-    localStorage.setItem("battle_start_class_task_signature", signature);
-    if(typeof start935SaveSchedule === "function") start935SaveSchedule();
-  }
-}
-
-function start936RenderRealChecklist(){
-  const tasks = start936GetTodayTasks();
-  return `
-    <div class="start936-checklist">
-      <div class="start936-checklist-title">✅ 今日課堂完成確認</div>
-      <div class="start936-hint">這裡是實際上課紀錄；時間軸只是提醒進度，最後仍以此勾選為準。</div>
-      ${tasks.map((task,idx)=>`
-        <label class="start936-real-task">
-          <input type="checkbox" ${startClassTasks && startClassTasks[`task_${idx}`] ? "checked" : ""} onchange="startClassToggleTask(${idx},this.checked)">
-          <span>${escapeHtml(task)}</span>
-        </label>
-      `).join("")}
-    </div>
-  `;
-}
-
-setTimeout(renderSyncStatus,500);
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">setTimeout(renderSyncStatus,500);
 setTimeout(applyThemeMode,300);
 setTimeout(()=>{ try{ normalizeStateShape(); saveState(); }catch(e){ console.warn(e); } },100);
 setTimeout(()=>console.log('BattleModules health', systemHealthCheck()),800);
@@ -2888,317 +2830,157 @@ body.start-class-mode #app{
 
 
 /* =========================================================
-   V9.3.5 CLASS TIMELINE SCHEDULER
+   V9.3.9 START CLASS CLEAN CORE
+   只重寫「開始上課」：流程時間軸、真實勾選、學生角色卡、XP/點數模式
    ========================================================= */
-.start935-timebox{
+.sc939-shell{
+  width:100%;
+  max-width:1500px;
+  margin:0 auto;
+  box-sizing:border-box;
+}
+.sc939-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.sc939-title{
+  font-size:34px;
+  font-weight:950;
+}
+.sc939-sub{
+  margin-top:4px;
+  font-size:14px;
+  font-weight:850;
+  opacity:.72;
+}
+.sc939-layout{
+  display:grid;
+  grid-template-columns:minmax(260px, 320px) minmax(0,1fr);
+  gap:16px;
+  align-items:start;
+}
+.sc939-left{
+  position:sticky;
+  top:14px;
+  min-width:0;
+}
+.sc939-panel{
+  background:rgba(255,255,255,.94);
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:18px;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
+}
+.sc939-panel h2,.sc939-panel h3{
+  margin-top:0;
+}
+.sc939-time-row{
   display:grid;
   grid-template-columns:1fr 90px;
   gap:8px;
-  align-items:end;
-  margin:12px 0;
+  margin:10px 0;
 }
-.start935-timebox label{
-  font-weight:950;
+.sc939-time-row label{
   font-size:13px;
+  font-weight:950;
 }
-.start935-timebox input{
+.sc939-time-row input{
   width:100%;
   min-height:42px;
   border:1px solid var(--line);
   border-radius:14px;
   padding:8px 10px;
-  font-weight:900;
   box-sizing:border-box;
+  font-weight:900;
   background:rgba(255,255,255,.78);
 }
-.start935-timeline{
-  display:grid;
-  gap:9px;
-  margin-top:10px;
-}
-.start935-task-card{
-  display:grid;
-  grid-template-columns:24px 1fr 58px 34px;
-  gap:8px;
-  align-items:center;
-  padding:10px;
-  border-radius:16px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.72);
-}
-.start935-task-card.active{
-  background:rgba(127,200,169,.22);
-  border-color:#7fc8a9;
-  box-shadow:0 0 0 3px rgba(127,200,169,.16);
-}
-.start935-task-card.done{
-  opacity:.62;
-  background:rgba(0,0,0,.04);
-}
-.start935-task-card.upcoming{
-  background:rgba(255,255,255,.72);
-}
-.start935-status-dot{
-  width:14px;
-  height:14px;
-  border-radius:999px;
-  background:#aaa;
-}
-.start935-task-card.active .start935-status-dot{background:#27b96c}
-.start935-task-card.done .start935-status-dot{background:#aaa}
-.start935-task-card.upcoming .start935-status-dot{background:#e3b341}
-.start935-task-main input{
-  width:100%;
-  min-height:36px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:6px 8px;
-  box-sizing:border-box;
-  font-weight:900;
-  background:rgba(255,255,255,.84);
-}
-.start935-time-range{
+.sc939-hint{
   font-size:12px;
   opacity:.72;
-  font-weight:900;
-  margin-top:3px;
+  font-weight:850;
+  margin:8px 0;
 }
-.start935-min{
-  width:100%;
-  min-height:36px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:6px;
-  box-sizing:border-box;
-  text-align:center;
-  font-weight:900;
-  background:rgba(255,255,255,.84);
-}
-.start935-del{
-  border:none;
-  border-radius:12px;
-  min-height:36px;
-  background:#ff8c8c;
-  color:white;
-  font-weight:950;
-}
-.start935-add{
-  width:100%;
-  margin-top:10px;
-  border:none;
-  border-radius:16px;
-  padding:11px;
-  background:rgba(127,200,169,.20);
-  color:#31725a;
-  font-weight:950;
-}
-.start935-progress-wrap{
-  margin:10px 0 6px;
-}
-.start935-progress-title{
+.sc939-progress-title{
   display:flex;
   justify-content:space-between;
   gap:8px;
   font-size:13px;
   font-weight:950;
-  opacity:.78;
+  opacity:.82;
+  margin-top:10px;
 }
-.start935-progress{
+.sc939-progress{
   height:12px;
   border-radius:999px;
   background:rgba(0,0,0,.08);
   overflow:hidden;
-  margin-top:5px;
+  margin:6px 0 12px;
 }
-.start935-progress-fill{
+.sc939-progress-fill{
   height:100%;
-  width:0%;
   background:#27b96c;
+  border-radius:999px;
 }
-body.dark-mode .start935-task-card,
-body.dark-mode .start935-timebox input,
-body.dark-mode .start935-task-main input,
-body.dark-mode .start935-min{
-  background:#242820 !important;
-}
-
-
-/* =========================================================
-   V9.3.6 TODAY TASK SYNC + REAL CHECKLIST
-   ========================================================= */
-.start936-checklist{
-  margin-top:14px;
-  padding-top:12px;
-  border-top:1px dashed var(--line);
-}
-.start936-checklist-title{
-  font-weight:950;
-  margin:8px 0;
-}
-.start936-real-task{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 12px;
-  border-radius:16px;
-  margin:8px 0;
-  background:rgba(127,200,169,.10);
-  border:1px solid rgba(127,200,169,.22);
-  font-weight:900;
-}
-.start936-real-task input{
-  width:22px;
-  height:22px;
-}
-.start936-hint{
-  font-size:12px;
-  opacity:.72;
-  font-weight:850;
-  margin-top:6px;
-}
-
-
-/* =========================================================
-   V9.3.7 CLEAN CLASS TIMELINE VIEW
-   開始上課只顯示流程，不在此處編輯任務內容
-   ========================================================= */
-.start937-task-card{
+.sc939-flow{
   display:grid;
-  grid-template-columns:24px 1fr;
+  gap:8px;
+}
+.sc939-flow-card{
+  display:grid;
+  grid-template-columns:18px 1fr;
   gap:10px;
   align-items:center;
   padding:12px;
   border-radius:16px;
   border:1px solid var(--line);
   background:rgba(255,255,255,.72);
-  margin:8px 0;
 }
-.start937-task-card.active{
+.sc939-flow-card.active{
   background:rgba(127,200,169,.22);
   border-color:#7fc8a9;
   box-shadow:0 0 0 3px rgba(127,200,169,.16);
 }
-.start937-task-card.done{
+.sc939-flow-card.done{
   opacity:.58;
   background:rgba(0,0,0,.04);
 }
-.start937-task-card.upcoming{
-  background:rgba(255,255,255,.72);
-}
-.start937-dot{
-  width:14px;
-  height:14px;
+.sc939-dot{
+  width:13px;
+  height:13px;
   border-radius:999px;
-  background:#aaa;
+  background:#e3b341;
 }
-.start937-task-card.active .start937-dot{background:#27b96c}
-.start937-task-card.done .start937-dot{background:#aaa}
-.start937-task-card.upcoming .start937-dot{background:#e3b341}
-.start937-title{
+.sc939-flow-card.active .sc939-dot{background:#27b96c}
+.sc939-flow-card.done .sc939-dot{background:#aaa}
+.sc939-flow-title{
   font-weight:950;
   font-size:16px;
 }
-.start937-time{
-  font-size:13px;
-  opacity:.75;
-  font-weight:900;
-  margin-top:4px;
-}
-.start937-duration{
+.sc939-badge{
   display:inline-block;
   margin-left:8px;
   padding:2px 8px;
   border-radius:999px;
   background:rgba(0,0,0,.06);
   font-size:12px;
+  font-weight:900;
 }
-.start937-edit-hint{
-  margin:10px 0;
-  padding:10px 12px;
-  border-radius:14px;
-  background:rgba(255,224,138,.18);
-  border:1px dashed rgba(212,160,23,.35);
-  font-weight:850;
+.sc939-flow-time{
   font-size:13px;
-}
-body.dark-mode .start937-task-card{
-  background:#242820 !important;
-}
-
-
-/* V9.3.7.2 checklist fallback */
-.start936-checklist{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
-.start936-checklist-title{font-weight:950;margin:8px 0}
-.start936-real-task{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;margin:8px 0;background:rgba(127,200,169,.10);border:1px solid rgba(127,200,169,.22);font-weight:900}
-.start936-real-task input{width:22px;height:22px}
-.start936-hint{font-size:12px;opacity:.72;font-weight:850;margin-top:6px}
-
-
-/* =========================================================
-   V9.3.8.2 SAFE WEEKLY TASK MINUTES EDITOR
-   ========================================================= */
-.v9382-task-editor{
-  display:grid;
-  gap:8px;
-  margin:10px 0;
-}
-.v9382-task-row{
-  display:grid;
-  grid-template-columns:1fr 88px 42px;
-  gap:8px;
-  align-items:center;
-}
-.v9382-task-row input{
-  min-height:40px;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:8px 10px;
-  box-sizing:border-box;
-  font-weight:850;
-  background:rgba(255,255,255,.82);
-}
-.v9382-task-row .v9382-min{
-  text-align:center;
-}
-.v9382-del{
-  border:none;
-  border-radius:14px;
-  min-height:40px;
-  background:#ff8c8c;
-  color:white;
-  font-weight:950;
-}
-.v9382-add{
-  width:100%;
-  border:none;
-  border-radius:16px;
-  padding:11px;
-  background:rgba(127,200,169,.20);
-  color:#31725a;
-  font-weight:950;
-}
-.v9382-total{
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  padding:8px 10px;
-  border-radius:14px;
-  background:rgba(255,224,138,.22);
-  border:1px dashed rgba(212,160,23,.35);
+  opacity:.75;
   font-weight:900;
-  margin:8px 0;
+  margin-top:4px;
 }
-.v9382-real-checklist{
+.sc939-checklist{
   margin-top:16px;
   padding-top:14px;
   border-top:1px dashed var(--line);
 }
-.v9382-real-checklist-title{
-  font-size:18px;
-  font-weight:950;
-  margin-bottom:8px;
-}
-.v9382-real-task{
+.sc939-check-task{
   display:flex;
   align-items:center;
   gap:10px;
@@ -3209,108 +2991,251 @@ body.dark-mode .start937-task-card{
   border:1px solid rgba(127,200,169,.22);
   font-weight:900;
 }
-.v9382-real-task input{
+.sc939-check-task input{
   width:22px;
   height:22px;
 }
-.v9382-hint{
-  font-size:12px;
-  opacity:.72;
-  font-weight:850;
-  margin-bottom:8px;
+.sc939-textarea{
+  width:100%;
+  min-height:76px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:12px;
+  box-sizing:border-box;
+  resize:vertical;
+  background:rgba(255,255,255,.78);
 }
-
-
-/* =========================================================
-   V9.3.8.3 TASK MINUTES EDITOR + START CHECKLIST FORCE
-   ========================================================= */
-.v9383-task-editor{
-  display:grid;
-  gap:8px;
-  margin:10px 0;
+.sc939-student-panel{
+  min-width:0;
+  background:rgba(255,255,255,.94);
+  border:1px solid var(--line);
+  border-radius:28px;
+  padding:18px;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
 }
-.v9383-task-row{
-  display:grid;
-  grid-template-columns:1fr 90px 42px;
+.sc939-student-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.sc939-mode{
+  display:flex;
   gap:8px;
+  flex-wrap:wrap;
+  margin:10px 0 14px;
+}
+.sc939-mode button{
+  border:none;
+  border-radius:999px;
+  padding:9px 14px;
+  font-weight:950;
+  background:rgba(0,0,0,.08);
+}
+.sc939-mode button.active{
+  background:#ffe08a;
+  color:#4e3c00;
+}
+.sc939-card{
+  width:100%;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:minmax(280px, 34%) minmax(220px, 29%) minmax(280px, 37%);
+  gap:14px;
+  align-items:center;
+  padding:20px;
+  margin:14px 0;
+  border:1px solid var(--line);
+  border-radius:26px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 8px 24px rgba(0,0,0,.055);
+  overflow:hidden;
+}
+.sc939-profile{
+  display:grid;
+  grid-template-columns:120px minmax(0,1fr);
+  gap:14px;
   align-items:center;
 }
-.v9383-task-row input{
-  min-height:40px;
+.sc939-photo{
+  width:120px;
+  height:120px;
+  object-fit:cover;
+  border-radius:28px;
   border:1px solid var(--line);
-  border-radius:14px;
-  padding:8px 10px;
-  box-sizing:border-box;
-  font-weight:850;
-  background:rgba(255,255,255,.86);
+  background:#f2ead6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:52px;
 }
-.v9383-task-row .v9383-min{
-  text-align:center;
+.sc939-name{
+  font-size:clamp(22px,2vw,30px);
+  font-weight:950;
+  line-height:1.1;
 }
-.v9383-del{
-  border:none;
-  border-radius:14px;
-  min-height:40px;
-  background:#ff8c8c;
-  color:white;
+.sc939-level{
+  display:inline-block;
+  margin-top:8px;
+  padding:5px 12px;
+  border-radius:999px;
+  background:rgba(127,200,169,.18);
+  color:#32765e;
   font-weight:950;
 }
-.v9383-add{
+.sc939-xp{
+  margin-top:8px;
+  font-size:17px;
+  font-weight:950;
+}
+.sc939-mini-bar{
+  height:12px;
+  background:rgba(0,0,0,.08);
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:8px;
+}
+.sc939-mini-fill{
+  height:100%;
+  background:#39a873;
+  border-radius:999px;
+}
+.sc939-attendance{
+  margin-top:10px;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 11px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.85);
+  font-weight:950;
+}
+.sc939-att-dot{
+  width:11px;
+  height:11px;
+  border-radius:999px;
+  display:inline-block;
+}
+.sc939-attendance select{
+  border:none;
+  background:transparent;
+  font-weight:950;
+  outline:none;
+}
+.sc939-insight{
+  min-width:0;
+  border-left:1px solid var(--line);
+  border-right:1px solid var(--line);
+  padding:0 14px;
+}
+.sc939-insight-title{
+  font-weight:950;
+  margin-bottom:8px;
+}
+.sc939-row{
+  display:grid;
+  grid-template-columns:58px minmax(70px,1fr) 36px;
+  gap:6px;
+  align-items:center;
+  margin:6px 0;
+  font-size:12px;
+  font-weight:900;
+}
+.sc939-rowbar{
+  height:9px;
+  background:rgba(0,0,0,.08);
+  border-radius:999px;
+  overflow:hidden;
+}
+.sc939-rowfill{
+  height:100%;
+  border-radius:999px;
+}
+.sc939-actions{
+  min-width:0;
+  display:grid;
+  gap:10px;
+}
+.sc939-action-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.sc939-btns{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(78px,1fr));
+  gap:8px;
+}
+.sc939-chip{
+  border:none;
+  min-height:40px;
+  border-radius:14px;
+  color:white;
+  font-weight:950;
+  box-shadow:0 3px 8px rgba(0,0,0,.14);
+  text-shadow:0 1px 2px rgba(0,0,0,.22);
+}
+.sc939-point{background:#d4a017}
+.sc939-point.minus{background:#d95f5f}
+.sc939-log-toggle{
   width:100%;
   border:none;
   border-radius:16px;
   padding:11px;
-  background:rgba(127,200,169,.20);
-  color:#31725a;
+  background:rgba(127,200,169,.16);
+  color:#36745e;
   font-weight:950;
 }
-.v9383-total{
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  padding:9px 10px;
-  border-radius:14px;
-  background:rgba(255,224,138,.22);
-  border:1px dashed rgba(212,160,23,.35);
-  font-weight:900;
-  margin:8px 0;
-}
-.v9383-time-preview{
-  font-size:12px;
-  opacity:.72;
-  font-weight:850;
-  margin-top:3px;
-}
-.v9383-real-checklist{
-  margin-top:16px;
-  padding-top:14px;
-  border-top:1px dashed var(--line);
-}
-.v9383-real-checklist-title{
-  font-size:18px;
-  font-weight:950;
-  margin-bottom:8px;
-}
-.v9383-real-task{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 12px;
+.sc939-log{
   border-radius:16px;
-  margin:8px 0;
   background:rgba(127,200,169,.10);
-  border:1px solid rgba(127,200,169,.22);
-  font-weight:900;
+  border-left:6px solid #7fc8a9;
+  padding:10px 12px;
+  margin-top:8px;
 }
-.v9383-real-task input{
-  width:22px;
-  height:22px;
+.sc939-bottom{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
 }
-.v9383-hint{
-  font-size:12px;
-  opacity:.72;
-  font-weight:850;
-  margin-bottom:8px;
+.sc939-bottom button{flex:1;min-height:48px}
+body.dark-mode .sc939-panel,
+body.dark-mode .sc939-student-panel,
+body.dark-mode .sc939-card,
+body.dark-mode .sc939-flow-card,
+body.dark-mode .sc939-time-row input,
+body.dark-mode .sc939-textarea{
+  background:#242820!important;
+}
+@media(max-width:1180px){
+  .sc939-card{
+    grid-template-columns:minmax(260px, 42%) minmax(0,1fr);
+  }
+  .sc939-insight{
+    grid-column:1 / -1;
+    border-left:none;
+    border-right:none;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:14px 0;
+  }
+}
+@media(max-width:900px){
+  .sc939-layout{grid-template-columns:1fr}
+  .sc939-left{position:static}
+  .sc939-card{grid-template-columns:1fr}
+  .sc939-profile{grid-template-columns:110px minmax(0,1fr)}
+  .sc939-photo{width:110px;height:110px}
+}
+@media(max-width:560px){
+  .sc939-profile{grid-template-columns:96px minmax(0,1fr)}
+  .sc939-photo{width:96px;height:96px}
+  .sc939-btns{grid-template-columns:repeat(2,minmax(78px,1fr))}
 }
 
 </style>
@@ -3319,7 +3244,7 @@ body.dark-mode .start937-task-card{
 <div class="app">
   <aside class="sidebar">
     <div class="logo" id="logoTitle">🎵 教學管理系統</div>
-    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.8.3 課堂任務時間補齊版</div>
+    <button id="startClassSidebarBtn" class="btn gold" style="margin-bottom:10px;width:100%" onclick="enterStartClassMode()">🎺 開始上課</button><div class="version">v9.3.9 開始上課 Clean Core 版</div>
     <div class="nav">
       <button data-page="classroom" class="active">🎒 上課介面</button>
       <button data-page="student">🐾 學生端</button>
@@ -11273,272 +11198,456 @@ if(typeof start933Buttons === "function"){
 
 
 /* =========================================================
-   V9.3.5 CLASS TIMELINE SCHEDULER
+   V9.3.9 START CLASS CLEAN CORE
+   Single self-contained module. No dependency on v935/v936/v937 patches.
    ========================================================= */
-let start935ClockTimer = window.start935ClockTimer || null;
+let sc939Mode = window.sc939Mode || "xp";
+let sc939Attendance = window.sc939Attendance || {};
+let sc939Timer = window.sc939Timer || null;
 
-function start935EnsureSchedule(){
-  if(!window.start935Schedule){
-    window.start935Schedule = {
-      startTime: localStorage.getItem("battle_start_class_time") || "10:30",
-      tasks: (() => {
-        try{
-          const saved = JSON.parse(localStorage.getItem("battle_start_class_tasks") || "null");
-          if(Array.isArray(saved) && saved.length) return saved;
-        }catch(e){}
-        return [
-          {title:"暖身", minutes:10},
-          {title:"本週主線", minutes:20},
-          {title:"個別檢查", minutes:25},
-          {title:"收尾回饋", minutes:5}
-        ];
-      })()
-    };
-  }
-  if(!Array.isArray(window.start935Schedule.tasks) || !window.start935Schedule.tasks.length){
-    window.start935Schedule.tasks = [{title:"呼吸健身房", minutes:5}];
-  }
+function sc939Esc(v){
+  return typeof escapeHtml === "function" ? escapeHtml(v) : String(v ?? "").replace(/[&<>"']/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[s]));
 }
 
-function start935SaveSchedule(){
-  start935EnsureSchedule();
-  localStorage.setItem("battle_start_class_time", window.start935Schedule.startTime || "10:30");
-  localStorage.setItem("battle_start_class_tasks", JSON.stringify(window.start935Schedule.tasks || []));
+function sc939Id(){
+  return typeof makeId === "function" ? makeId() : `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-function start935TimeToMinutes(t){
-  const [h,m] = String(t || "00:00").split(":").map(n=>Number(n)||0);
-  return h*60 + m;
+function sc939DateTime(){
+  return typeof localIsoLikeString === "function" ? localIsoLikeString() : new Date().toISOString();
 }
 
-function start935MinutesToTime(total){
-  total = ((Number(total)||0) + 1440) % 1440;
+function sc939FormatDateTime(v){
+  return typeof formatDateTime === "function" ? formatDateTime(v) : String(v || "");
+}
+
+function sc939Main(){
+  try{ return typeof getWeeklyMainline === "function" ? getWeeklyMainline() : {}; }
+  catch(e){ return {}; }
+}
+
+function sc939SplitTasks(raw){
+  if(Array.isArray(raw)) return raw.map(x=>String(x).trim()).filter(Boolean);
+  return String(raw || "").split(/\n/).map(x=>x.trim()).filter(Boolean);
+}
+
+function sc939TaskItems(){
+  const main = sc939Main();
+  const titles = sc939SplitTasks(main.tasks || "");
+  const mins = Array.isArray(main.taskMinutes) ? main.taskMinutes : [];
+  const fallback = titles.length ? Math.max(1, Math.floor(40/titles.length)) : 10;
+  const items = titles.map((title,idx)=>({
+    title,
+    minutes:Math.max(1, Number(mins[idx] || fallback || 10))
+  }));
+  return items.length ? items : [
+    {title:"暖身", minutes:5},
+    {title:"本週主線", minutes:15},
+    {title:"個別檢查", minutes:15},
+    {title:"收尾回饋", minutes:5}
+  ];
+}
+
+function sc939GrowthTypes(){
+  try{
+    if(typeof giEnsureSettings === "function") giEnsureSettings();
+    if(typeof growthTypes === "function") return growthTypes().filter(t=>Number(t.defaultXp||t.xp||0)>0);
+  }catch(e){}
+  return [
+    {id:"breath",name:"氣息",defaultXp:10,color:"#2fb37b"},
+    {id:"tone",name:"音色",defaultXp:10,color:"#4b8df8"},
+    {id:"rhythm",name:"節奏",defaultXp:10,color:"#f2a93b"},
+    {id:"reading",name:"視譜",defaultXp:10,color:"#8b6cf6"},
+    {id:"ensemble",name:"合奏",defaultXp:10,color:"#22a6b3"},
+    {id:"help",name:"幫助同學",defaultXp:15,color:"#d4a017"}
+  ];
+}
+
+function sc939Color(typeId){
+  try{ if(typeof giColor === "function") return giColor(typeId); }catch(e){}
+  const t = sc939GrowthTypes().find(x=>x.id===typeId || x.name===typeId);
+  return t?.color || "#7fc8a9";
+}
+
+function sc939Name(typeId){
+  try{ if(typeof giName === "function") return giName(typeId); }catch(e){}
+  const t = sc939GrowthTypes().find(x=>x.id===typeId || x.name===typeId);
+  return t?.name || typeId || "成長紀錄";
+}
+
+function sc939StudentXp(studentId){
+  try{ if(typeof startClassStudentXp === "function") return startClassStudentXp(studentId); }catch(e){}
+  return (state.growthLogs || []).filter(l=>l.studentId===studentId).reduce((s,l)=>s+(Number(l.xp||0)||0),0);
+}
+
+function sc939StudentPoints(studentId){
+  const earned = (state.pointLogs || []).filter(l=>l.studentId===studentId).reduce((s,l)=>s+(Number(l.points ?? l.amount ?? 0)||0),0);
+  const spent = (state.redeemLogs || []).filter(l=>l.studentId===studentId).reduce((s,l)=>s+(Number(l.cost ?? l.points ?? 0)||0),0);
+  return earned - spent;
+}
+
+function sc939TimeToMin(t){
+  const [h,m] = String(t || "10:30").split(":").map(n=>Number(n)||0);
+  return h*60+m;
+}
+
+function sc939MinToTime(total){
+  total = ((Number(total)||0)+1440)%1440;
   const h = Math.floor(total/60);
-  const m = total % 60;
+  const m = total%60;
   return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
-function start935NowMinutes(){
+function sc939NowMin(){
   const d = new Date();
-  return d.getHours()*60 + d.getMinutes();
+  return d.getHours()*60+d.getMinutes();
 }
 
-function start935TaskRanges(){
-  start935EnsureSchedule();
-  let cur = start935TimeToMinutes(window.start935Schedule.startTime || "10:30");
-  return window.start935Schedule.tasks.map((task,idx)=>{
+function sc939StartTime(){
+  return localStorage.getItem("battle_start_class_time") || "10:30";
+}
+
+function sc939SetStartTime(v){
+  localStorage.setItem("battle_start_class_time", v || "10:30");
+  renderStartClassMode();
+}
+
+function sc939Ranges(){
+  let cur = sc939TimeToMin(sc939StartTime());
+  return sc939TaskItems().map((item,idx)=>{
     const start = cur;
-    const mins = Math.max(1, Number(task.minutes || 1));
-    const end = start + mins;
+    const minutes = Math.max(1, Number(item.minutes||1));
+    const end = start + minutes;
     cur = end;
-    return {idx, title:task.title || `任務 ${idx+1}`, minutes:mins, start, end};
+    return {idx,title:item.title,minutes,start,end};
   });
 }
 
-function start935CurrentIndex(){
-  const now = start935NowMinutes();
-  const ranges = start935TaskRanges();
-  const active = ranges.find(r=>now>=r.start && now<r.end);
-  if(active) return active.idx;
-  if(ranges.length && now >= ranges[ranges.length-1].end) return ranges.length;
-  return -1;
-}
-
-function start935ProgressPercent(){
-  const ranges = start935TaskRanges();
+function sc939Progress(){
+  const ranges = sc939Ranges();
   if(!ranges.length) return 0;
   const start = ranges[0].start;
   const end = ranges[ranges.length-1].end;
-  const now = start935NowMinutes();
+  const now = sc939NowMin();
   if(now <= start) return 0;
   if(now >= end) return 100;
   return Math.round((now-start)/(end-start)*100);
 }
 
-function start935SetStartTime(v){
-  start935EnsureSchedule();
-  window.start935Schedule.startTime = v || "10:30";
-  start935SaveSchedule();
-  renderStartClassMode();
+function sc939ActiveName(){
+  const now = sc939NowMin();
+  const ranges = sc939Ranges();
+  const active = ranges.find(r=>now>=r.start && now<r.end);
+  if(active) return active.title;
+  if(ranges.length && now >= ranges[ranges.length-1].end) return "本堂課已完成";
+  return "尚未開始";
 }
 
-function start935UpdateTask(idx,field,value){
-  start935EnsureSchedule();
-  if(!window.start935Schedule.tasks[idx]) return;
-  if(field === "minutes"){
-    window.start935Schedule.tasks[idx].minutes = Math.max(1, Number(value || 1));
-  }else{
-    window.start935Schedule.tasks[idx].title = value;
-  }
-  start935SaveSchedule();
-  renderStartClassMode();
-}
-
-function start935AddTask(){
-  start935EnsureSchedule();
-  window.start935Schedule.tasks.push({title:"新任務", minutes:5});
-  start935SaveSchedule();
-  renderStartClassMode();
-}
-
-function start935DeleteTask(idx){
-  start935EnsureSchedule();
-  window.start935Schedule.tasks.splice(idx,1);
-  if(!window.start935Schedule.tasks.length){
-    window.start935Schedule.tasks.push({title:"呼吸健身房", minutes:5});
-  }
-  start935SaveSchedule();
-  renderStartClassMode();
-}
-
-function start935RenderTimeline(){
-  start935EnsureSchedule();
-  const ranges = start935TaskRanges();
-  const now = start935NowMinutes();
-  const activeIdx = start935CurrentIndex();
+function sc939RenderFlow(){
+  const ranges = sc939Ranges();
+  const now = sc939NowMin();
   const total = ranges.reduce((s,r)=>s+r.minutes,0);
-  const activeName = activeIdx >= 0 && activeIdx < ranges.length ? ranges[activeIdx].title : (activeIdx >= ranges.length ? "本堂課已完成" : "尚未開始");
   return `
     <h3>本堂流程</h3>
-    <div class="start935-timebox">
+    <div class="sc939-time-row">
       <div>
         <label>上課開始時間</label>
-        <input type="time" value="${escapeHtml(window.start935Schedule.startTime || "10:30")}" onchange="start935SetStartTime(this.value)">
+        <input type="time" value="${sc939Esc(sc939StartTime())}" onchange="sc939SetStartTime(this.value)">
       </div>
       <div>
         <label>總分鐘</label>
         <input value="${total}" readonly>
       </div>
     </div>
-
-    <div class="start935-progress-wrap">
-      <div class="start935-progress-title">
-        <span>現在：${escapeHtml(activeName)}</span>
-        <span>${start935ProgressPercent()}%</span>
-      </div>
-      <div class="start935-progress"><div class="start935-progress-fill" style="width:${start935ProgressPercent()}%"></div></div>
-    </div>
-
-    <div class="start935-timeline">
+    <div class="sc939-hint">任務內容與分鐘數請到「課程紀錄／本週主線」編輯；這裡只作為上課時的時間提醒。</div>
+    <div class="sc939-progress-title"><span>現在：${sc939Esc(sc939ActiveName())}</span><span>${sc939Progress()}%</span></div>
+    <div class="sc939-progress"><div class="sc939-progress-fill" style="width:${sc939Progress()}%"></div></div>
+    <div class="sc939-flow">
       ${ranges.map(r=>{
-        const cls = now >= r.end ? "done" : (now >= r.start && now < r.end ? "active" : "upcoming");
+        const cls = now>=r.end ? "done" : (now>=r.start && now<r.end ? "active" : "upcoming");
         return `
-          <div class="start935-task-card ${cls}">
-            <span class="start935-status-dot"></span>
-            <div class="start935-task-main">
-              <input value="${escapeHtml(r.title)}" oninput="start935UpdateTask(${r.idx},'title',this.value)">
-              <div class="start935-time-range">${start935MinutesToTime(r.start)} - ${start935MinutesToTime(r.end)}</div>
+          <div class="sc939-flow-card ${cls}">
+            <span class="sc939-dot"></span>
+            <div>
+              <div class="sc939-flow-title">${sc939Esc(r.title)} <span class="sc939-badge">${r.minutes} 分鐘</span></div>
+              <div class="sc939-flow-time">${sc939MinToTime(r.start)} - ${sc939MinToTime(r.end)}</div>
             </div>
-            <input class="start935-min" type="number" min="1" value="${r.minutes}" onchange="start935UpdateTask(${r.idx},'minutes',this.value)">
-            <button class="start935-del" onclick="start935DeleteTask(${r.idx})">×</button>
           </div>
         `;
       }).join("")}
     </div>
-    <button class="start935-add" onclick="start935AddTask()">＋ 新增課堂任務</button>
   `;
 }
 
-const __v935RenderStartClassModeBase = renderStartClassMode;
-renderStartClassMode = function(){
-  __v935RenderStartClassModeBase();
+function sc939RenderChecklist(){
+  const items = sc939TaskItems();
+  if(!window.startClassTasks) window.startClassTasks = {};
+  return `
+    <div class="sc939-checklist">
+      <h3>今日課堂完成確認</h3>
+      <div class="sc939-hint">時間軸是提醒進度；這裡才是真實完成紀錄。</div>
+      ${items.map((item,idx)=>`
+        <label class="sc939-check-task">
+          <input type="checkbox" ${window.startClassTasks[`task_${idx}`] ? "checked" : ""} onchange="sc939ToggleTask(${idx},this.checked)">
+          <span>${sc939Esc(item.title)}</span>
+        </label>
+      `).join("")}
+    </div>
+  `;
+}
 
-  const leftPanel = document.querySelector(".start931-left .start931-panel");
-  if(leftPanel){
-    const oldFlowHeading = [...leftPanel.querySelectorAll("h3")].find(h=>h.textContent.includes("本堂目標") || h.textContent.includes("本堂流程"));
-    if(oldFlowHeading){
-      let node = oldFlowHeading;
-      const remove = [];
-      while(node){
-        remove.push(node);
-        node = node.nextElementSibling;
-        if(node && node.tagName === "H3" && (node.textContent.includes("課堂備註") || node.textContent.includes("回家功課"))) break;
-      }
-      remove.forEach(n=>n.remove());
-      const holder = document.createElement("div");
-      holder.innerHTML = start935RenderTimeline();
-      const before = [...leftPanel.querySelectorAll("h3")].find(h=>h.textContent.includes("課堂備註") || h.textContent.includes("回家功課"));
-      leftPanel.insertBefore(holder, before || null);
-    }
+function sc939ToggleTask(idx,checked){
+  if(!window.startClassTasks) window.startClassTasks = {};
+  window.startClassTasks[`task_${idx}`] = !!checked;
+  try{ if(typeof startClassToggleTask === "function") startClassToggleTask(idx, checked); }catch(e){}
+}
+
+function sc939Photo(st){
+  const url = st?.photoUrl || st?.photo || st?.imageUrl || "";
+  if(url) return `<img class="sc939-photo" src="${sc939Esc(url)}" onerror="this.outerHTML='<div class=&quot;sc939-photo&quot;>👤</div>'">`;
+  return `<div class="sc939-photo">👤</div>`;
+}
+
+function sc939AttendanceMeta(studentId){
+  const val = sc939Attendance[studentId] || "arrived";
+  const map = {
+    arrived:{label:"已到",color:"#25b45b"},
+    none:{label:"未到",color:"#9a9a9a"},
+    leave:{label:"請假",color:"#e3b341"},
+    absent:{label:"缺席",color:"#d9534f"}
+  };
+  return map[val] || map.arrived;
+}
+
+function sc939SetAttendance(studentId,value){
+  sc939Attendance[studentId] = value;
+  window.sc939Attendance = sc939Attendance;
+  renderStartClassMode();
+}
+
+function sc939Distribution(studentId){
+  const logs = (state.growthLogs || []).filter(l=>l.studentId===studentId);
+  const map = {};
+  let total = 0;
+  logs.forEach(l=>{
+    const xp = Math.max(0, Number(l.xp || 0) || 0);
+    if(!xp) return;
+    const key = l.type || "未分類";
+    map[key] = (map[key] || 0) + xp;
+    total += xp;
+  });
+  return {map,total};
+}
+
+function sc939Insight(studentId){
+  const {map,total} = sc939Distribution(studentId);
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){
+    return `<div class="sc939-insight"><div class="sc939-insight-title">能力洞察 ⓘ</div><div class="sc939-hint">尚無成長資料</div></div>`;
   }
+  return `<div class="sc939-insight">
+    <div class="sc939-insight-title">能力洞察 ⓘ</div>
+    ${entries.slice(0,6).map(([k,v])=>`
+      <div class="sc939-row">
+        <div>${sc939Esc(sc939Name(k))}</div>
+        <div class="sc939-rowbar"><div class="sc939-rowfill" style="width:${Math.max(5,v/total*100)}%;background:${sc939Esc(sc939Color(k))}"></div></div>
+        <div>${Math.round(v/total*100)}%</div>
+      </div>
+    `).join("")}
+  </div>`;
+}
 
-  if(start935ClockTimer) clearInterval(start935ClockTimer);
-  start935ClockTimer = setInterval(()=>{
+function sc939Logs(studentId,limit=3){
+  return (state.growthLogs || [])
+    .filter(l=>l.studentId===studentId)
+    .slice()
+    .sort((a,b)=>String(b.date || b.createdAt || "").localeCompare(String(a.date || a.createdAt || "")))
+    .slice(0,limit);
+}
+
+function sc939RecentLogs(studentId){
+  const logs = sc939Logs(studentId,3);
+  if(!logs.length) return `<div class="sc939-hint">尚無成長日誌。</div>`;
+  return logs.map(l=>`
+    <div class="sc939-log" style="border-left-color:${sc939Esc(l.color || sc939Color(l.type))}">
+      <b>${sc939Esc(sc939Name(l.type))} ${Number(l.xp||0)>=0?"+":""}${Number(l.xp||0)} XP</b>
+      <div>${sc939Esc(l.feedback || "")}</div>
+      <div class="sc939-hint">${sc939Esc(sc939FormatDateTime(l.date || l.createdAt || ""))}</div>
+    </div>
+  `).join("");
+}
+
+function sc939SetMode(mode){
+  sc939Mode = mode;
+  window.sc939Mode = mode;
+  renderStartClassMode();
+}
+
+function sc939AddXp(studentId,typeId){
+  const t = sc939GrowthTypes().find(x=>x.id===typeId || x.name===typeId) || sc939GrowthTypes()[0];
+  if(!t) return;
+  const remark = document.getElementById(`sc939Remark_${studentId}`)?.value?.trim() || "";
+  if(!Array.isArray(state.growthLogs)) state.growthLogs = [];
+  state.growthLogs.push({
+    id:sc939Id(),
+    studentId,
+    type:t.id || t.name,
+    color:sc939Color(t.id || t.name),
+    xp:Number(t.defaultXp || t.xp || 0),
+    feedback:remark || `開始上課快速記錄：${t.name}`,
+    date:sc939DateTime()
+  });
+  try{ markDirty?.(`開始上課XP：${t.name}`); }catch(e){}
+  try{ saveState(); }catch(e){}
+  renderStartClassMode();
+}
+
+function sc939AddPoints(studentId,points){
+  const remark = document.getElementById(`sc939Remark_${studentId}`)?.value?.trim() || "";
+  if(!Array.isArray(state.pointLogs)) state.pointLogs = [];
+  state.pointLogs.push({
+    id:sc939Id(),
+    studentId,
+    points:Number(points),
+    amount:Number(points),
+    reason:remark || `開始上課點數調整：${points>0?"+":""}${points}`,
+    date:sc939DateTime()
+  });
+  try{ markDirty?.(`開始上課點數：${points>0?"+":""}${points}`); }catch(e){}
+  try{ saveState(); }catch(e){}
+  renderStartClassMode();
+}
+
+function sc939Buttons(studentId){
+  if(sc939Mode === "points"){
+    return [1,3,5,-1,-3].map(p=>`
+      <button class="sc939-chip sc939-point ${p<0?'minus':''}" onclick="sc939AddPoints('${studentId}',${p})">
+        點數 ${p>0?"+":""}${p}
+      </button>
+    `).join("");
+  }
+  return sc939GrowthTypes().map(t=>`
+    <button class="sc939-chip" style="background:${sc939Esc(sc939Color(t.id || t.name))}" onclick="sc939AddXp('${studentId}','${sc939Esc(t.id || t.name)}')">
+      ${sc939Esc(t.name)} +${Number(t.defaultXp || t.xp || 0)}
+    </button>
+  `).join("");
+}
+
+function sc939RenderStudentCard(st){
+  const xp = sc939StudentXp(st.id);
+  const att = sc939AttendanceMeta(st.id);
+  return `
+    <article class="sc939-card">
+      <div class="sc939-profile">
+        ${sc939Photo(st)}
+        <div>
+          <div class="sc939-name">${sc939Esc(st.name)}</div>
+          <div class="sc939-level">LV ${Math.max(1,Math.floor(xp/100)+1)} 小演奏家</div>
+          <div class="sc939-xp">XP：${xp}</div>
+          <div class="sc939-xp">點數：${sc939StudentPoints(st.id)}</div>
+          <div class="sc939-mini-bar"><div class="sc939-mini-fill" style="width:${Math.min(100,xp%100)}%"></div></div>
+          <div class="sc939-attendance">
+            <span class="sc939-att-dot" style="background:${att.color}"></span>
+            <select onchange="sc939SetAttendance('${st.id}',this.value)">
+              <option value="arrived" ${sc939Attendance[st.id]==='arrived'||!sc939Attendance[st.id]?'selected':''}>已到</option>
+              <option value="none" ${sc939Attendance[st.id]==='none'?'selected':''}>未到</option>
+              <option value="leave" ${sc939Attendance[st.id]==='leave'?'selected':''}>請假</option>
+              <option value="absent" ${sc939Attendance[st.id]==='absent'?'selected':''}>缺席</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      ${sc939Insight(st.id)}
+      <div class="sc939-actions">
+        <div class="sc939-action-head">
+          <b>${sc939Mode==='xp'?'成長加分':'點數調整'}</b>
+          <span class="badge">${sc939Mode==='xp'?'寫入成長日誌':'只調整兌換點數'}</span>
+        </div>
+        <div class="sc939-btns">${sc939Buttons(st.id)}</div>
+        <textarea id="sc939Remark_${st.id}" class="sc939-textarea" style="min-height:58px" placeholder="個別備註 / 成長亮點（選填）"></textarea>
+        <details>
+          <summary class="sc939-log-toggle">📖 成長日誌（最近 ${sc939Logs(st.id,99).length} 筆）</summary>
+          ${sc939RecentLogs(st.id)}
+        </details>
+      </div>
+    </article>
+  `;
+}
+
+function renderStartClassMode(){
+  document.body.classList.add("start-class-mode");
+  try{ if(typeof prepareStartClassData === "function") prepareStartClassData(); }catch(e){}
+  if(!window.startClassTasks) window.startClassTasks = {};
+
+  const cls = (()=>{ try{return findById(state.classes, classContext.classId)}catch(e){return null} })();
+  const school = (()=>{ try{return findById(state.schools, classContext.schoolId || cls?.schoolId)}catch(e){return null} })();
+  const students = (()=>{ try{return studentsByClass(classContext.classId)}catch(e){return []} })();
+
+  const date = classContext?.date || new Date().toISOString().slice(0,10);
+
+  document.getElementById("app").innerHTML = `
+    <div class="sc939-shell">
+      <div class="sc939-header">
+        <div>
+          <div class="sc939-title">🎺 開始上課</div>
+          <div class="sc939-sub">${sc939Esc(school?.name || "未指定學校")}｜${sc939Esc(cls?.name || "未指定課程")}｜${sc939Esc(date)}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="toggleThemeMode()">🌙 深色</button>
+          <button class="btn red" onclick="exitStartClassMode()">退出</button>
+        </div>
+      </div>
+
+      <div class="sc939-layout">
+        <aside class="sc939-left">
+          <section class="sc939-panel">
+            <h2>📅 今日課堂</h2>
+            ${sc939RenderFlow()}
+            ${sc939RenderChecklist()}
+
+            <h3>課堂備註</h3>
+            <textarea id="startClassMemo" class="sc939-textarea" placeholder="例如：今天節奏反應很好，但合奏速度還不穩。"></textarea>
+
+            <h3>回家功課</h3>
+            <textarea id="startClassHomework" class="sc939-textarea" placeholder="例如：長音4拍每天3次、練習第8-16小節。"></textarea>
+          </section>
+        </aside>
+
+        <section class="sc939-student-panel">
+          <div class="sc939-student-head">
+            <div>
+              <h2>🧑‍🎓 學生名單</h2>
+              <div class="sc939-hint">左側提醒課堂流程；右側進行學生加分、點數與成長紀錄。</div>
+            </div>
+            <div class="badge">本堂學生：${students.length} 人</div>
+          </div>
+
+          <div class="sc939-mode">
+            <button class="${sc939Mode==='xp'?'active':''}" onclick="sc939SetMode('xp')">🌱 XP 成長</button>
+            <button class="${sc939Mode==='points'?'active':''}" onclick="sc939SetMode('points')">🎁 點數加點</button>
+          </div>
+
+          ${students.length ? students.map(sc939RenderStudentCard).join("") : `<div class="note">這個課程目前沒有學生。</div>`}
+
+          <div class="sc939-bottom">
+            <button class="btn" onclick="guardedFirebaseUpload()">☁️ 先同步</button>
+            <button class="btn gold" onclick="exitStartClassMode()">稍後儲存</button>
+            <button class="btn primary" onclick="finishStartClass()">✅ 儲存並結束課堂</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+
+  if(sc939Timer) clearInterval(sc939Timer);
+  sc939Timer = setInterval(()=>{
     if(document.body.classList.contains("start-class-mode")){
-      renderStartClassMode();
+      try{ renderStartClassMode(); }catch(e){ console.warn(e); }
     }else{
-      clearInterval(start935ClockTimer);
-      start935ClockTimer = null;
+      clearInterval(sc939Timer);
+      sc939Timer = null;
     }
   }, 30000);
-};
-
-
-
-/* =========================================================
-   V9.3.7 CLEAN CLASS TIMELINE VIEW
-   ========================================================= */
-function start937RenderTimelineClean(){
-  if(typeof start936SyncScheduleFromTodayTasks === 'function') start936SyncScheduleFromTodayTasks(false);
-  start935EnsureSchedule();
-
-  const ranges = start935TaskRanges();
-  const now = start935NowMinutes();
-  const activeIdx = start935CurrentIndex();
-  const total = ranges.reduce((s,r)=>s+r.minutes,0);
-  const activeName = activeIdx >= 0 && activeIdx < ranges.length ? ranges[activeIdx].title : (activeIdx >= ranges.length ? "本堂課已完成" : "尚未開始");
-
-  return `
-    <h3>本堂流程</h3>
-    <div class="start935-timebox">
-      <div>
-        <label>上課開始時間</label>
-        <input type="time" value="${escapeHtml(window.start935Schedule.startTime || "10:30")}" onchange="start935SetStartTime(this.value)">
-      </div>
-      <div>
-        <label>總分鐘</label>
-        <input value="${total}" readonly>
-      </div>
-    </div>
-
-    <div class="start937-edit-hint">
-      任務內容請到「課程紀錄／本週主線」編輯；這裡只作為上課時的時間提醒。
-    </div>
-
-    <div class="start935-progress-wrap">
-      <div class="start935-progress-title">
-        <span>現在：${escapeHtml(activeName)}</span>
-        <span>${start935ProgressPercent()}%</span>
-      </div>
-      <div class="start935-progress"><div class="start935-progress-fill" style="width:${start935ProgressPercent()}%"></div></div>
-    </div>
-
-    <div class="start935-timeline">
-      ${ranges.map(r=>{
-        const cls = now >= r.end ? "done" : (now >= r.start && now < r.end ? "active" : "upcoming");
-        return `
-          <div class="start937-task-card ${cls}">
-            <span class="start937-dot"></span>
-            <div>
-              <div class="start937-title">
-                ${escapeHtml(r.title)}
-                <span class="start937-duration">${r.minutes} 分鐘</span>
-              </div>
-              <div class="start937-time">${start935MinutesToTime(r.start)} - ${start935MinutesToTime(r.end)}</div>
-            </div>
-          </div>
-        `;
-      }).join("")}
-    </div>
-  `;
-}
-
-if(typeof start936RenderRealChecklist === "function"){
-  start935RenderTimeline = function(){
-    return start937RenderTimelineClean() + start936RenderRealChecklist();
-  };
-}else{
-  start935RenderTimeline = start937RenderTimelineClean;
 }
 
 </script>
